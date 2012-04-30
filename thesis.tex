@@ -44,7 +44,7 @@
 \usepackage{array}
 \usepackage[lofdepth,lotdepth]{subfig}
 \usepackage{tikz}
-\usepackage{natbib}
+%\usepackage{natbib}
 \usetikzlibrary{decorations.pathreplacing,patterns}
 
 %% Balíček hyperref, kterým jdou vyrábět klikací odkazy v PDF,
@@ -252,9 +252,10 @@ dependently-typed programming, exceptions, compiler, correctness
 \tableofcontents
 
 %%% Jednotlivé kapitoly práce jsou pro přehlednost uloženy v samostatných souborech
-\include{preface}
-\include{chap1}
-\include{chap2}
+\include{introduction}
+\include{ch01-exceptions}
+\include{ch02-dependent-types}
+\include{ch03-compiling}
 
 % Ukázka použití některých konstrukcí LateXu (odkomentujte, chcete-li)
 % \include{example}
