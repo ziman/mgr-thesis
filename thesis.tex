@@ -58,7 +58,15 @@
 %% Balíček hyperref, kterým jdou vyrábět klikací odkazy v PDF,
 %% ale hlavně ho používáme k uložení metadat do PDF (včetně obsahu).
 %% POZOR, nezapomeňte vyplnit jméno práce a autora.
-\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue,unicode]{hyperref}
+\usepackage{color}
+\definecolor{link}{rgb}{0,0,0.5}
+\usepackage[
+	colorlinks=true,
+	linkcolor=link,
+	urlcolor=link,
+	citecolor=link,
+	unicode
+]{hyperref}
 \hypersetup{pdftitle=On the semantics of exceptions for high level and low level languages}
 \hypersetup{pdfauthor=Matus Tejiscak}
 
@@ -139,7 +147,7 @@ Department of Theoretical Computer Science and Mathematical Logic
 
 \begin{tabular}{rl}
 
-Supervisor of the master thesis: & Wouter Swierstra \\
+Supervisor of the master thesis: & Wouter Swierstra PhD\\
 \noalign{\vspace{2mm}}
 Study programme: & Computer science \\
 \noalign{\vspace{2mm}}
