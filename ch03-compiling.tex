@@ -47,7 +47,7 @@ universe.
 
 \begin{code}
   open import Relation.Nullary using (Dec)
-  open import Relation.Binary.PropositionalEquality using ( ==)
+  open import Relation.Binary.PropositionalEquality using (_==_)
 
   eqDecU : (u v : U) -> Dec (u == v)
   -- body omitted
@@ -86,6 +86,14 @@ the modelled language.
 
 These two short bits of code make up for the complete definition of the expressions
 of our first high-level language.
+
+\subsection{Code}
+
+\subsection{Compiler}
+
+\subsection{Execution}
+
+\subsection{Correctness}
 
 \section{Adding exceptions, GMH-style}
 
