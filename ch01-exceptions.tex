@@ -2,14 +2,17 @@
 
 \section{Purpose}
 
-Blah blah blah blah. Lots of fun, as described in \cite{swierstra:thesis}.
+Blah blah blah blah. Lots of fun, as described in \cite{swierstra:thesis}. Some sample code.
+We define the exception semantics as follows.
 
-Some sample code:
 \begin{code}
 data Nat : forall (a : Set) (x : a) -> a -> a -> Set where
   zero : forall {x} -> Nat x x  -- zero constructor
   suc : forall {x} -> Nat x x -> Nat x x  -- successor
 \end{code}
+
+\noindent We can see that in this piece of code, we have three new data types
+blah blah predicates logic blah blah curry howard.
 
 \section{History}
 
