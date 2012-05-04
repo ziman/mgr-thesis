@@ -4,6 +4,13 @@
 
 Blah blah blah blah. Lots of fun, as described in \cite{swierstra:thesis}.
 
+Some sample code:
+\begin{code}
+data Nat : forall (a : Set) (x : a) -> a -> a -> Set where
+  zero : forall {x} -> Nat x x  -- zero constructor
+  suc : forall {x} -> Nat x x -> Nat x x  -- successor
+\end{code}
+
 \section{History}
 
 \section{Theoretical consequences}

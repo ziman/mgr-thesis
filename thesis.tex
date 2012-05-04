@@ -49,6 +49,43 @@
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing,patterns}
 
+\usepackage{listings}
+\lstloadlanguages{Haskell}
+\lstnewenvironment{code}
+    {\lstset{}%
+      \csname lst@SetFirstLabel\endcsname}
+    {\csname lst@SaveFirstLabel\endcsname}
+    \lstset{
+      comment=[l]--,
+      basicstyle=\small\sffamily,
+      keywordstyle=\bf\sffamily,
+      commentstyle=\color{gray}\it\rmfamily,
+      columns=fullflexible,
+      basewidth={0.5em,0.45em},
+      morekeywords={data,where},
+      literate=
+      	{+}{{$+$}}1
+      	{/}{{$/$}}1
+      	{*}{{$*$}}1
+      	{=}{{$=$}}1
+        {>}{{$>$}}1
+        {<}{{$<$}}1
+        {\\}{{$\lambda$}}1
+        {\\\\}{{\char`\\\char`\\}}1
+       	{->}{{$\rightarrow\:$}}2
+       	{>=}{{$\geq$}}2
+       	{<-}{{$\leftarrow$}}2
+        {<=}{{$\leq$}}2
+        {=>}{{$\Rightarrow$}}2 
+        {\ .}{{$\circ$}}2
+        {\ .\ }{{$\circ$}}2
+        {>>}{{>>}}2
+        {>>=}{{>>=}}2
+        {|}{{$\mid$}}1
+        {Nat}{{$\mathbb{N}\:$}}1
+        {forall}{{$\forall\:$}}1
+    }
+
 %\usepackage{minion}
 %\renewcommand{\scdefault}{ssc}
 %\newfont{\chapnum}{eurb10 scaled 10000}
