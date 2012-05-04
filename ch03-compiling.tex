@@ -8,15 +8,23 @@ diverge a bit, in details at first, in parts of the design later.
 
 \section{A simple exceptionless language}
 
+The high-level languages in this thesis will all be languages of simple, typed
+expressions.
+
+Our first language is just a language of natural numbers and addition, even
+without exceptions. We will implement this language to build the auxiliary
+ecosystem of the compiler, the skeleton of our development.
+
 \subsection{Type universe}
 
 The first thing we will introduce is the type universe representing the set of
-types of expressions of our language. We will index our types with it (most
-notably the expression type, denoting what the type of the expression in our
-small language is), and while we could use Agda types directly for indexing,
-with an explicit universe, we get decidable equality of types and all datatypes
-conveniently in \ident{Set}. We could parametrize our modules with the
-universe but let us just define a simple, fixed one for the sake of simplicity.
+types of expressions of the high-level language. We will index our types with
+it (most notably the expression type, denoting what the type of the expression
+in our small language is), and while we could use Agda types directly for
+indexing, with an explicit universe, we get decidable equality of types and all
+datatypes conveniently in \ident{Set}. We could parametrize our modules with
+the universe but let us just define a simple, fixed one for the sake of
+simplicity.
 
 \begin{code}
   data U : Set where
@@ -34,7 +42,8 @@ language.
   el (s => t) = el s -> el t
 \end{code}
 
-\noindent And, as announced, equality is decidable on elements of the universe.
+\noindent And, as announced, equality is decidable on the elements of the
+universe.
 
 \begin{code}
   open import Relation.Nullary using (Dec)
@@ -48,6 +57,35 @@ language.
 uninteresting case analysis.
 
 \subsection{Expressions}
+
+The core of the language we are going to model consists of its expressions, of
+course. For now, we will support nothing more than (numeric) literals and addition.
+However, for further extensibility, we separate the type of binary operators.
+
+The type of binary operators is indexed by the types of the two values that
+the operator accepts as arguments; the third index represents the type of
+the result of application of the operator on the two values.
+
+\begin{code}
+  data Op : U -> U -> U -> Set where
+    Plus : Op nat nat nat
+\end{code}
+
+\noindent Now we can define the expressions: literals and binary operators.
+Note that we index the datatype with elements of the universe \ident{U} so that
+the Agda type of an expression also incorporates the type of the expression in
+the modelled language.
+
+\begin{code}
+  data Exp : U -> Set where
+    -- Literals
+    Lit : forall {u} -> el u -> Exp u
+    -- Binary operators
+    Bin : forall {u v w} -> Bin u v w -> Exp u -> Exp v -> Exp w
+\end{code}
+
+These two short bits of code make up for the complete definition of the expressions
+of our first high-level language.
 
 \section{Adding exceptions, GMH-style}
 
