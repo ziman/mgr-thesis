@@ -1,8 +1,53 @@
 \chapter{Compiling exceptions}
 
-\section{Core principles}
+The basic approach to compiling exceptions was shown in \cite{gmh:exceptions}.
+This article provides excellent insight and inspiration how such code can be written
+in a language such as Haskell.
+However, peculiarities of programming with dependent types will make us
+diverge a bit, in details at first, in parts of the design later.
 
 \section{A simple exceptionless language}
+
+\subsection{Type universe}
+
+The first thing we will introduce is the type universe representing the set of
+types of expressions of our language. We will index our types with it (most
+notably the expression type, denoting what the type of the expression in our
+small language is), and while we could use Agda types directly for indexing,
+with an explicit universe, we get decidable equality of types and all datatypes
+conveniently in \ident{Set}. We could parametrize our modules with the
+universe but let us just define a simple, fixed one for the sake of simplicity.
+
+\begin{code}
+  data U : Set where
+    nat : U
+    _=>_ : U -> U -> U
+\end{code}
+
+\noindent We will also need the interpretation function that maps types of our
+simple language to Agda types so that we can use Agda values in the modelled
+language.
+
+\begin{code}
+  el : U -> Set
+  el nat = Nat
+  el (s => t) = el s -> el t
+\end{code}
+
+\noindent And, as announced, equality is decidable on elements of the universe.
+
+\begin{code}
+  open import Relation.Nullary using (Dec)
+  open import Relation.Binary.PropositionalEquality using ( ==)
+
+  eqDecU : (u v : U) -> Dec (u == v)
+  -- body omitted
+\end{code}
+
+\noindent We omit the body of \ident{eqDecU} because it's just an ordinary
+uninteresting case analysis.
+
+\subsection{Expressions}
 
 \section{Adding exceptions, GMH-style}
 

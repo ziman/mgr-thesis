@@ -60,22 +60,22 @@
       commentstyle=\color{gray}\it\rmfamily,
       columns=fullflexible,
       basewidth={0.5em,0.45em},
-      xleftmargin=2em,
-      morekeywords={data,where},
+%      xleftmargin=1em,
+      morekeywords={data,where,open,import,let,with,module,using},
       literate=
       	{+}{{$+$}}1
       	{/}{{$/$}}1
       	{*}{{$*$}}1
-      	{=}{{$=$}}1
+      	{=}{{$=\;$}}1
         {>}{{$>$}}1
         {<}{{$<$}}1
         {\\}{{$\lambda$}}1
         {\\\\}{{\char`\\\char`\\}}1
-       	{->}{{$\rightarrow\:$}}2
+       	{->}{{$\rightarrow\;$}}2
        	{>=}{{$\geq$}}2
        	{<-}{{$\leftarrow$}}2
         {<=}{{$\leq$}}2
-        {=>}{{$\Rightarrow$}}2 
+        {=>}{{$\Rightarrow\;$}}2 
         {\ .}{{$\circ$}}2
         {\ .\ }{{$\circ$}}2
         {>>}{{>>}}2
@@ -83,6 +83,8 @@
         {|}{{$\mid$}}1
         {Nat}{{$\mathbb{N}\:$}}1
         {forall}{{$\forall\:$}}1
+		{nil}{{$\varepsilon$}}1
+		{==}{{$\equiv\:$}}1
     }
 
 %\usepackage{minion}
@@ -130,3 +132,6 @@
 \chapter*{#1}
 \addcontentsline{toc}{chapter}{#1}
 }
+
+\newcommand{\ident}[1]{\textsf{#1}}
+
