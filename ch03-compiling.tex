@@ -27,6 +27,7 @@ modules with the universe but let us just define a fixed one for the sake of
 simplicity.
 
 \begin{code}
+  infixr 5 _=>_
   data U : Set where
     nat : U
     _=>_ : U -> U -> U
@@ -106,6 +107,7 @@ at the type of the stack, we can tell how many elements it contains and what
 types they have.
 \begin{code}
   -- open import Data.List
+  infixr 5 _::_
   data List (a : Set) : Set where
     [] : List a
     _::_ : a -> List a -> List a
@@ -113,6 +115,7 @@ types they have.
   Shape : Set
   Shape = List U
 
+  infixr 5 _\scons_
   data Stack : Shape -> Set where
     snil : Stack []
     _\scons_ : forall {u s} -> el u -> Stack s -> Stack (u :: s)
@@ -122,12 +125,12 @@ pushed onto it using the infix constructor \ident{\_\scons\_}.
 
 \subsubsection{Instructions}
 
-At this stage, this machine supports only two instructions: \ident{PUSH}
+At this stage, the machine supports only two instructions: \ident{PUSH}
 and \ident{ADD}.
 \begin{code}
   data Instr : Shape -> Shape -> Set where
     PUSH : forall {u s} -> el u -> Instr s (u :: s)
-    ADD : forall s -> Instr (nat :: nat :: s) (Val nat :: s)
+    ADD : forall s -> Instr (nat :: nat :: s) (nat :: s)
 \end{code}
 The type of instructions is indexed by their action on stack. The first shape
 argument is the required stack shape so that the instruction can be executed;
@@ -159,12 +162,28 @@ module \ident{Data.Star}.
 
 \begin{code}
   -- require import Data.Star
+  infixr 5 _<|_
   data Star {a b : Set} (R : a -> b -> Set) : a -> b -> Set where
     \nil : forall {x} -> Star R x x
     _<|_ : forall {x y z} -> R x y -> Star R y z -> Star R x z
 
   Code : Shape -> Shape -> Set
   Code = Star Instr
+\end{code}
+
+\noindent The type of instruction sequences is indexed in exactly the same
+manner as the type of single instructions: the first index represents the
+acceptable shape of stack before execution of the piece of code; the second
+index represents the shape of stack after its execution.
+
+Let us conclude this section with an utility function for concatenation of
+instruction sequences, which is actually also included in \ident{Data.Star}.
+
+\begin{code}
+  infixr 5 _\app_
+  _\app_ : forall {R x y z} -> Star R x y -> Star R y z -> Star R x z
+  _\app_ \nil ys = ys
+  _\app_ (x <| xs) ys = x <| xs \app ys
 \end{code}
 
 \subsection{Compiler}
