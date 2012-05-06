@@ -186,9 +186,57 @@ instruction sequences, which is actually also included in \ident{Data.Star}.
   _\app_ (x <| xs) ys = x <| xs \app ys
 \end{code}
 
-\subsection{Compiler}
-
 \subsection{Execution}
+
+Now we will describe how the machine executes instructions.
+
+At this stage, the state of the machine is fully described by just its stack. This
+means that there are no other state variables, registers or any additional
+memory.
+
+Let us describe the effects of single instructions on the state of the machine
+(that is, on the stack).
+
+\begin{code}
+  execInstr : forall {s t} -> Instr s t -> Stack s -> Stack t
+  execInstr (PUSH x) st = x \scons st
+  execInstr ADD (x \scons y \scons st) = (x + y) \scons st
+\end{code}
+
+\noindent The above function simply says that
+\begin{itemize}
+  \item the effect of the instruction \ident{PUSH} is pushing the attached
+    value onto the stack. This consistently extends the information contained
+    in the type of \ident{PUSH x}.\footnote{\ident{Instr s (u $::$ s)} -- for
+    some \ident{u} and \ident{s}. This type is interpreted as ,,\ident{PUSH x}
+    pushes some value of type \ident{u} onto the stack''.}
+    What the type does not say (and \ident{execInstr}
+    does) is what value exactly this is.
+  \item the effect of the instruction \ident{ADD} pops two \ident{nat}s from
+    the top of the stack and pushes their sum back.
+\end{itemize}
+
+Note that in this definition, we already reap some benefits of dependently
+typed programming.
+
+First, of course, Agda checks types of the terms behind
+the scenes and the machinery of types we have designed so far ensures that
+in the case for \ident{PUSH x}, pushing the value \ident{x} always yields
+a stack of the desired shape.
+
+Second, in the case for \ident{ADD}, the types ensure that there are always two
+\ident{nat}s on top of the stack and we can safely pattern-match with the
+pattern \ident{x} \scons \ident{y} \scons \ident{st} -- because this match
+will always succeed (and no other patterns for the \ident{ADD} case are needed). 
+
+Thus the above definition complies to the type signatures involved (relatively
+solid hints of correctness) and it is \emph{total} (esp. no pattern match failures),
+while compilers of non-dependently typed languages, like OCaml or Haskell,
+would complain about non-exhaustive patterns here --- there is no way to tell them
+that, for example, we needn't deal with empty stacks when executing \ident{ADD}.
+% TODO: ktory paper tvrdi, ze to je nevyhnutne?
+
+\subsection{Compiler}
 
 \subsection{Correctness}
 
