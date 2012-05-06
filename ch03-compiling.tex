@@ -8,22 +8,22 @@ diverge a bit, in details at first, in parts of the design later.
 
 \section{A simple exceptionless language}
 
-The high-level languages in this thesis will all be languages of simple, typed
+All high-level languages in this thesis will be languages of simple, typed
 expressions.
 
-Our first language is just a language of natural numbers and addition, even
-without exceptions. We will implement this language to build the auxiliary
-ecosystem of the compiler, the skeleton of our development.
+Our first language will feature only natural numbers and addition, not even
+exceptions. We will implement it to build the auxiliary ecosystem of the
+compiler and the skeleton of our development.
 
 \subsection{Type universe}
 
 The first thing we will introduce is the type universe representing the set of
 types of expressions of the high-level language. We will index our types with
-it (most notably the expression type, denoting what the type of the expression
-in our small language is), and while we could use Agda types directly for
-indexing, with an explicit universe, we get decidable equality of types and all
-datatypes conveniently in \ident{Set}. We could parametrize our modules with
-the universe but let us just define a simple, fixed one for the sake of
+values of this type (most notably the type \ident{Exp u} of expressions, to
+indicate what the type of the expression is), and while we could use Agda types
+directly for indexing, with an explicit universe, we get decidable equality of
+types and all datatypes conveniently in \ident{Set}. We could parametrize our
+modules with the universe but let us just define a fixed one for the sake of
 simplicity.
 
 \begin{code}
@@ -32,9 +32,9 @@ simplicity.
     _=>_ : U -> U -> U
 \end{code}
 
-\noindent We will also need the interpretation function that maps types of our
-simple language to Agda types so that we can use Agda values in the modelled
-language.
+\noindent We will also need the interpretation function \ident{el} that maps
+types of our simple language to Agda types so that we can use Agda values in
+the modelled language.
 
 \begin{code}
   el : U -> Set
@@ -42,12 +42,18 @@ language.
   el (s => t) = el s -> el t
 \end{code}
 
-\noindent And, as announced, equality is decidable on the elements of the
+\noindent And, as promised, equality is decidable on the elements of the
 universe.
 
 \begin{code}
-  open import Relation.Nullary using (Dec)
-  open import Relation.Binary.PropositionalEquality using (_==_)
+  -- open import Relation.Nullary using (Dec)
+  data Dec (p : Set) : Set where
+    yes : p -> Dec p
+    no  : ~ p -> Dec p
+
+  -- open import Relation.Binary.PropositionalEquality using (_==_)
+  data _==_ {a : Set} (x : a) : a -> Set where
+    refl : x == x
 
   eqDecU : (u v : U) -> Dec (u == v)
   -- body omitted
@@ -87,7 +93,79 @@ the modelled language.
 These two short bits of code make up for the complete definition of the expressions
 of our first high-level language.
 
-\subsection{Code}
+\subsection{Virtual machine}
+
+We will use a very simple stack machine to run the compiled code.
+
+\subsubsection{Stack}
+
+The stack of
+the machine is just a cons-list of values, indexed by types (elements of
+\ident{U}) of the values pushed on the stack.  This means that just by looking
+at the type of the stack, we can tell how many elements it contains and what
+types they have.
+\begin{code}
+  -- open import Data.List
+  data List (a : Set) : Set where
+    [] : List a
+    _::_ : a -> List a -> List a
+
+  Shape : Set
+  Shape = List U
+
+  data Stack : Shape -> Set where
+    snil : Stack []
+    _\scons_ : forall {u s} -> el u -> Stack s -> Stack (u :: s)
+\end{code}
+\noindent The literal \ident{snil} represents the empty stack; new values are
+pushed onto it using the infix constructor \ident{\_\scons\_}.
+
+\subsubsection{Instructions}
+
+At this stage, this machine supports only two instructions: \ident{PUSH}
+and \ident{ADD}.
+\begin{code}
+  data Instr : Shape -> Shape -> Set where
+    PUSH : forall {u s} -> el u -> Instr s (u :: s)
+    ADD : forall s -> Instr (nat :: nat :: s) (Val nat :: s)
+\end{code}
+The type of instructions is indexed by their action on stack. The first shape
+argument is the required stack shape so that the instruction can be executed;
+the second shape argument is the resulting shape of the stack after the
+instruction has been executed.
+
+For example, the instruction \ident{PUSH} takes any value of the type \ident{el u}
+and pushes it onto a stack having any shape \ident{s}, creating a new
+stack of the shape \ident{u :: s}.
+
+The instruction \ident{ADD} represents popping two natural numbers from the
+stack of any shape with two \ident{nat}s on top of it, (hence
+\ident{nat :: nat :: s})
+and subsequently pushing their sum onto it, resulting in the shape
+\ident{nat :: s}.
+
+\subsubsection{Code}
+
+Finally, code for the stack machine is a sequence of instructions, where
+type indices of subsequent instructions match. For example, if one instruction
+in the sequence produces a stack of the shape \ident{nat :: nat :: s},
+we want the next instruction in the code sequence to accept this shape.
+
+If we regard
+$\midt{Instr} : \midt{Shape} \to \midt{Shape} \to \midt{Set}$
+as a binary relation on \ident{Shape}, then code is the \emph{transitive reflexive closure}
+of \ident{Instr}, which is already included in the Agda standard library as the
+module \ident{Data.Star}.
+
+\begin{code}
+  -- require import Data.Star
+  data Star {a b : Set} (R : a -> b -> Set) : a -> b -> Set where
+    \nil : forall {x} -> Star R x x
+    _<|_ : forall {x y z} -> R x y -> Star R y z -> Star R x z
+
+  Code : Shape -> Shape -> Set
+  Code = Star Instr
+\end{code}
 
 \subsection{Compiler}
 

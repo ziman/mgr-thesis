@@ -47,6 +47,8 @@
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing,patterns}
 
+\newcommand{\scons}{:-:}
+
 \usepackage{listings}
 \lstloadlanguages{Haskell}
 \lstnewenvironment{code}
@@ -63,13 +65,13 @@
 %      xleftmargin=1em,
       morekeywords={data,where,open,import,let,with,module,using},
       literate=
-      	{+}{{$+$}}1
+      	{+}{{$+\:$}}1
       	{/}{{$/$}}1
       	{*}{{$*$}}1
       	{=}{{$=\;$}}1
         {>}{{$>$}}1
         {<}{{$<$}}1
-        {\\}{{$\lambda$}}1
+        {\\lam}{{$\lambda$}}1
         {\\\\}{{\char`\\\char`\\}}1
        	{->}{{$\rightarrow\;$}}2
        	{>=}{{$\geq$}}2
@@ -83,9 +85,11 @@
         {|}{{$\mid$}}1
         {Nat}{{$\mathbb{N}\:$}}1
         {forall}{{$\forall\:$}}1
-		{nil}{{$\varepsilon$}}1
-		{==}{{$\equiv\:$}}1
-		{<|}{{$\lhd\;$}}1
+        {\\scons}{{\scons}}1
+  		  {\\nil}{{$\varepsilon\:$}}1
+	  	  {==}{{$\equiv\:$}}1
+		    {<|}{{$\lhd\;$}}1
+        {~}{{$\neg\:$}}1
     }
 
 %\usepackage{minion}
@@ -135,4 +139,6 @@
 }
 
 \newcommand{\ident}[1]{\textsf{#1}}
+\newcommand{\midt}[1]{\mathsf{#1}}
+%\newcommand{\to}{\rightarrow}
 
