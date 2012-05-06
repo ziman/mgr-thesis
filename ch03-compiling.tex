@@ -207,7 +207,8 @@ instruction sequences, which is actually also included in \ident{Data.Star}.
 
 \subsection{Execution}
 
-Now we will describe how the machine executes instructions.
+Now we will describe how the machine executes instructions, that is,
+the operational semantics of the low-level language.
 
 At this stage, the state of the machine is fully described by just its stack. This
 means that there are no other state variables, registers or any additional
@@ -298,13 +299,18 @@ two values from the stack as its operands and pushes the result back.
 \end{code}
 
 Again, behind the scenes, Agda ensures that all types match and the code
-compiled by this function will not make the stack machine fail. For example,
+compiled by this function will not make the stack machine fail.\footnote{
+To be fair, this is already a property of \ident{Code},
+,,inherited'' by the function \ident{compile} via its return type.
+However, it does constrain possible definitions of the function \ident{compile}.}
+For example,
 there is no way to have the function \ident{compile} output code where
 \ident{ADD} would not have two \ident{nat}s on the top of the
-stack.\footnote{To be precise, this is a property of \ident{Code},
-,,inherited'' by the function \ident{compile} via its return type.}
+stack.
 
 \subsection{Correctness}
+
+% TODO?
 
 \section{Adding exceptions, GMH-style}
 
