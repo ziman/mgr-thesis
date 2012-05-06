@@ -35,7 +35,7 @@ simplicity.
 
 \noindent We will also need the interpretation function \ident{el} that maps
 types of our simple language to Agda types so that we can use Agda values in
-the modelled language.
+the modelled language, talk about its denotational semantics etc.
 
 \begin{code}
   el : U -> Set
@@ -91,8 +91,27 @@ the modelled language.
     Bin : forall {u v w} -> Bin u v w -> Exp u -> Exp v -> Exp w
 \end{code}
 
-These two short bits of code make up for the complete definition of the expressions
-of our first high-level language.
+\subsection{Semantics of expressions}
+
+Our definition of the high-level language would not be complete without giving
+the denotational semantics of its expressions. This is done in the following
+pair of simple functions.
+
+\begin{code}
+  denOp : forall {u v w} -> Op u v w -> el u -> el v -> el w
+  denOp Plus = _+_
+
+  denExp : forall {u} -> Exp u -> el u
+  denExp (Lit x) = x
+  denExp (Bin op l r) = denOp op (denExp l) (denExp r)
+\end{code}
+
+\noindent The separate type of binary operators deserves a separate function
+converting an operator to a binary Agda function of the appropriate type.
+
+Expressions are then turned into Agda values recursively; literals in a trivial
+way, binary-operator expressions using the denotation of the corresponding
+operator.
 
 \subsection{Virtual machine}
 
@@ -254,8 +273,6 @@ contains instructions, then the first instruction is executed and on the
 resulting stack, the rest of code is executed.
 
 \subsection{Compiler}
-
-\subsection{Denotation}
 
 \subsection{Correctness}
 
