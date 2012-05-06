@@ -194,6 +194,8 @@ At this stage, the state of the machine is fully described by just its stack. Th
 means that there are no other state variables, registers or any additional
 memory.
 
+\subsubsection{Instructions}
+
 Let us describe the effects of single instructions on the state of the machine
 (that is, on the stack).
 
@@ -235,6 +237,21 @@ while compilers of non-dependently typed languages, like OCaml or Haskell,
 would complain about non-exhaustive patterns here --- there is no way to tell them
 that, for example, we needn't deal with empty stacks when executing \ident{ADD}.
 % TODO: ktory paper tvrdi, ze to je nevyhnutne?
+
+\subsubsection{Code}
+
+Execution of code is then just a left fold over the sequence of instructions,
+accepting the initial and yielding the resulting state of the machine.
+
+\begin{code}
+  execCode : forall {s t} -> Code s t -> Stack s -> Stack t
+  execCode \nil st = st
+  execCode (i <| is) st = execCode is (execInstr i st)
+\end{code}
+
+\noindent Execution of empty code has no effect on the stack; if the code
+contains instructions, then the first instruction is executed and on the
+resulting stack, the rest of code is executed.
 
 \subsection{Compiler}
 
