@@ -274,6 +274,36 @@ resulting stack, the rest of code is executed.
 
 \subsection{Compiler}
 
+Compiling our simple high-level language for a stack machine is easy. The
+central idea is that execution of an expression of some type is equivalent to
+pushing its value onto the stack. Literal values are then pushed on the stack
+directly; binary-operator expressions first evaluate both operands, effectively
+putting their values on the top of the stack, and then execute the appropriate
+instruction, determined by the operator. This instruction pops the top
+two values from the stack as its operands and pushes the result back.
+
+\begin{code}
+  -- Syntactic sugar, promote an Instr to singleton Code
+  [[_\;]] : forall {s t} -> Instr s t -> Code s t
+  [[_\;]] i = i <| \nil
+
+  -- Determine what instruction performs the required calculation
+  opInstr : forall {u v w} -> Op u v w -> forall {s} -> Instr (u :: v :: s) (w :: s)
+  opInstr Plus = ADD
+
+  -- Turn the expression into code
+  compile : forall {u} -> Exp u -> forall {s} -> Code s (u :: s)
+  compile (Lit x) = [[ PUSH x ]]
+  compile (Bin op l r) = compile r \app compile r \app [[ opInstr op ]]
+\end{code}
+
+Again, behind the scenes, Agda ensures that all types match and the code
+compiled by this function will not make the stack machine fail. For example,
+there is no way to have the function \ident{compile} output code where
+\ident{ADD} would not have two \ident{nat}s on the top of the
+stack.\footnote{To be precise, this is a property of \ident{Code},
+,,inherited'' by the function \ident{compile} via its return type.}
+
 \subsection{Correctness}
 
 \section{Adding exceptions, GMH-style}
