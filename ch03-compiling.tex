@@ -351,10 +351,10 @@ d} has the same effect as first executing \ident{c} and then executing
     -> execCode (c \app d) st == execCode d (execCode c st)
 \end{code}
 
-\noindent We will split the lemma by the parameter \ident{c} in two cases:
-either \ident{c} is empty or it consists of an instruction and the rest of
-code. The first case is trivial by substituting $\varepsilon$ and comparing the
-normal forms.
+\noindent We will proceed by induction on the parameter \ident{c}, which yields
+two cases: either \ident{c} is empty or it consists of an instruction and the
+rest of code. The first case is trivial by substituting $\varepsilon$ and
+comparing the normal forms.
 
 \begin{code}
   compile\-distr \nil d = refl
@@ -388,10 +388,9 @@ equality.
 The first proof is just comparison of normal forms, as indicated by
 \ident{refl}.
 
-The second proof uses \ident{compile-distr} recursively to break the execution
-of composite code into two stages. This is not circular reasoning because the
-first argument of \ident{compile-distr} is structurally smaller in this
-application.
+The second proof uses \ident{compile-distr} recursively as an induction
+hypothesis to break the execution of composite code into two stages: first
+executing \ident{is}, then executing \ident{d}.
 
 The third proof is just \ident{refl} again and we use it to restructure the
 term to the desired final form.
@@ -489,13 +488,14 @@ in a common context.
 \noindent This function is used with recursive applications of the theorem
 \ident{correctness} to both operands of the binary operator. This allows us
 to rewrite the subterms in the form \ident{execCode (compile operand) state}
-to their equivalents in the form \ident{denExp operand \scons state}.
+to their equivalents in the form \ident{denExp operand \scons state}. These
+two recursive applications are actually inductive hypotheses.
 
 This is actually what the theorem of correctness -- the one that we are
 currently proving -- states. However, it is not a circular proof because
 operands are structurally smaller than the whole binary-operator expression
 and, by the nature of induction, we assume that the correctness theorem holds
-for these smaller cases.
+for these smaller cases, as stated by .
 
 The two steps using \ident{exec-distr} and \ident{correctness} for each operand
 actually correspond to ,,accelerated execution'' of these pieces of code -- we
@@ -525,5 +525,7 @@ cannot happen \emph{and the compiler knows it}.} pattern cases in a completely
 safe way, without triggering compiler warnings.
 
 \section{Adding exceptions, GMH-style}
+
+
 
 \section{Termination}
