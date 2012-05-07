@@ -390,10 +390,46 @@ The first proof is just comparison of normal forms, as indicated by
 
 The second proof uses \ident{compile-distr} recursively to break the execution
 of composite code into two stages. This is not circular reasoning because the
-first argument of \ident{compile-distr} is structurally smaller in this call.
+first argument of \ident{compile-distr} is structurally smaller in this
+application.
 
 The third proof is just \ident{refl} again and we use it to restructure the
 term to the desired final form.
+
+\subsubsection{Alternative proof of distributivity}
+
+% TODO: which version?
+Beginning with Agda 2.2.4, we can shorten our previous proof considerably
+by using the \ident{rewrite} syntax:
+
+\begin{code}
+  compile\-distr : forall {s t u} {st : Stack s}
+    -> (c : Code s t) -> (d : Code t u)
+    -> execCode (c \app d) st == execCode d (execCode c st)
+  compile\-distr \nil d = refl
+  compile\-distr (i <| is) d rewrite compile\-distr is d (execInstr i st) = refl
+\end{code}
+
+The \ident{rewrite} construct expands to a specific pattern-matching mechanism
+behind the scenes, effectively rewriting subterms of the goal using the provided
+equality (which is the recursive application of \ident{compile-distr} here). The
+resulting goal is then easily solvable by \ident{refl}.
+
+\subsubsection{Main correctness theorem}
+
+This is the central result that binds together everything we have defined so
+far in a single proof of correctness.
+
+This proof formalizes the idea we informally mentioned when we started to write
+the compiler: that executing the compiled code for an expression should be
+equivalent to pushing the value of the expression (as given by the denotational
+semantics) onto the stack.
+
+\begin{code}
+  correctness : forall {u s}
+    -> (e : Exp u) (st : Stack s)
+    -> exec (compile e) st == denExp e \scons st
+\end{code}
 
 \section{Adding exceptions, GMH-style}
 
