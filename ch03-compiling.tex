@@ -399,8 +399,8 @@ term to the desired final form.
 \subsubsection{Alternative proof of distributivity}
 
 % TODO: which version?
-Beginning with Agda 2.2.4, we can shorten our previous proof considerably
-by using the \ident{rewrite} syntax:
+Starting from Agda 2.2.4, we can shorten our previous proof considerably
+by using the \ident{rewrite} keyword:
 
 \begin{code}
   compile\-distr : forall {s t u} {st : Stack s}
@@ -410,26 +410,118 @@ by using the \ident{rewrite} syntax:
   compile\-distr (i <| is) d rewrite compile\-distr is d (execInstr i st) = refl
 \end{code}
 
-The \ident{rewrite} construct expands to a specific pattern-matching mechanism
-behind the scenes, effectively rewriting subterms of the goal using the provided
-equality (which is the recursive application of \ident{compile-distr} here). The
-resulting goal is then easily solvable by \ident{refl}.
+\noindent The \ident{rewrite} construct expands to a specific pattern-matching
+mechanism behind the scenes, effectively rewriting subterms of the goal using
+the provided equality (which is the recursive application of
+\ident{compile-distr} here). The resulting goal is then easily solvable by
+\ident{refl}.
 
 \subsubsection{Main correctness theorem}
 
-This is the central result that binds together everything we have defined so
-far in a single proof of correctness.
+This is the central result of this stage that relates together everything we
+have defined so far in a single proof of correctness.
 
-This proof formalizes the idea we informally mentioned when we started to write
-the compiler: that executing the compiled code for an expression should be
+This proof formalizes the idea that we informally mentioned when we started to
+write the compiler: executing the compiled code for an expression should be
 equivalent to pushing the value of the expression (as given by the denotational
 semantics) onto the stack.
 
 \begin{code}
   correctness : forall {u s}
     -> (e : Exp u) (st : Stack s)
-    -> exec (compile e) st == denExp e \scons st
+    -> execCode (compile e) st == denExp e \scons st
 \end{code}
+
+\noindent We will proceed by induction on the expression \ident{e}. The literal
+case is trivial and solvable with \ident{refl}.
+
+\begin{code}
+  correctness (Lit x) _ = refl
+\end{code}
+
+\noindent The binary-operator case is a bit more involved and we will prove it
+using equational reasoning, again.
+
+\begin{code}
+  correctness (Binop op l r) st = begin
+    execCode (compile (Binop op l r)) st
+      ==< refl \>
+    execCode (compile r \app compile l \app [[ opInstr op ]]) st
+      ==< compile\-distr (compile r) _ _ \>
+    execCode (compile l \app [[ opInstr op ]]) (execCode (compile r) st)
+      ==< compile\-distr (compile l) _ _ \>
+    execCode [[ opInstr op ]] (execCode (compile l) (execCode (compile r) st))
+      ==< cong (\lam z -> execCode [[ opInstr op ]] (execCode (compile l) z) (correctness r st) \>
+    execCode [[ opInstr op ]] (execCode (compile l) (denExp r \scons st))
+      ==< cong (\lam z -> execCode [[ opInstr op ]] z) (correctness l st) \>
+    execCode [[ opInstr op ]] (denExp l \scons denExp r \scons st)
+      ==< refl \>
+    execInstr (opInstr op) (denExp l \scons denExp r \scons st)
+      ==< op\-correct op \>
+    denOp op (denExp l) (denExp r) \scons st
+      ==< refl \>
+    denExp (Binop op l r) \scons st
+    \qed
+\end{code}
+
+\noindent The first \ident{refl} is used to expand the definition of compile
+for the \ident{Binop} case so that human readers can see what's going on more
+easily.
+
+Then we make two appeals to the lemma \ident{compile-distr}. Each usage of this
+lemma removes a part of the code sequence (exactly corresponding to an operand
+of the binary operator) and transforms it to the effect that this piece of code
+has on the stack until only a single instruction is left in the code sequence.
+Note that we omit two of three arguments of \ident{compile-distr} in both
+applications. This omission improves readability of the proof and Agda can
+infer these terms, anyway.
+
+The following two rather cryptic steps use the function \ident{cong} that allows
+us to prove equality of two terms, given a proof of equality of their subterms
+in a common context.
+
+\begin{code}
+  cong : forall {a b : Set} {x y : a}
+    -> (f : a -> b)
+    -> x == y -> f x == f y
+\end{code}
+
+\noindent This function is used with recursive applications of the theorem
+\ident{correctness} to both operands of the binary operator. This allows us
+to rewrite the subterms in the form \ident{execCode (compile operand) state}
+to their equivalents in the form \ident{denExp operand \scons state}.
+
+This is actually what the theorem of correctness -- the one that we are
+currently proving -- states. However, it is not a circular proof because
+operands are structurally smaller than the whole binary-operator expression
+and, by the nature of induction, we assume that the correctness theorem holds
+for these smaller cases.
+
+The two steps using \ident{exec-distr} and \ident{correctness} for each operand
+actually correspond to ,,accelerated execution'' of these pieces of code -- we
+do not execute the instructions; instead, we rely on the induction hypothesis
+to simultaneously remove the code corresponding to the operand and push its
+denotation onto the stack.
+
+Finally, we use the lemma \ident{op-correct} to show that executing the
+leftover instruction is exactly what is left to do to get the desired value
+on top of the stack.
+
+\subsection{Remarks}
+
+Totality of Agda functions give us a proof of termination and the above
+correctness proof gives us a guarantee that the compiler calculates the correct
+code, given the defined semantics.
+
+This is a very strong guarantee and it did not cost us that much -- the code we
+have written looks much like the equivalent in any other functional language.
+However, we have been maintaining much stronger invariants along the way, being
+able to, for example, afford including only \emph{relevant}\footnote{In this
+  context, by \emph{relevant} we mean the cases that arise during normal and
+  expected operation of the program; for example, we needn't specify what to do
+when the instruction \ident{ADD} gets an empty stack -- just because this
+cannot happen \emph{and the compiler knows it}.} pattern cases in a completely
+safe way, without triggering compiler warnings.
 
 \section{Adding exceptions, GMH-style}
 
