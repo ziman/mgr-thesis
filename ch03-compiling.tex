@@ -295,7 +295,7 @@ two values from the stack as its operands and pushes the result back.
   -- Turn the expression into code
   compile : forall {u} -> Exp u -> forall {s} -> Code s (u :: s)
   compile (Lit x) = [[ PUSH x ]]
-  compile (Bin op l r) = compile r \app compile r \app [[ opInstr op ]]
+  compile (Bin op l r) = compile r \app compile l \app [[ opInstr op ]]
 \end{code}
 
 Again, behind the scenes, Agda ensures that all types match and the code
@@ -310,7 +310,90 @@ stack.
 
 \subsection{Correctness}
 
-% TODO?
+This is the only place in this thesis where we will include the complete proof
+of correctness. All proofs are of course contained in the attached Agda source
+code.
+
+\subsubsection{Operator lemma}
+
+There are two auxiliary lemmas that we will need to prove our main result. The
+first one of them is called \ident{op-correct} and it says that for any binary
+operator, the instruction picked by the compiler indeed does what the
+denotation of the binary operator says.
+
+To be more specific, for any operator \ident{op} and two values \ident{x} and
+\ident{y} of appropriate types, executing \ident{opInstr op} with the two
+values on top of the stack results in having the value \ident{denOp op x y}
+on the top of the stack afterwards.
+
+\begin{code}
+  op\-correct : forall {s u v w} {st : Stack s} {x : el u} {y : el w}
+    -> (op : Op u v w)
+    -> execInstr (opInstr op) (x \scons y \scons st) == denOp op x y \scons st
+  op\-correct Plus = refl
+\end{code}
+
+In the case for \ident{Plus}, Agda substitutes the term \ident{Plus} in the
+appropriate places, normalizes the resulting equality (expanding function
+definitions etc.) and the proof becomes a trivial observation of equality
+of normal forms, which is indicated by \ident{refl}.
+
+\subsubsection{Distributivity lemma}
+
+The other lemma that we will need says that execution of code distributes over
+concatenation of code. In other words, executing the code \ident{c $\lhd\!\lhd$
+d} has the same effect as first executing \ident{c} and then executing
+\ident{d} on the resulting stack.
+
+\begin{code}
+  compile\-distr : forall {s t u} {st : Stack s}
+    -> (c : Code s t) -> (d : Code t u)
+    -> execCode (c \app d) st == execCode d (execCode c st)
+\end{code}
+
+We will split the lemma by the parameter \ident{c} in two cases: either
+\ident{c} is empty or it consists of an instruction and the rest of code. The
+first case is trivial by substituting $\varepsilon$ and comparing the normal
+forms.
+
+\begin{code}
+  compile\-distr \nil d = refl
+\end{code}
+
+\noindent For writing the proof for the second case, we will use the wonderful
+way supported by the Agda module $\midt{\equiv}$-\ident{Reasoning}\footnote{Actually,
+there are also other similar modules, like \ident{$\le$-Reasoning} etc.}, which
+lets us write proofs in the equational-reasoning style; just the way we would
+do it with pen and paper.
+
+\begin{code}
+  compile\-distr (i <| is) d = begin
+    execCode (i <| is \app d) st
+      ==< refl \>
+    execCode (is \app d) (execInstr i st)
+      ==< compile\-distr is d \>
+    execCode d (execCode is (execInstr i st))
+      ==< refl \>
+    execCode d (execCode c st)
+    \qed
+\end{code}
+
+\noindent The proof begins with the word \ident{begin} and continues with the
+first line, which is usually exactly the left-hand side of the equality we aim
+to prove.  The second line contains the proof that the first line is equal to
+the third line and so on -- by alternating terms and equality proofs, we can
+gradually rewrite the left-hand term to the right-hand term of the desired
+equality.
+
+The first proof is just comparison of normal forms, as indicated by
+\ident{refl}.
+
+The second proof uses \ident{compile-distr} recursively to break the execution
+of composite code into two stages. This is not circular reasoning because the
+first argument of \ident{compile-distr} is structurally smaller in this call.
+
+The third proof is just \ident{refl} again and we use it to restructure the
+term to the desired final form.
 
 \section{Adding exceptions, GMH-style}
 
