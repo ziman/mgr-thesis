@@ -518,8 +518,9 @@ have written looks much like the equivalent in any other functional language.
 However, we have been maintaining much stronger invariants along the way, being
 able to, for example, afford including only \emph{relevant}\footnote{In this
   context, by \emph{relevant} we mean the cases that arise during normal and
-  expected operation of the program; for example, we needn't specify what to do
-when the instruction \ident{ADD} gets an empty stack -- just because this
+  expected operation of the program; for example, as already mentioned, we
+needn't specify what to do when the instruction \ident{ADD} gets an
+inappropriate number or types of elements on the stack -- just because this
 cannot happen \emph{and the compiler knows it}.} pattern cases in a completely
 safe way, without triggering compiler warnings.
 
