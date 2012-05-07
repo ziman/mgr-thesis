@@ -491,12 +491,6 @@ to rewrite the subterms in the form \ident{execCode (compile operand) state}
 to their equivalents in the form \ident{denExp operand \scons state}. These
 two recursive applications are actually inductive hypotheses.
 
-This is actually what the theorem of correctness -- the one that we are
-currently proving -- states. However, it is not a circular proof because
-operands are structurally smaller than the whole binary-operator expression
-and, by the nature of induction, we assume that the correctness theorem holds
-for these smaller cases, as stated by .
-
 The two steps using \ident{exec-distr} and \ident{correctness} for each operand
 actually correspond to ,,accelerated execution'' of these pieces of code -- we
 do not execute the instructions; instead, we rely on the induction hypothesis
