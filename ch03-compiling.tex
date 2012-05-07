@@ -15,6 +15,8 @@ Our first language will feature only natural numbers and addition, not even
 exceptions. We will implement it to build the auxiliary ecosystem of the
 compiler and the skeleton of our development.
 
+% branch: no-exceptions
+
 \subsection{Type universe}
 
 The first thing we will introduce is the type universe representing the set of
@@ -298,15 +300,13 @@ two values from the stack as its operands and pushes the result back.
   compile (Bin op l r) = compile r \app compile l \app [[ opInstr op ]]
 \end{code}
 
-Again, behind the scenes, Agda ensures that all types match and the code
-compiled by this function will not make the stack machine fail.\footnote{
-To be fair, this is already a property of \ident{Code},
-,,inherited'' by the function \ident{compile} via its return type.
-However, it does constrain possible definitions of the function \ident{compile}.}
-For example,
-there is no way to have the function \ident{compile} output code where
-\ident{ADD} would not have two \ident{nat}s on the top of the
-stack.
+\noindent Again, behind the scenes, Agda ensures that all types match and the
+code compiled by this function will not make the stack machine fail.\footnote{
+  To be fair, this is already a property of \ident{Code}, ,,inherited'' by the
+  function \ident{compile} via its return type.  However, it does constrain
+possible definitions of the function \ident{compile}.} For example, there is no
+way to have the function \ident{compile} output code where \ident{ADD} would
+not have two \ident{nat}s on the top of the stack.
 
 \subsection{Correctness}
 
@@ -333,10 +333,10 @@ on the top of the stack afterwards.
   op\-correct Plus = refl
 \end{code}
 
-In the case for \ident{Plus}, Agda substitutes the term \ident{Plus} in the
-appropriate places, normalizes the resulting equality (expanding function
-definitions etc.) and the proof becomes a trivial observation of equality
-of normal forms, which is indicated by \ident{refl}.
+\noindent In the case for \ident{Plus}, Agda substitutes the term \ident{Plus}
+in the appropriate places, normalizes the resulting equality (expanding
+function definitions etc.) and the proof becomes a trivial observation of
+equality of normal forms, which is indicated by \ident{refl}.
 
 \subsubsection{Distributivity lemma}
 
@@ -351,10 +351,10 @@ d} has the same effect as first executing \ident{c} and then executing
     -> execCode (c \app d) st == execCode d (execCode c st)
 \end{code}
 
-We will split the lemma by the parameter \ident{c} in two cases: either
-\ident{c} is empty or it consists of an instruction and the rest of code. The
-first case is trivial by substituting $\varepsilon$ and comparing the normal
-forms.
+\noindent We will split the lemma by the parameter \ident{c} in two cases:
+either \ident{c} is empty or it consists of an instruction and the rest of
+code. The first case is trivial by substituting $\varepsilon$ and comparing the
+normal forms.
 
 \begin{code}
   compile\-distr \nil d = refl
