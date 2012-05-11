@@ -63,7 +63,7 @@
       columns=fullflexible,
       basewidth={0.5em,0.45em},
 %      xleftmargin=1em,
-      morekeywords={data,where,open,import,let,with,module,using,infixr},
+      morekeywords={data,where,open,import,let,with,module,using,infixr,rewrite},
       literate=
       	{+}{{$+\;$}}1
       	{/}{{$/$}}1
@@ -98,7 +98,10 @@
         {\\qed}{{$\qed$}}1
         {==<}{{$\equiv\!\!\langle\;$}}1
         {\\>}{{$\rangle$}}1
+        {\\_}{{\!\!\_}}1
     }
+   
+\newcommand{\bin}[1]{\_#1\!\!\_}
 
 %\usepackage{minion}
 %\renewcommand{\scdefault}{ssc}

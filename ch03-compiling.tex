@@ -29,10 +29,10 @@ modules with the universe but let us just define a fixed one for the sake of
 simplicity.
 
 \begin{code}
-  infixr 5 _=>_
+  infixr 5 _=>\_
   data U : Set where
     nat : U
-    _=>_ : U -> U -> U
+    _=>\_ : U -> U -> U
 \end{code}
 
 \noindent We will also need the interpretation function \ident{el} that maps
@@ -54,8 +54,8 @@ universe.
     yes : p -> Dec p
     no  : ~ p -> Dec p
 
-  -- open import Relation.Binary.PropositionalEquality using (_==_)
-  data _==_ {a : Set} (x : a) : a -> Set where
+  -- open import Relation.Binary.PropositionalEquality using (_==\_)
+  data _==\_ {a : Set} (x : a) : a -> Set where
     refl : x == x
 
   eqDecU : (u v : U) -> Dec (u == v)
@@ -101,7 +101,7 @@ pair of simple functions.
 
 \begin{code}
   denOp : forall {u v w} -> Op u v w -> el u -> el v -> el w
-  denOp Plus = _+_
+  denOp Plus = _+\_
 
   denExp : forall {u} -> Exp u -> el u
   denExp (Lit x) = x
@@ -136,13 +136,13 @@ types they have.
   Shape : Set
   Shape = List U
 
-  infixr 5 _\scons_
+  infixr 5 _\scons\_
   data Stack : Shape -> Set where
     snil : Stack []
-    _\scons_ : forall {u s} -> el u -> Stack s -> Stack (u :: s)
+    _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (u :: s)
 \end{code}
 \noindent The literal \ident{snil} represents the empty stack; new values are
-pushed onto it using the infix constructor \ident{\_\scons\_}.
+pushed onto it using the infix constructor \ident{\bin{\scons}}.
 
 \subsubsection{Instructions}
 
@@ -183,10 +183,10 @@ module \ident{Data.Star}.
 
 \begin{code}
   -- require import Data.Star
-  infixr 5 _<|_
+  infixr 5 _<|\_
   data Star {a b : Set} (R : a -> b -> Set) : a -> b -> Set where
     \nil : forall {x} -> Star R x x
-    _<|_ : forall {x y z} -> R x y -> Star R y z -> Star R x z
+    _<|\_ : forall {x y z} -> R x y -> Star R y z -> Star R x z
 
   Code : Shape -> Shape -> Set
   Code = Star Instr
@@ -201,10 +201,10 @@ Let us conclude this section with an utility function for concatenation of
 instruction sequences, which is actually also included in \ident{Data.Star}.
 
 \begin{code}
-  infixr 5 _\app_
-  _\app_ : forall {R x y z} -> Star R x y -> Star R y z -> Star R x z
-  _\app_ \nil ys = ys
-  _\app_ (x <| xs) ys = x <| xs \app ys
+  infixr 5 _\app\_
+  _\app\_ : forall {R x y z} -> Star R x y -> Star R y z -> Star R x z
+  \nil \app\ ys = ys
+  (x <| xs) \app ys = x <| xs \app ys
 \end{code}
 
 \subsection{Execution}
@@ -288,7 +288,7 @@ two values from the stack as its operands and pushes the result back.
 \begin{code}
   -- Syntactic sugar, promote an Instr to singleton Code
   [[_\;]] : forall {s t} -> Instr s t -> Code s t
-  [[_\;]] i = i <| \nil
+  [[i\;]] = i <| \nil
 
   -- Determine what instruction performs the required calculation
   opInstr : forall {u v w} -> Op u v w -> forall {s} -> Instr (u :: v :: s) (w :: s)
