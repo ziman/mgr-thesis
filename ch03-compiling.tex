@@ -554,16 +554,26 @@ add the \ident{Throw} expression and the \ident{Catch} construct.
     Lit : forall {u} -> el u -> Exp u
     Bin : forall {u v w} -> Op u v w -> Exp u -> Exp v -> Exp w
     Throw : forall {u} -> Exp u
-    Catch : forall {u} -> (code : Exp u) -> (hnd : Exp u) -> Exp u
+    Catch : forall {u} -> (val : Exp u) -> (hnd : Exp u) -> Exp u
 \end{code}
 
 \noindent The type of expressions gets two new constructors.
 \begin{itemize}
 
-  \item The first one is \ident{Throw}, which is similar to the literal
+  \item One of them is \ident{Throw}, which is similar to the literal
     constructor \ident{Lit}, except that no value of the type \ident{el u} is
     needed: a throw-expression can promise to yield a value of any type without
     actually having it.
+
+  \item The other is \ident{Catch}. This constructor takes two expressions of
+    the same type, regular value and an exception handler, representing a
+    catch-block. If no exception gets thrown in the value, the whole
+    catch-block is equivalent to the regular value. Otherwise, it is equivalent
+    to the handler value.\footnote{Especially, if both values throw exceptions,
+    the catch-block propagates the exception thrown in the handler.}
+    \footnote{Hence, this constructor is similar to the combinator
+    \ident{mplus} in Haskell, which combines two possibly failing computations
+    in exactly the same way.}
 
 \end{itemize}
 
