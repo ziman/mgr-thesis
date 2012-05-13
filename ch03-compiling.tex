@@ -518,8 +518,43 @@ inappropriate number or types of elements on the stack -- just because this
 cannot happen \emph{and the compiler knows it}.} pattern cases in a completely
 safe way, without triggering compiler warnings.
 
+Implementation-wise, the above (sub-)sections form separate modules in the
+accompanying Agda code and these modules define the overall structure of our
+development. In the following sections (and chapters), we will develop
+the code further by extending and improving particular modules.
+
 \section{Adding exceptions, GMH-style}
 
-Approach like in \cite{gmh:exceptions} and \cite{nipkow}.
+Now we are about to add exceptions to our language(s). The first approach is to
+examine ways found in the literature.
+
+Code in this section is modelled after the paper \cite{gmh:exceptions} by
+Graham Hutton and Joel Wright. The authors used Haskell in their development.
+This approach was later formalized by Tobias Nipkow in \cite{nipkow} in
+Isabelle, an interactive theorem prover/proof assistant, in exactly the same
+way; the development even uses the same lemmas and their numbering as the
+paper.
+
+In contrast with the original paper and Tobias Nipkow's formalization thereof,
+our aim is to create a dependently typed program, which means we don't want to
+copy the code as is; instead, we will adapt it for the dependently typed
+setting and see how it works out.
+
+\subsection{Expressions}
+
+The first module we need to extend when adding exceptions is the one containing
+the definition of expressions of the high-level language. Namely, we need to
+add the \ident{Throw} expression and the \ident{Catch} construct.
+
+\begin{code}
+  data Op : U -> U -> U -> Set where
+    Plus : Op nat nat nat
+
+  data Exp : U -> Set where
+    Lit : forall {u} -> el u -> Exp u
+    Bin : forall {u v w} -> Op u v w -> Exp u -> Exp v -> Exp w
+    Throw : forall {u} -> Exp u
+    Catch : forall {u} -> (code : Exp u) -> (hnd : Exp u) -> Exp u
+\end{code}
 
 \section{Termination}
