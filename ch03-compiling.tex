@@ -526,7 +526,7 @@ the code further by extending and improving particular modules.
 \section{Adding exceptions, GMH-style}
 
 Now we are about to add exceptions to our language(s). The first approach is to
-examine ways found in the literature.
+examine the ways found in the literature.
 
 Code in this section is modelled after the paper \cite{gmh:exceptions} by
 Graham Hutton and Joel Wright. The authors used Haskell in their development.
@@ -537,8 +537,8 @@ paper.
 
 In contrast with the original paper and Tobias Nipkow's formalization thereof,
 our aim is to create a dependently typed program, which means we don't want to
-copy the code as is; instead, we will adapt it for the dependently typed
-setting and see how it works out.
+copy the Haskell code as is; instead, we will adapt it for the dependently
+typed setting and see how it works out.
 
 \subsection{Expressions}
 
@@ -556,5 +556,15 @@ add the \ident{Throw} expression and the \ident{Catch} construct.
     Throw : forall {u} -> Exp u
     Catch : forall {u} -> (code : Exp u) -> (hnd : Exp u) -> Exp u
 \end{code}
+
+\noindent The type of expressions gets two new constructors.
+\begin{itemize}
+
+  \item The first one is \ident{Throw}, which is similar to the literal
+    constructor \ident{Lit}, except that no value of the type \ident{el u} is
+    needed: a throw-expression can promise to yield a value of any type without
+    actually having it.
+
+\end{itemize}
 
 \section{Termination}
