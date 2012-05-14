@@ -577,4 +577,32 @@ add the \ident{Throw} expression and the \ident{Catch} construct.
 
 \end{itemize}
 
+\subsection{Semantics of expressions}
+
+The expression type has just been extended with two new constructors and we
+need to formalize what the meaning of the two constructors actually is. For
+that purpose, we need to alter the function \ident{denExp}
+
+The first change is that we need to express that an exception has been thrown
+during evaluation of an expression. The function \ident{denExp} will now return
+\ident{Maybe (el u)} instead of \ident{el u} directly, using the value
+\ident{nothing} to indicate uncaught exceptions.
+
+The second change is adding pattern cases for the newly added constructors
+of \ident{Exp} to the function \ident{denExp}.
+
+\begin{code}
+  denExp : forall {u} -> Exp u -> Maybe (el u)
+  denExp (Lit x) = just x
+  denExp (Bin op l r) with denExp l | denExp r
+  \... | just x  | just y  = denOp op x y
+  \... | just _  | nothing = nothing
+  \... | nothing | just _  = nothing
+  \... | nothing | nothing = nothing
+  denExp Throw = nothing
+  denExp (Catch e h) with denExp e
+  \... | just x  = just x
+  \... | nothing = denExp h 
+\end{code}
+
 \section{Termination}
