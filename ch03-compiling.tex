@@ -577,7 +577,7 @@ add the \ident{Throw} expression and the \ident{Catch} construct.
 
 The expression type has just been extended with two new constructors and we
 need to formalize what the meaning of the two expression variants actually is.
-For that purpose, we need to alter the function \ident{denExp}
+For that purpose, we need to alter the function \ident{denExp}.
 
 The first change is in the return type of \ident{denExp}: we need a way to
 indicate whether the expression evaluates to a value or whether an uncaught
@@ -589,7 +589,7 @@ exceptions and the value \ident{just x} to indicate that the expression
 succesfully evaluates to the value \ident{x}.
 
 The second change is adding pattern cases for the newly added constructors
-of \ident{Exp} to the function \ident{denExp}.
+of \ident{Exp} to the denotation function \ident{denExp}.
 
 \begin{code}
   denExp : forall {u} -> Exp u -> Maybe (el u)
@@ -622,8 +622,19 @@ computations in exactly the same way.}
 
 \subsubsection{Remarks}
 
-This concludes the definition of our high-level language and the rest of this thesis
-will build on this version.
+To keep things simple, the \ident{Throw} expression does not take a value, unlike
+its counterparts in most programming languages. At this stage, we will worry only
+about whether an exception has been thrown or not, not about its particular value.
+
+Also, in most programming languages, exception handlers can inspect the exceptions
+being handled and return different values depending on some attributes
+of the exception. In our language, it would be pointless to do that because our exceptions
+do not carry values. Thus, our exception handlers are just simple expressions of the
+same type as the main expression and they have no means to refer to the exception
+being handled.
+
+This concludes the definition of our high-level language and now we are going
+to figure out the operational semantics.
 
 \subsection{Low-level language}
 
