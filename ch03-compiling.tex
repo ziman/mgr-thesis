@@ -540,7 +540,9 @@ our aim is to create a dependently typed program, which means we don't want to
 copy the Haskell code as is; instead, we will adapt it for the dependently
 typed setting and see how it works out.
 
-\subsection{Expressions}
+\subsection{Changes to the high-level language}
+
+\subsubsection{Expressions}
 
 The first module we need to extend when adding exceptions is the one containing
 the definition of expressions of the high-level language. Namely, we need to
@@ -566,27 +568,25 @@ add the \ident{Throw} expression and the \ident{Catch} construct.
     actually having it.
 
   \item The other is \ident{Catch}. This constructor takes two expressions of
-    the same type, regular value and an exception handler, representing a
-    catch-block. If no exception gets thrown in the value, the whole
-    catch-block is equivalent to the regular value. Otherwise, it is equivalent
-    to the handler value.\footnote{Especially, if both values throw exceptions,
-    the catch-block propagates the exception thrown in the handler.}
-    \footnote{Hence, this constructor is similar to the combinator
-    \ident{mplus} in Haskell, which combines two possibly failing computations
-    in exactly the same way.}
+    the same type, the regular value and an exception handler, representing a
+    catch-block.
 
 \end{itemize}
 
-\subsection{Semantics of expressions}
+\subsubsection{Semantics of expressions}
 
 The expression type has just been extended with two new constructors and we
-need to formalize what the meaning of the two constructors actually is. For
-that purpose, we need to alter the function \ident{denExp}
+need to formalize what the meaning of the two expression variants actually is.
+For that purpose, we need to alter the function \ident{denExp}
 
-The first change is that we need to express that an exception has been thrown
-during evaluation of an expression. The function \ident{denExp} will now return
-\ident{Maybe (el u)} instead of \ident{el u} directly, using the value
-\ident{nothing} to indicate uncaught exceptions.
+The first change is in the return type of \ident{denExp}: we need a way to
+indicate whether the expression evaluates to a value or whether an uncaught
+exception occurs. To express that, the function \ident{denExp} will now return
+\ident{Maybe (el u)} instead of the more direct \ident{el u}, using the value
+\ident{nothing}\footnote{In contrast with Haskell, Agda uses lowercase initials
+of the constructors \ident{just} and \ident{nothing}.} to indicate uncaught
+exceptions and the value \ident{just x} to indicate that the expression
+succesfully evaluates to the value \ident{x}.
 
 The second change is adding pattern cases for the newly added constructors
 of \ident{Exp} to the function \ident{denExp}.
@@ -604,5 +604,27 @@ of \ident{Exp} to the function \ident{denExp}.
   \... | just x  = just x
   \... | nothing = denExp h 
 \end{code}
+
+\noindent We had to alter the original two cases slightly, most importantly the
+binary operator case, where the result now yields a value (i.e.  doesn't throw)
+if and only if both subexpressions yield values without throwing.
+
+As hinted above, we added a case for the expression \ident{Throw}; this one
+never yields a value and always throws.
+
+Finally, we also added a case for catch-expressions. If no exception gets
+thrown in the value, the whole catch-expression is equivalent to the regular
+value.  Otherwise, it is equivalent to the handler value.\footnote{Especially,
+  if both values throw exceptions, the catch-expression propagates the
+exception thrown in the handler.} \footnote{Hence, this constructor is similar
+to the combinator \ident{mplus} in Haskell, which combines two possibly failing
+computations in exactly the same way.}
+
+\subsubsection{Remarks}
+
+This concludes the definition of our high-level language and the rest of this thesis
+will build on this version.
+
+\subsection{Low-level language}
 
 \section{Termination}
