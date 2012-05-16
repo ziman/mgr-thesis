@@ -609,29 +609,29 @@ of \ident{Exp} to the denotation function \ident{denExp}.
 binary operator case, where the result now yields a value (i.e.  doesn't throw)
 if and only if both subexpressions yield values without throwing.
 
-As hinted above, we added a case for the expression \ident{Throw}; this one
-never yields a value and always throws.
-
-Finally, we also added a case for catch-expressions. If no exception gets
-thrown in the value, the whole catch-expression is equivalent to the regular
-value.  Otherwise, it is equivalent to the handler value.\footnote{Especially,
-  if both values throw exceptions, the catch-expression propagates the
-exception thrown in the handler.} \footnote{Hence, this constructor is similar
-to the combinator \ident{mplus} in Haskell, which combines two possibly failing
-computations in exactly the same way.}
+As hinted above, we added a case for the expression \ident{Throw}: this one
+never yields a value and always throws; and also case for catch-expressions: if
+no exception gets thrown in the value, the whole catch-expression is equivalent
+to the regular value.  Otherwise, it is equivalent to the handler
+value.\footnote{Especially, if both values throw exceptions, the
+catch-expression propagates the exception thrown in the handler.}
+\footnote{Hence, this constructor is similar to the combinator \ident{mplus} in
+Haskell, which combines two possibly failing computations in exactly the same
+way.}
 
 \subsubsection{Remarks}
 
-To keep things simple, the \ident{Throw} expression does not take a value, unlike
-its counterparts in most programming languages. At this stage, we will worry only
-about whether an exception has been thrown or not, not about its particular value.
+To keep things simple, the \ident{Throw} expression does not take a value,
+unlike its counterparts in most programming languages. At this stage, we will
+worry only about whether an exception has been thrown or not, not about its
+particular value.
 
-Also, in most programming languages, exception handlers can inspect the exceptions
-being handled and return different values depending on some attributes
-of the exception. In our language, it would be pointless to do that because our exceptions
-do not carry values. Thus, our exception handlers are just simple expressions of the
-same type as the main expression and they have no means to refer to the exception
-being handled.
+Also, in most programming languages, exception handlers can inspect the
+exceptions being handled and return different values depending on some
+attributes of the exception. In our language, it would be pointless to do that
+because our exceptions do not carry values. Thus, our exception handlers are
+just simple expressions of the same type as the main expression and they have
+no means to refer to the exception being handled.
 
 This concludes the definition of our high-level language and now we are going
 to figure out the operational semantics.
