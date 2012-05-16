@@ -154,6 +154,12 @@
 \newcommand{\midt}[1]{\mathsf{#1}}
 %\newcommand{\to}{\rightarrow}
 
+\newenvironment{agda}%
+{\begingroup\sf\small\tabbing%
+ \newcommand{\with}{\textbf{with}}
+}
+{\endtabbing\endgroup}
+
 
 % TODO:
 % - add \noindent after each \end{code}
