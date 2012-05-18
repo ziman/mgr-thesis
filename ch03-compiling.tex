@@ -1,4 +1,7 @@
-\chapter{Compiling exceptions}
+\chapter{Compiling exceptions totally correctly}
+
+\todo{Blah blah about differences between FP and total FP, substantiate the
+title of the section}
 
 The basic approach to compiling exceptions was shown in \cite{gmh:exceptions}.
 This article provides excellent insight and inspiration how such code can be written
@@ -35,6 +38,8 @@ simplicity.
     _=>\_ : U -> U -> U
 \end{code}
 
+\todo{Omit the unused $\Rightarrow$ constructor entirely?}
+
 \noindent We will also need the interpretation function \ident{el} that maps
 types of our simple language to Agda types so that we can use Agda values in
 the modelled language, talk about its denotational semantics etc.
@@ -64,6 +69,13 @@ universe.
 
 \noindent We omit the body of \ident{eqDecU} because it's just an ordinary
 uninteresting case analysis.
+
+In the following text, we will be a bit lax on wording related to type
+universes.  We will be talking about ``expressions of the type \ident{u}'',
+while actually referring to ``terms that represent expressions of \emph{the
+type denoted by \ident{u}}''. This simplified approach can hardly cause
+confusion, while adhering to precise wording in every situation at all costs
+would lead to incomprehensible sentences.
 
 \subsection{Expressions}
 
@@ -203,7 +215,7 @@ instruction sequences, which is actually also included in \ident{Data.Star}.
 \begin{code}
   infixr 5 _\app\_
   _\app\_ : forall {R x y z} -> Star R x y -> Star R y z -> Star R x z
-  \nil \app\ ys = ys
+  \nil \app ys = ys
   (x <| xs) \app ys = x <| xs \app ys
 \end{code}
 
@@ -609,33 +621,94 @@ of \ident{Exp} to the denotation function \ident{denExp}.
 binary operator case, where the result now yields a value (i.e.  doesn't throw)
 if and only if both subexpressions yield values without throwing.
 
-As hinted above, we added a case for the expression \ident{Throw}; this one
-never yields a value and always throws.
-
-Finally, we also added a case for catch-expressions. If no exception gets
-thrown in the value, the whole catch-expression is equivalent to the regular
-value.  Otherwise, it is equivalent to the handler value.\footnote{Especially,
-  if both values throw exceptions, the catch-expression propagates the
-exception thrown in the handler.} \footnote{Hence, this constructor is similar
-to the combinator \ident{mplus} in Haskell, which combines two possibly failing
-computations in exactly the same way.}
+As hinted above, we added a case for the expression \ident{Throw}: this one
+never yields a value and always throws; and also case for catch-expressions: if
+no exception gets thrown in the value, the whole catch-expression is equivalent
+to the regular value.  Otherwise, it is equivalent to the handler
+value.\footnote{Especially, if both values throw exceptions, the
+catch-expression propagates the exception thrown in the handler.}
+\footnote{Hence, this constructor is similar to the combinator \ident{mplus} in
+Haskell, which combines two possibly failing computations in exactly the same
+way.}
 
 \subsubsection{Remarks}
 
-To keep things simple, the \ident{Throw} expression does not take a value, unlike
-its counterparts in most programming languages. At this stage, we will worry only
-about whether an exception has been thrown or not, not about its particular value.
+To keep things simple, the \ident{Throw} expression does not take a value,
+unlike its counterparts in most programming languages. At this stage, we will
+worry only about whether an exception has been thrown or not, not about its
+particular value.
 
-Also, in most programming languages, exception handlers can inspect the exceptions
-being handled and return different values depending on some attributes
-of the exception. In our language, it would be pointless to do that because our exceptions
-do not carry values. Thus, our exception handlers are just simple expressions of the
-same type as the main expression and they have no means to refer to the exception
-being handled.
+Also, in most programming languages, exception handlers can inspect the
+exceptions being handled and return different values depending on some
+attributes of the exception. In our language, it would be pointless to do that
+because our exceptions do not carry values. Thus, our exception handlers are
+just simple expressions of the same type as the main expression and they have
+no means to refer to the exception being handled.
 
 This concludes the definition of our high-level language and the rest of this thesis
 will be mostly devoted to how to make it work operationally.
 
-\subsection{Low-level language}
+\subsection{Virtual machine}
+
+What about our virtual stack machine and its low-level language of
+instructions? What features and instructions do we need to add to make the
+machine capable of computing with exceptions?
+
+In \cite{gmh:exceptions}, Hutton and Wright give a description of how this can
+be done. Let us extend the machine along the lines drawn by this paper and see
+how we can adapt their solution to total functional programming with dependent
+types, having the goals from the Introduction (page~\pageref{objectives}) in
+mind.
+
+First, Hutton and Wright propose altering the type of stacks because besides
+values, now we are going to push exception handlers on the stack, too. We will
+do this as follows.
+
+We begin by extending the type of stack shapes. A stack shape is no longer a plain
+list of types (that is, elements of the universe \ident{U}); instead, we distinguish
+between \emph{values} and \emph{handlers} pushed on the stack.
+\begin{code}
+  data Item : Set where
+    Val : U -> Item
+    Han : U -> Item
+
+  Shape : Set
+  Shape = List Item
+\end{code}
+
+\noindent A value, denoted by \ident{Val u}, is an actual value of the type
+denoted by \ident{u}; a handler, denoted by \ident{Han u}, is a piece of code
+that, when run, leaves a value of the type \ident{u} on the top of the stack.
+This corresponds to the new type of stacks,
+\begin{code}
+  data Stack : Shape -> Set where
+    snil : Stack []
+    _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
+    _\sconsh\_ : forall {u s} -> Code s (Val u :: s) -> Stack s -> Stack (Han u :: s)
+\end{code}
+where the constructor \ident{\scons\!\!} corresponds to pushing values and the
+constructor \ident{\sconsh\!\!} corresponds to pushing handlers on the stack.
+
+Note that we are pushing whole strands of code on the stack; single stack items can
+be arbitrarily large, which contradicts one of our design principles -- that the
+code must be executable on a dumb stack machine (Introduction, page~\pageref{objectives}).
+
+Hutton and Wright introduce three new instructions of the virtual machine:
+\ident{MARK}, \ident{UNMARK}, and \ident{THROW}. In our code, this change
+reflects in extending the \ident{Instr} type, which must now reside in a
+\ident{mutual} block with \ident{Code}:
+
+\begin{code}
+  mutual
+    data Instr : Shape -> Shape -> Set where
+      PUSH : forall {u s} -> el u -> Instr s (Val u :: s)
+      ADD : forall s -> Instr (Val nat :: Val nat :: s) (Val nat :: s)
+      THROW : forall {u s} -> Instr s (Val u :: s)
+      MARK : forall {u s} -> Code s (Val u :: s) -> Instr s (Han u :: s)
+      UNMARK : forall {u s} -> Instr (Val u :: Han u :: s) (Val u :: s)
+
+    Code : Shape -> Shape -> Set
+    Code = Star Instr
+\end{code}
 
 \section{Termination}

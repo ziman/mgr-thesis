@@ -48,6 +48,7 @@
 \usetikzlibrary{decorations.pathreplacing,patterns}
 
 \newcommand{\scons}{:-:\;}
+\newcommand{\sconsh}{!-!\;}
 
 \usepackage{listings}
 \lstloadlanguages{Haskell}
@@ -63,7 +64,7 @@
       columns=fullflexible,
       basewidth={0.5em,0.45em},
 %      xleftmargin=1em,
-      morekeywords={data,where,open,import,let,with,module,using,infixr,rewrite},
+      morekeywords={data,where,open,import,let,with,module,using,infixr,rewrite,mutual},
       literate=
       	{+}{{$+\;$}}1
       	{/}{{$/$}}1
@@ -87,6 +88,7 @@
         {Nat}{{$\mathbb{N}\;$}}1
         {forall}{{$\forall\;$}}1
         {\\scons}{{\scons}}1
+        {\\sconsh}{{\sconsh}}1
   		  {\\nil}{{$\varepsilon\;$}}1
 	  	  {==}{{$\equiv\;$}}1
 		    {<|}{{$\lhd\;\,$}}1
@@ -153,6 +155,7 @@
 \newcommand{\ident}[1]{\textsf{#1}}
 \newcommand{\midt}[1]{\mathsf{#1}}
 %\newcommand{\to}{\rightarrow}
+\newcommand{\todo}[1]{\noindent\fbox{\minipage{0.985\textwidth}\noindent\textsf{\textbf{TODO:} #1}\endminipage}\\}
 
 \newenvironment{agda}%
 {\begingroup\sf\small\tabbing%
