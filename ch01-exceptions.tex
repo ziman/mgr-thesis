@@ -2,25 +2,6 @@
 
 \section{Purpose}
 
-Blah blah blah blah. Lots of fun, as described in \cite{swierstra:thesis}. Some sample code.
-We define the exception semantics as follows.
-
-%\begin{code}
-%data Nat : forall (a : Set) (x : a) -> a -> a -> Set where
-%  zero : forall {x} -> Nat x x  -- zero constructor
-%  suc : forall {x} -> Nat x x -> Nat x x  -- successor
-%\end{code}
-
-\noindent We can see that in this piece of code, we have three new data types
-blah blah predicates logic blah blah curry howard.
-
-\begin{code}
-  data Acc : forall {s t} -> Code s t -> Set where
-    acc-nil : forall {s} -> Acc {s} {s} nil
-    acc-Push : forall {s u t} {x : el u} (c : Code (Val u :: s) t)
-      -> Acc c -> Acc (PUSH x <| c) 
-\end{code}
-
 \section{History}
 
 \section{Theoretical consequences}

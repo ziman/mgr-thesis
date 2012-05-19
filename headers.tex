@@ -51,6 +51,7 @@
 \newcommand{\sconsh}{!-!\;}
 \newcommand{\void}{$\square$}
 \newcommand{\tick}{$\checkmark$}
+\newcommand{\bN}{\mathbb{N}}
 
 \usepackage{listings}
 \lstloadlanguages{Haskell}
@@ -65,6 +66,7 @@
       commentstyle=\color{gray}\it\rmfamily,
       columns=fullflexible,
       basewidth={0.5em,0.45em},
+      escapechar=&,
 %      xleftmargin=1em,
       morekeywords={data,where,open,import,let,with,module,using,infixr,rewrite,mutual},
       literate=
@@ -94,6 +96,8 @@
         {\\void}{{\void}}1
         {\\tick}{{\tick}}1
 	  	{\\nil}{{$\varepsilon\;$}}1
+	  	{\\bN}{{$\bN\;$}}1
+	  	{\\x}{{$\times$}}1
 	  	{==}{{$\equiv\;$}}1
 		{<|}{{$\lhd\;\,$}}1
         {\\app}{{$\lhd\!\lhd\;\,$}}1

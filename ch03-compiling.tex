@@ -680,7 +680,7 @@ distinguish between \emph{values} and \emph{handlers} pushed on the stack.
 A value, denoted by \ident{Val u}, is an actual value of the type
 denoted by \ident{u}; a handler, denoted by \ident{Han u}, is a piece of code
 that, when run, leaves a value of the type \ident{u} on the top of the stack.
-This naturally unfolds to the new type of stacks,
+This naturally leads to the new type of stacks,
 \begin{code}
   data Stack : Shape -> Set where
     snil : Stack []
@@ -721,11 +721,21 @@ reflects in extending the \ident{Instr} type, which must now reside in a
 \subsubsection{Machine state, take one}
 
 The topic of machine state is left implicit in the paper by Hutton and Wright,
-yet it is one of the most involved parts of this Agda development. The state
-certainly contains the stack but -- is it sufficient?
+yet it is one of the most involved parts of this Agda development. The state must
+certainly contain the stack but -- is it sufficient?
 
-One approach to execution not requiring any additional state would be extending
-the stack type with a new constructor;
+To be put it precisely and explicitly, the state of the virtual machine includes
+these components:
+\begin{itemize}
+	\item the position in the executed code (e.g. instruction pointer);
+	\item the stack;
+	\item a bounded number of other flags and variables.
+\end{itemize}
+For now, we will leave the position in the code implicit and we will not count it
+as a component of the state.
+
+One approach to execution not requiring any additional flags and variables would
+be extending the stack type with a new constructor;
 let us call it \ident{\void\scons\!\!\_}.
 \begin{code}
   data Stack : Shape -> Set where
@@ -798,6 +808,57 @@ sections (and chapters), we will address these objections. Let us begin with the
 of them.
 
 \subsubsection{Machine state, take two}
+
+This approach is actually an adaptation of the one presented by Hutton and Wright,
+except that we make the state completely explicit in order to adhere to our objectives.
+We discard our attempts with placeholders and return to the original stack representation:
+\begin{code}
+  data Stack : Shape -> Set where
+    snil : Stack []
+    _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
+    _\sconsh\_ : forall {u s} -> Code s (Val u :: s) -> Stack s -> Stack (Han u :: s)
+\end{code}
+
+\noindent However, we extend the \emph{state} of the machine instead. We will distinguish
+two modes of operation:
+\begin{itemize}
+	\item normal operation, where we just need to keep track of the stack;
+	\item exception handling, where we keep additional state variables besides the stack.
+\end{itemize}
+While in real machines, the above distinction would result in yet another state variable
+determining which mode of operation the machine is in, we will model it as different
+constructors of the \ident{State} data type.
+
+The normal mode of operation contains simply the stack. However, the exceptional state
+is a bit more involved; let us declare the datatypes first and describe them afterwards.
+\begin{code}
+  -- Get the type of the top\-most handler in the Shape.
+  unwindHnd : Shape -> \bN -> Maybe U
+  unwindHnd (Han u :: xs) zero    = just u
+  unwindHnd (Han _ :: xs) (suc n) = unwindHnd xs n
+  unwindHnd (Val _ :: xs) n       = unwindHnd xs n
+  unwindHnd []           _       = nothing
+
+  -- Unwind the shape up to just below the top-most handler.
+  unwindShape : Shape -> \bN -> Shape
+  unwindShape (Han _ :: xs) zero    = xs
+  unwindShape (Han _ :: xs) (suc n) = unwindShape xs n
+  unwindShape (Val _ :: xs) n       = unwindShape xs n
+  unwindShape []           _       = []
+
+  -- Normal operation resumption point.
+  data Resume (s : Shape) : Maybe U -> Set where
+    -- A handler is available, also remember the stack on which the handler should operate.
+    Okay : forall {u} -> Code s (Val u :: s) -> Stack s -> Resume s (just u)
+    -- Uncaught throw.
+    Fail : Resume s nothing
+
+  data State : Shape -> Set where
+  	\tick[_] : forall {s} -> Stack s -> State s
+  	\x[_,_] : forall {s : Shape} (n : \bN&\!&)
+  	  -> Resume (unwindShape s n) (unwindHnd s n)
+  	  -> State s
+\end{code}
 
 
 \section{Termination}
