@@ -49,6 +49,8 @@
 
 \newcommand{\scons}{:-:\;}
 \newcommand{\sconsh}{!-!\;}
+\newcommand{\void}{$\square$}
+\newcommand{\tick}{$\checkmark$}
 
 \usepackage{listings}
 \lstloadlanguages{Haskell}
@@ -89,9 +91,11 @@
         {forall}{{$\forall\;$}}1
         {\\scons}{{\scons}}1
         {\\sconsh}{{\sconsh}}1
-  		  {\\nil}{{$\varepsilon\;$}}1
-	  	  {==}{{$\equiv\;$}}1
-		    {<|}{{$\lhd\;\,$}}1
+        {\\void}{{\void}}1
+        {\\tick}{{\tick}}1
+	  	{\\nil}{{$\varepsilon\;$}}1
+	  	{==}{{$\equiv\;$}}1
+		{<|}{{$\lhd\;\,$}}1
         {\\app}{{$\lhd\!\lhd\;\,$}}1
         {~}{{$\neg\:$}}1
         {[[}{{[\![\;}}1

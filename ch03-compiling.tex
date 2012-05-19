@@ -660,13 +660,15 @@ how we can adapt their solution to total functional programming with dependent
 types, having the goals from the Introduction (page~\pageref{objectives}) in
 mind.
 
-First, Hutton and Wright propose altering the type of stacks because besides
-values, now we are going to push exception handlers on the stack, too. We will
-do this as follows.
+\subsubsection{Stack}
 
-We begin by extending the type of stack shapes. A stack shape is no longer a plain
-list of types (that is, elements of the universe \ident{U}); instead, we distinguish
-between \emph{values} and \emph{handlers} pushed on the stack.
+First, Hutton and Wright propose altering the type of stacks because besides
+values, now we are going to push exception handlers on the stack, too.
+
+Unlike Hutton and Wright, we also need to care about the type of stack shapes.
+This will no longer be a plain
+list of types (that is, elements of the universe \ident{U}); instead, we  will
+distinguish between \emph{values} and \emph{handlers} pushed on the stack.
 \begin{code}
   data Item : Set where
     Val : U -> Item
@@ -675,11 +677,10 @@ between \emph{values} and \emph{handlers} pushed on the stack.
   Shape : Set
   Shape = List Item
 \end{code}
-
-\noindent A value, denoted by \ident{Val u}, is an actual value of the type
+A value, denoted by \ident{Val u}, is an actual value of the type
 denoted by \ident{u}; a handler, denoted by \ident{Han u}, is a piece of code
 that, when run, leaves a value of the type \ident{u} on the top of the stack.
-This corresponds to the new type of stacks,
+This naturally unfolds to the new type of stacks,
 \begin{code}
   data Stack : Shape -> Set where
     snil : Stack []
@@ -689,11 +690,14 @@ This corresponds to the new type of stacks,
 where the constructor \ident{\scons\!\!} corresponds to pushing values and the
 constructor \ident{\sconsh\!\!} corresponds to pushing handlers on the stack.
 
-Note that we are pushing whole strands of code on the stack; single stack items can
-be arbitrarily large, which contradicts one of our design principles -- that the
-code must be executable on a dumb stack machine (Introduction, page~\pageref{objectives}).
+Note that we push arbitrarily large strands of code as single items on the stack,
+which contradicts one of our design principles -- that the
+code must be executable on a simple stack machine (Introduction, page~\pageref{objectives})
+-- and we will address this objection in Chapter \ref{chap:compiling2}.
 
-Hutton and Wright introduce three new instructions of the virtual machine:
+\subsubsection{Instructions and code}
+
+Next, Hutton and Wright introduce three new instructions of the virtual machine:
 \ident{MARK}, \ident{UNMARK}, and \ident{THROW}. In our code, this change
 reflects in extending the \ident{Instr} type, which must now reside in a
 \ident{mutual} block with \ident{Code}:
@@ -711,4 +715,158 @@ reflects in extending the \ident{Instr} type, which must now reside in a
     Code = Star Instr
 \end{code}
 
+\noindent The definition of code doesn't change: it is still a simple
+``index-matching list'' of instructions.
+
+\subsubsection{Machine state, take one}
+
+The topic of machine state is left implicit in the paper by Hutton and Wright,
+yet it is one of the most involved parts of this Agda development. The state
+certainly contains the stack but -- is it sufficient?
+
+One approach to execution not requiring any additional state would be extending
+the stack type with a new constructor;
+let us call it \ident{\void\scons\!\!\_}.
+\begin{code}
+  data Stack : Shape -> Set where
+    snil : Stack []
+    _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
+    _\sconsh\_ : forall {u s} -> Code s (Val u :: s) -> Stack s -> Stack (Han u :: s)
+    \void\scons\_ : forall {u s} -> Stack s -> Stack (Val u :: s)
+\end{code}
+The new constructor acts as a placeholder for missing values if an exception is raised.
+
+Note the strong similarity to the \ident{THROW} instruction and the \ident{Throw}
+expression. The instruction \ident{THROW} is indexed as an instruction that pushes
+a value of any specified type on the stack -- but it actually does not. The 
+\ident{Throw} expression is indexed as an expression that yields a value of any specified
+type -- but it actually does not. Likewise, the \ident{\void} constructor is typed in
+exactly the same way as the constructor that pushes values on the stack -- but it does not.
+
+Thus, it is probably not a surprise that the \ident{THROW} instruction, instead of pushing
+a value on the stack, pushes the \ident{\void} placeholder. To be precise, execution would
+look the following way.
+\begin{code}
+  mutual
+    execInstr : forall {s t} -> Instr s t -> Stack s -> Stack t
+    -- the original two cases
+    execInstr (PUSH x) st = x \scons st
+    execInstr ADD (x \scons y \scons st) = (x + y) \scons st
+    -- new instructions
+    execInstr THROW st = \void\scons st
+    execInstr (MARK h) st = h \sconsh st
+    -- unmark: no exceptions thrown
+    execInstr UNMARK (x \scons h \sconsh st) = x \scons st
+    -- unmark: an exception thrown, handle it by executing the handler
+    execInstr UNMARK (\void\scons h \sconsh st) = execCode h st
+    -- miscellaneous exception handling
+    execInstr ADD (\void\scons y \scons st) = \void\scons st
+    execInstr ADD (x \scons \void\scons st) = \void\scons st
+    execInstr ADD (\void\scons \void\scons st) = \void\scons st
+
+    -- execCode is still a left fold over instructions
+    execCode : forall {s t} -> Code s t -> Stack s -> Stack t
+    execCode \nil st = st
+    execCode (i <| is) st = execCode is (execInstr i st)
+\end{code}
+
+\noindent However, there are multiple downsides to this solution.
+
+First, and most importantly, it's not really a transition to a different low-level language.
+Instead, it is actually evaluation of the function \ident{denExp} with an explicit
+stack. The placeholder \ident{\void} corresponds to the outcome \ident{nothing} of
+\ident{denExp}, while the regular stack-cons using the constructor \ident{\scons\!\!}
+corresponds to the outcome \ident{just x} (for some \ident{x}).
+
+Second, this solution is not elegant in the sense that we need to add exception-handling
+cases to every instruction (in our case, only \ident{ADD}). Why should we define how
+these instructions handle exceptions when they all must do the same thing: just pass
+the exception forward and do nothing else? Exceptions should be handled by a different
+mechanism than regular execution.
+
+Third, the Agda termination checker rejects the exception-handling case for
+\ident{UNMARK} in the function \ident{execInstr}. Recursion isn't structural
+here and we need to convince Agda about termination using a decreasing measure
+or another way.
+
+Fourth, it is not how machines actually work. Real exception-handling strategies do jumps,
+and they don't push whole code blobs on the stack. Instead, they linearize exception-handling
+code with regular code into a single instruction sequence -- and then jump to it if needed.
+
+While this low-level representation does work, it leaves much to be desired. In the following
+sections (and chapters), we will address these objections. Let us begin with the first two
+of them.
+
+\subsubsection{Machine state, take two}
+
+
 \section{Termination}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
