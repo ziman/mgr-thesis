@@ -21,6 +21,7 @@
 %\setlength\headheight{0mm}
 %\setlength\textheight{247mm}
 
+\setlength{\headsep}{3em}
 \setlength\textwidth{145mm}
 \setlength\oddsidemargin{15mm}
 \setlength\evensidemargin{0mm}
@@ -67,17 +68,6 @@
 \sectionfont{\centering\rm\itshape}
 \subsectionfont{\rm}
 \subsubsectionfont{\rm\bf}
-
-\newcommand{\lrule}[2]{%
-  \noindent\hbox{{\vrule width #1}\hskip 0.7em\vbox{\noindent #2}\hskip 0.7em{\vrule width #1}}%
-}
-
-\newcommand{\inset}[1]{\begin{wrapfigure}{r}{0.25\textwidth}%
-\vspace{-1em}%
-\lrule{0.5pt}{\footnotesize #1}%
-\vspace{-1em}%
-\end{wrapfigure}%
-}
 
 \newcommand{\scons}{:-:\;}
 \newcommand{\sconsh}{!-!\;}
@@ -191,8 +181,21 @@
 \newcommand{\ident}[1]{\textsf{#1}}
 \newcommand{\midt}[1]{\mathsf{#1}}
 %\newcommand{\to}{\rightarrow}
+
+\newcommand{\lrule}[2]{%
+  \noindent\hbox{{\vrule width #1}\hskip 0.7em\vbox{\noindent #2}}%
+}
+
+\newcommand{\inset}[1]{\begin{wrapfigure}{r}{0.25\textwidth}%
+\vspace{-1em}%
+\parbox{0.228\textwidth}{%
+\lrule{0.5pt}{\sloppy \raggedright \footnotesize #1}%
+}\vspace{-1em}%
+\end{wrapfigure}%
+}
+
 %\newcommand{\todo}[1]{\noindent\mbox{\minipage{0.985\textwidth}\noindent\textsf{\textbf{TODO:} #1}\endminipage}\\}
-\newcommand{\todo}[1]{\noindent\parbox{0.94\textwidth}{\lrule{5pt}{\textsf{\textbf{TODO:}} #1}}%
+\newcommand{\todo}[1]{\noindent\parbox{0.973\textwidth}{\lrule{5pt}{\textsf{\textbf{TODO:}} #1}}%
 \vspace{0.5em}}
 
 \newenvironment{agda}%

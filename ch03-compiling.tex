@@ -838,9 +838,12 @@ constructors of the \ident{State} data type.
 The normal mode of operation contains simply the stack. However, the exceptional state
 is a bit more involved; let us declare the datatypes and the auxiliary functions first
 and describe them afterwards.
+
+First, we will need two functions operating on shapes:
+
+\inset{Get the type of the top-most handler in the Shape or return \ident{nothing}
+if there is no handler.}
 \begin{code}
-  -- Get the type of the top\-most handler in the Shape.
-  -- Return nothing if there is no handler.
   unwindHnd : Shape -> \bN -> Maybe U
   unwindHnd (Han u :: xs) zero    = just u
   unwindHnd (Han _ :: xs) (suc n) = unwindHnd xs n
@@ -848,9 +851,9 @@ and describe them afterwards.
   unwindHnd []           _       = nothing
 \end{code}
 
+\inset{Unwind the shape up to just below the top-most handler or return the empty
+shape if there is no handler.}
 \begin{code}
-  -- Unwind the shape up to just below the top-most handler.
-  -- Return the empty shape if there is no handler.
   unwindShape : Shape -> \bN -> Shape
   unwindShape (Han _ :: xs) zero    = xs
   unwindShape (Han _ :: xs) (suc n) = unwindShape xs n
@@ -858,15 +861,22 @@ and describe them afterwards.
   unwindShape []           _       = []
 \end{code}
 
+\noindent Then we can define the resumption point:
+
+\inset{This is a resumption point of normal operation.}
 \begin{code}
   -- Normal operation resumption point.
   data Resume (s : Shape) : Maybe U -> Set where
-    -- A handler is available, also remember the stack on which the handler should operate.
+    -- A handler is available, also remember the stack on which
+    -- the handler should operate.
     Caught : forall {u} -> Code s (Val u :: s) -> Stack s -> Resume s (just u)
     -- Uncaught throw.
     Uncaught : Resume s nothing
 \end{code}
 
+\noindent Finally, we can define the machine state datatype.
+
+\inset{Finally, we can define the machine state datatype.}
 \begin{code}
   data State : Shape -> Set where
   	-- Normal state
