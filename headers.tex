@@ -39,7 +39,7 @@
 \usepackage[english]{babel}
 \usepackage[all,cmtip]{xy}
 \usepackage{textcomp}
-\usepackage{subfloat}
+%\usepackage{subfloat}
 \usepackage{graphicx}
 \usepackage{lmodern}
 \usepackage{microtype}
@@ -183,6 +183,7 @@
 
 \newcommand{\ident}[1]{\mbox{\textsf{#1}}}
 \newcommand{\midt}[1]{\mathsf{#1}}
+\newcommand{\cident}[1]{\textsf{\textit{\color{gray}#1}}}
 %\newcommand{\to}{\rightarrow}
 
 \newcommand{\lrule}[2]{%
@@ -192,7 +193,7 @@
 \newcommand{\myinset}[1]{\begin{wrapfigure}{r}{0.25\textwidth}%
 \vspace{-1em}%
 \parbox{0.228\textwidth}{%
-\lrule{0.5pt}{\sloppy \raggedright \footnotesize #1}%
+\lrule{0.5pt}{\raggedright\footnotesize\sloppy #1\fussy}%
 }\vspace{-1em}%
 \end{wrapfigure}%
 }

@@ -803,8 +803,6 @@ these instructions handle exceptions when they all must do the same thing: just 
 the exception forward and do nothing else? Exceptions should be handled by a different
 mechanism than regular execution.
 
-\inset{Get the type of the top-most handler in the Shape or return \ident{nothing}
-if there is no handler.}
 Third, the Agda termination checker rejects the exception-handling case for
 \ident{UNMARK} in the function \ident{execInstr}. Recursion isn't structural
 here and we need to convince Agda about termination using a decreasing measure
@@ -844,11 +842,10 @@ The normal mode of operation contains simply the stack. However, the exceptional
 is a bit more involved; let us declare the datatypes and the auxiliary functions first
 and describe them afterwards.
 
-First, we will need two functions operating on shapes:
-
-\inset{Get the type of the top-most handler in the Shape or return \ident{nothing}
-if there is no handler.}
+\inset{We need to know whether there is a handler on the stack and what type it has.}
 \begin{code}
+  -- Get the type of the top-most handler in the Shape.
+  -- Return &\cident{nothing}& if there is no handler.
   unwindHnd : Shape -> \bN -> Maybe U
   unwindHnd (Han u :: xs) zero    = just u
   unwindHnd (Han _ :: xs) (suc n) = unwindHnd xs n
@@ -856,9 +853,10 @@ if there is no handler.}
   unwindHnd []           _       = nothing
 \end{code}
 
-\inset{Unwind the shape up to just below the top-most handler or return the empty
-shape if there is no handler.}
+\inset{We also need to know what shape the unwound stack will have.}
 \begin{code}
+  -- Unwind the shape up to just below the top\-most handler.
+  -- Return the empty shape if there is no handler.
   unwindShape : Shape -> \bN -> Shape
   unwindShape (Han _ :: xs) zero    = xs
   unwindShape (Han _ :: xs) (suc n) = unwindShape xs n
@@ -866,9 +864,11 @@ shape if there is no handler.}
   unwindShape []           _       = []
 \end{code}
 
-\noindent Then we can define the resumption point:
+\noindent Then we can define the data types: the resumption point and, finally,
+the type of machine states.
 
-\inset{This is a resumption point of normal operation.}
+\inset{This structure holds information needed to resume computation when the machine
+finds the exception handler.}
 \begin{code}
   -- Normal operation resumption point.
   data Resume (s : Shape) : Maybe U -> Set where
@@ -879,9 +879,7 @@ shape if there is no handler.}
     Uncaught : Resume s nothing
 \end{code}
 
-\noindent Finally, we can define the machine state datatype.
-
-\inset{Finally, we can define the machine state datatype.}
+\inset{This finally leads to the data type of machine states, which are twofold.}
 \begin{code}
   data State : Shape -> Set where
   	-- Normal state
