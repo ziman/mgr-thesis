@@ -48,6 +48,7 @@
 %\usepackage{tgcursor}
 \usepackage{MinionPro}
 \usepackage{wrapfig}
+\usepackage{sectsty}
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing,patterns}
 
@@ -58,6 +59,10 @@
 	\ChNameVar{\Large\sc}
 	\ChNameAsIs
 \makeatother
+
+\sectionfont{\rm\itshape}
+\subsectionfont{\rm}
+\subsubsectionfont{\rm\bf}
 
 \newcommand{\lrule}[2]{%
   \noindent\hbox{{\vrule width #1}\hskip 0.7em\vbox{\noindent #2}}%
