@@ -14,15 +14,19 @@
 
 %% Pokud tiskneme oboustranně:
 \documentclass[12pt,a4paper,twoside,openright,reqno]{book}
-\usepackage{etex}
-\setlength\textwidth{145mm}
-%\setlength\textheight{247mm}
-\setlength\oddsidemargin{15mm}
-\setlength\evensidemargin{0mm}
+%\documentclass[12pt,a4paper,symmetric,twoside,justified,nofonts,nohyper]{tufte-book}
+
 %\setlength\topmargin{0mm}
 %\setlength\headsep{0mm}
 %\setlength\headheight{0mm}
+%\setlength\textheight{247mm}
+
+\setlength\textwidth{145mm}
+\setlength\oddsidemargin{15mm}
+\setlength\evensidemargin{0mm}
 \let\openright=\cleardoublepage
+
+\usepackage{etex}
 
 %% Ostatní balíčky
 \usepackage{graphicx}
@@ -55,7 +59,7 @@
 \usepackage[Sonny]{fncychap}
 \makeatletter
 	\ChNumVar{\Huge}
-	\ChTitleVar{\Large\rm\it}
+	\ChTitleVar{\LARGE\rm\it}
 	\ChNameVar{\Large\sc}
 	\ChNameAsIs
 \makeatother
@@ -65,7 +69,7 @@
 \subsubsectionfont{\rm\bf}
 
 \newcommand{\lrule}[2]{%
-  \noindent\hbox{{\vrule width #1}\hskip 0.7em\vbox{\noindent #2}}%
+  \noindent\hbox{{\vrule width #1}\hskip 0.7em\vbox{\noindent #2}\hskip 0.7em{\vrule width #1}}%
 }
 
 \newcommand{\inset}[1]{\begin{wrapfigure}{r}{0.25\textwidth}%
@@ -90,7 +94,7 @@
     {\csname lst@SaveFirstLabel\endcsname}
     \lstset{
       comment=[l]--,
-      basicstyle=\footnotesize\sffamily,
+      basicstyle=\small\sffamily,
       keywordstyle=\bf\sffamily,
       commentstyle=\color{gray}\it\rmfamily,
       columns=fullflexible,
@@ -155,13 +159,7 @@
 %% POZOR, nezapomeňte vyplnit jméno práce a autora.
 \usepackage{color}
 \definecolor{link}{rgb}{0,0,0.5}
-\usepackage[
-	colorlinks=true,
-	linkcolor=link,
-	urlcolor=link,
-	citecolor=link,
-	unicode
-]{hyperref}
+\usepackage[colorlinks=true,linkcolor=link,urlcolor=link,citecolor=link,unicode]{hyperref}
 \hypersetup{pdftitle=On the semantics of exceptions for high level and low level languages}
 \hypersetup{pdfauthor=Matus Tejiscak}
 
@@ -194,7 +192,7 @@
 \newcommand{\midt}[1]{\mathsf{#1}}
 %\newcommand{\to}{\rightarrow}
 %\newcommand{\todo}[1]{\noindent\mbox{\minipage{0.985\textwidth}\noindent\textsf{\textbf{TODO:} #1}\endminipage}\\}
-\newcommand{\todo}[1]{\noindent\parbox{0.97\textwidth}{\lrule{5pt}{\textsf{\textbf{TODO:} #1}}}%
+\newcommand{\todo}[1]{\noindent\parbox{0.94\textwidth}{\lrule{5pt}{\textsf{\textbf{TODO:}} #1}}%
 \vspace{0.5em}}
 
 \newenvironment{agda}%
@@ -202,7 +200,6 @@
  \newcommand{\with}{\textbf{with}}
 }
 {\endtabbing\endgroup}
-
 
 % TODO:
 % - add \noindent after each \end{code}

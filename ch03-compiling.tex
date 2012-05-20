@@ -252,8 +252,8 @@ Let us describe the effects of single instructions on the state of the machine
     the top of the stack and pushes their sum back.
 \end{itemize}
 
-Note that in this definition, we already reap some benefits of dependently
-typed programming.
+Note that in this definition of the execution function, we already reap some
+benefits of dependently typed programming.
 
 First, of course, Agda checks types of the terms behind
 the scenes and the machinery of types we have designed so far ensures that
@@ -270,7 +270,9 @@ solid hints of correctness) and it is \emph{total} (esp. no pattern match failur
 while compilers of non-dependently typed languages, like OCaml or Haskell,
 would complain about non-exhaustive patterns here --- there is no way to tell them
 that, for example, we needn't deal with empty stacks when executing \ident{ADD}.
-% TODO: ktory paper tvrdi, ze to je nevyhnutne?
+
+\todo{There's a paper saying that non-exhaustive matches are inevitable; insert
+a reference.}
 
 \subsubsection{Code}
 
@@ -409,9 +411,10 @@ term to the desired final form.
 
 \subsubsection{Alternative proof of distributivity}
 
-% TODO: which version?
 Starting from Agda 2.2.4, we can shorten our previous proof considerably
 by using the \ident{rewrite} keyword:
+
+\todo{Which version of Agda?}
 
 \begin{code}
   compile\-distr : forall {s t u} {st : Stack s}
