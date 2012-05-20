@@ -58,13 +58,12 @@
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing,patterns}
 
-\usepackage[Sonny]{fncychap}
-\makeatletter
-	\ChNumVar{\Huge}
-	\ChTitleVar{\LARGE\rm\it}
-	\ChNameVar{\Large\sc}
-	\ChNameAsIs
-\makeatother
+\titleformat{\chapter}[display]%
+{\flushright\rm}%
+{\scshape\Large Chapter\Huge\hspace{0.5em}\thechapter}%
+{20pt}%
+{\hrulefill\vspace{10pt}\\\itshape\LARGE}%
+[\hrulefill]
 
 \titleformat{\section}[block]{\centering\rm\itshape}{\Large\thesection}{1ex}{\Large}
 \titlespacing*{\section}{0ex}{20pt}{10pt}
