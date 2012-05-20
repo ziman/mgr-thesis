@@ -22,6 +22,7 @@ compiler and the skeleton of our development.
 
 \subsection{Type universe}
 
+
 The first thing we will introduce is the type universe representing the set of
 types of expressions of the high-level language. We will index our types with
 values of this type (most notably the type \ident{Exp u} of expressions, to
@@ -566,7 +567,9 @@ add the \ident{Throw} expression and the \ident{Catch} construct.
 \begin{code}
   data Op : U -> U -> U -> Set where
     Plus : Op nat nat nat
+\end{code}
 
+\begin{code}
   data Exp : U -> Set where
     Lit : forall {u} -> el u -> Exp u
     Bin : forall {u v w} -> Op u v w -> Exp u -> Exp v -> Exp w
@@ -601,7 +604,7 @@ exception occurs. To express that, the function \ident{denExp} will now return
 \ident{nothing}\footnote{In contrast with Haskell, Agda uses lowercase initials
 of the constructors \ident{just} and \ident{nothing}.} to indicate uncaught
 exceptions and the value \ident{just x} to indicate that the expression
-succesfully evaluates to the value \ident{x}.
+succesfully evaluates to the value~\ident{x}.
 
 The second change is adding pattern cases for the newly added constructors
 of \ident{Exp} to the denotation function \ident{denExp}.
@@ -800,6 +803,8 @@ these instructions handle exceptions when they all must do the same thing: just 
 the exception forward and do nothing else? Exceptions should be handled by a different
 mechanism than regular execution.
 
+\inset{Get the type of the top-most handler in the Shape or return \ident{nothing}
+if there is no handler.}
 Third, the Agda termination checker rejects the exception-handling case for
 \ident{UNMARK} in the function \ident{execInstr}. Recursion isn't structural
 here and we need to convince Agda about termination using a decreasing measure
