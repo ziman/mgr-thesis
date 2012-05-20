@@ -669,6 +669,9 @@ Unlike Hutton and Wright, we also need to care about the type of stack shapes.
 This will no longer be a plain
 list of types (that is, elements of the universe \ident{U}); instead, we  will
 distinguish between \emph{values} and \emph{handlers} pushed on the stack.
+
+%\inset{First, Hutton and Wright propose altering the type of stacks because besides
+%values, now we are going to push exception handlers on the stack, too.}
 \begin{code}
   data Item : Set where
     Val : U -> Item
@@ -830,31 +833,42 @@ determining which mode of operation the machine is in, we will model it as diffe
 constructors of the \ident{State} data type.
 
 The normal mode of operation contains simply the stack. However, the exceptional state
-is a bit more involved; let us declare the datatypes first and describe them afterwards.
+is a bit more involved; let us declare the datatypes and the auxiliary functions first
+and describe them afterwards.
 \begin{code}
   -- Get the type of the top\-most handler in the Shape.
+  -- Return nothing if there is no handler.
   unwindHnd : Shape -> \bN -> Maybe U
   unwindHnd (Han u :: xs) zero    = just u
   unwindHnd (Han _ :: xs) (suc n) = unwindHnd xs n
   unwindHnd (Val _ :: xs) n       = unwindHnd xs n
   unwindHnd []           _       = nothing
+\end{code}
 
+\begin{code}
   -- Unwind the shape up to just below the top-most handler.
+  -- Return the empty shape if there is no handler.
   unwindShape : Shape -> \bN -> Shape
   unwindShape (Han _ :: xs) zero    = xs
   unwindShape (Han _ :: xs) (suc n) = unwindShape xs n
   unwindShape (Val _ :: xs) n       = unwindShape xs n
   unwindShape []           _       = []
+\end{code}
 
+\begin{code}
   -- Normal operation resumption point.
   data Resume (s : Shape) : Maybe U -> Set where
     -- A handler is available, also remember the stack on which the handler should operate.
-    Okay : forall {u} -> Code s (Val u :: s) -> Stack s -> Resume s (just u)
+    Caught : forall {u} -> Code s (Val u :: s) -> Stack s -> Resume s (just u)
     -- Uncaught throw.
-    Fail : Resume s nothing
+    Uncaught : Resume s nothing
+\end{code}
 
+\begin{code}
   data State : Shape -> Set where
+  	-- Normal state
   	\tick[_] : forall {s} -> Stack s -> State s
+  	-- Exception\-processing state
   	\x[_,_] : forall {s : Shape} (n : \bN&\!&)
   	  -> Resume (unwindShape s n) (unwindHnd s n)
   	  -> State s
