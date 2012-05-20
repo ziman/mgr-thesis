@@ -867,8 +867,7 @@ and describe them afterwards.
 \noindent Then we can define the data types: the resumption point and, finally,
 the type of machine states.
 
-\inset{This structure holds information needed to resume computation when the machine
-finds the exception handler.}
+\inset{Information needed to resume computation after finding the exception handler.}
 \begin{code}
   -- Normal operation resumption point.
   data Resume (s : Shape) : Maybe U -> Set where
