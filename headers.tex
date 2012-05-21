@@ -64,16 +64,25 @@
 \makeatother
 
 \usepackage{fancyhdr}
-\lhead[\thepage]{\textsc{\nouppercase{\rightmark}}}
-\rhead[\textsc{\nouppercase{\leftmark}}]{\thepage}
-\cfoot[]{}
+\fancypagestyle{fancypg}{%
+\lhead[\thepage]{\textsc{\nouppercase{\rightmark}}}%
+\rhead[\textsc{\nouppercase{\leftmark}}]{\thepage}%
+\cfoot[]{}%
+}
+
+% make chapter pages numberless
+\fancypagestyle{plain}{ %
+\fancyhf{} % remove everything
+\renewcommand{\headrulewidth}{0pt} % remove lines as well
+\renewcommand{\footrulewidth}{0pt} %
+}
 
 \titleformat{\chapter}[display]%
 {\flushright\rm}%
 {\scshape\Large Chapter\Huge\hspace{0.5em}\thechapter}%
 {20pt}%
 {\vhrulefill{2pt}\vspace{11pt}\\\itshape\LARGE}%
-[\hrulefill]
+[\vspace{-2pt}\hrulefill]
 
 \titleformat{\section}[block]{\centering\rm\itshape}{\Large\thesection}{1ex}{\Large}
 \titlespacing*{\section}{0ex}{20pt}{10pt}
