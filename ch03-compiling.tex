@@ -964,12 +964,20 @@ two modes of operation:
 	\item normal operation, where we just need to keep track of the stack;
 	\item exception handling mode, where we keep additional state variables besides the stack.
 \end{itemize}
-While in real machines, the above distinction would be represented by yet another
-state variable
-determining which mode of operation the machine is in, we will model it as different
-constructors of the \ident{State} data type.
 
 \subsubsection{Differences to real machines}
+
+In real machines, the above distinction would be represented by yet another
+state variable determining which mode of operation the machine is in.
+We will model it as different constructors of the \ident{State} data type.
+
+Like in the placeholder method, we will push handlers on the stack, which contradicts
+the principles we pursue and isn't really executable by real machines. We will address
+this issue later, in Chapter \ref{chap:compiling2}.
+
+For quitting the current handler frame, we need to skip all instructions left to execute
+within the frame.
+\\ \todo{Frame skipping as machine state. Termination. Measure.}
 
 \subsubsection{Implementation}
 
