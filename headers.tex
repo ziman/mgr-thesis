@@ -227,10 +227,7 @@
 \newcommand{\inset}[1]{\myinset{#1}}
 %\newcommand{\note}[1]{\marginpar{\footnotesize \textit{#1}}}
 \newcommand{\note}[1]{\marginpar{\lrule{0.5pt}{\footnotesize \textit{#1}}}}
-
-%\newcommand{\todo}[1]{\noindent\mbox{\minipage{0.985\textwidth}\noindent\textsf{\textbf{TODO:} #1}\endminipage}\\}
-\newcommand{\todo}[1]{\vspace{7pt}\noindent\parbox{0.973\textwidth}{\lrule{5pt}{\textsf{\textbf{TODO:}} #1}}%
-\vspace{0.5em}}
+\newcommand{\todo}[1]{\noindent\textssc{Todo:} #1}
 
 \newenvironment{agda}%
 {\begingroup\sf\small\tabbing%

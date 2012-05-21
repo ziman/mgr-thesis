@@ -28,7 +28,9 @@ types of expressions of the high-level language. We will index our types with
 values of this type (most notably the type \ident{Exp u} of expressions, to
 indicate what the type of the expression is), and while we could use Agda types
 directly for indexing, with an explicit universe, we get decidable equality of
-types and all datatypes conveniently in \ident{Set}. We could parametrize our
+types and all datatypes conveniently in \ident{Set}.
+
+We could parametrize our
 modules with the universe but let us just define a fixed one for the sake of
 simplicity.
 
@@ -840,7 +842,7 @@ two modes of operation:
 \begin{itemize}
 	\item normal operation, where we just need to keep track of the stack;
 	\item exception handling mode, where we keep additional state variables besides the stack.
-		This mode is also called \emph{stack unwinding} \note{Stack unwinding.} because
+		This mode is also called \emph{stack unwinding} because
 		in this mode, the machine just keeps discarding values from the top of the stack
 		until it finds a suitable exception handler.
 \end{itemize}
@@ -876,7 +878,8 @@ First, we need to know whether there is an appropriate handler on the stack and 
 \end{code}
 
 \noindent Then we can define the data types; first the resumption point, which
-represents information needed to resume computation after finding the exception handler.
+represents information needed to resume computation after skipping the instructions
+belonging to the exception-throwing expression.
 \begin{code}
   -- Normal operation resumption point.
   data Resume (s : Shape) : Maybe U -> Set where
@@ -908,12 +911,120 @@ two (explicit) parameters.
 	\item The parameter~\ident{n} describes how many stack frames we need to
 		\emph{unconditionally} unwind before starting to search for an exception handler.
 	\item The other parameter describes how to resume normal execution when
-		the exception handler is found.
+		the machine has finished skipping instructions.
 \end{itemize}
 This perhaps vague description will be made clearer in the following subsection.
 
 \subsection{Execution}
 
+The machine has two modes of execution, as hinted in \cite[p.~7]{gmh:exceptions}.
+
+The normal mode is exactly what one would expect: executing instructions on a stack,
+nothing surprising.
+
+What we need to discuss is the exception-handling mode. When an exception is thrown,
+two things need to be done in order to execute the exception handler:
+\begin{itemize}
+	\item The position in the sequence of instructions needs to be advanced
+		appropriately. In general, we need to skip all instructions that belong
+		to the part of computation being abandoned.
+	\item Next, the stack needs to be unwound. This means removing items from the stack
+		until the first exception handler is found.\footnote{Here we do not distinguish types
+		of exception handlers so any handler is always appropriate. If we had typed
+		exceptions, we might need to skip handlers that don't match the exception
+		being processed.} When this is done, we can pop the handler from the stack
+		and the resulting stack is now suitable for execution of the popped handler.
+\end{itemize}
+In a sense, we can talk about \emph{handler frames} that we need to discard
+while looking for an exception handler. This is best demonstrated on an example.
+Consider the following expression of the high-level language:
+\begin{code}
+  Bin Plus
+  	(Catch
+  		(Bin Plus (Lit 1) (Lit 4))
+  		(Lit 2))
+  	(Lit 3)
+\end{code}
+The above expression compiles to the following instruction sequence, where we use
+the name~\ident{h} for the compiled handler code\footnote{In this case, the handler
+code is \ident{[PUSH 2]}.} for readability.
+\begin{code}
+  [PUSH 3, MARK h, PUSH 4, PUSH 1, ADD, UNMARK, ADD]
+\end{code}
+This code does not throw any exceptions so we already know how it should be executed.
+Let us plot the intermediate stacks in a graph, with the executed instructions
+on the horizontal axis, and the stack growing vertically from the baseline. This is
+how we get Figure \ref{fig:stack-frames}.
+
+\begin{figure}[htp]
+	\centering
+	\begin{tikzpicture}[x=4em,y=1em,font=\footnotesize]
+		\draw[lightgray,step=1,dotted] (0,0) grid (7,8);
+		\draw[->] (0,0) -- (7,0) node[below] {\textit{code}};
+		\draw[->] (0,0) -- (0,8) node[left] {\textit{stack}};
+
+		\draw
+			(0.5,0.5) node {\ident{3 : nat}}
+			
+			(1.5,0.5) node {\ident{3 : nat}}
+			(1.5,1.5) node {\ident{\textit{h : nat}}}
+			
+			(2.5,0.5) node {\ident{3 : nat}}
+			(2.5,1.5) node {\ident{\textit{h : nat}}}
+			(2.5,2.5) node {\ident{4 : nat}}
+			
+			(3.5,0.5) node {\ident{3 : nat}}
+			(3.5,1.5) node {\ident{\textit{h : nat}}}
+			(3.5,2.5) node {\ident{4 : nat}}
+			(3.5,3.5) node {\ident{1 : nat}}
+			
+			(4.5,0.5) node {\ident{3 : nat}}
+			(4.5,1.5) node {\ident{\textit{h : nat}}}
+			(4.5,2.5) node {\ident{5 : nat}}
+			
+			(5.5,0.5) node {\ident{3 : nat}}
+			(5.5,1.5) node {\ident{5 : nat}}
+			
+			(6.5,0.5) node {\ident{8 : nat}}
+			;
+		\draw
+			(0,0) node[below] {\ident{PUSH 3}}
+			(1,0) node[below] {\ident{MARK h}}
+			(2,0) node[below] {\ident{PUSH 4}}
+			(3,0) node[below] {\ident{PUSH 1}}
+			(4,0) node[below] {\ident{ADD}}
+			(5,0) node[below] {\ident{UNMARK}}
+			(6,0) node[below] {\ident{ADD}}
+			;
+		\draw[line width=1.5pt]
+			(1,5) -- (1,1) -- (5,1) -- (5,5);
+		\draw[line width=1.5pt,dotted]
+			(1,5) -- (1,6)    (5,5) -- (5,6);
+		\draw[dashed]
+			(1,2) -- (5,2);
+		\draw[->]
+			(5,1.55) -- (5.14,1.55);
+	\end{tikzpicture}
+	\caption{Execution of an expression with the handler frame outlined.}
+	\label{fig:stack-frames}
+\end{figure}
+
+The handler frame is delimited by the corresponding \ident{MARK} from the left,
+the corresponding \ident{UNMARK} from the right, and the corresponding handler
+on the stack from the bottom. Within the handler frame, evaluation of the
+guarded\footnote{%
+By ``guarded'' we mean that the expression is the main expression of
+some catch-expression.
+} expression runs independently from the context. Finally, after executing
+\ident{UNMARK}, a single value is left on top of the stack: if no exceptions
+were thrown, this is exactly the denotation of the guarded expression.
+
+Note that handler frames may be nested since catch-expressions may also
+be nested arbitrarily.
+
+Now that handler frames are defined, we can describe exception handling quite
+concisely: discard the innermost handler frame, remembering the associated
+handler, and then execute the handler as ordinary code on the resulting stack.
 
 \section{Termination}
 
