@@ -946,7 +946,8 @@ be nested arbitrarily.
 \subsubsection{Stack unwinding}
 Now that handler frames are defined, we can describe exception handling
 by stack unwinding quite concisely: quit the innermost handler frame\footnote{%
-Note that this involves discarding stack items but also skipping instructions.},
+Note that this involves discarding stack items but also skipping all instructions
+to be executed within the handler frame.},
 remembering the handler found at the bottom of the frame, and then
 execute the handler as ordinary code on the resulting stack.
 
@@ -968,14 +969,19 @@ state variable
 determining which mode of operation the machine is in, we will model it as different
 constructors of the \ident{State} data type.
 
+\subsubsection{Differences to real machines}
+
+\subsubsection{Implementation}
+
 The normal mode of operation contains simply the stack. However, the exceptional state
 is a bit more involved; let us declare the datatypes and the auxiliary functions first
 and describe them afterwards.
 
-First, we need to know whether there is an appropriate handler on the stack and what type it has.
+First, we need to know whether there is an appropriate handler on the stack and what type
+it has.
 \begin{code}
   -- Get the type of the &\cident{n}&\-th top\-most handler in the Shape.
-  -- Return &\cident{nothing}& if there is no handler.
+  -- Return &\cident{nothing}& if there is no such handler.
   unwindHnd : Shape -> \bN -> Maybe U
   unwindHnd (Han u :: xs) zero    = just u
   unwindHnd (Han _ :: xs) (suc n) = unwindHnd xs n
@@ -986,7 +992,7 @@ First, we need to know whether there is an appropriate handler on the stack and 
 \noindent We also need to know what shape the unwound stack will have.
 \begin{code}
   -- Unwind the shape up to just below the &\cident{n}&\-th top\-most handler.
-  -- Return the empty shape if there is no handler.
+  -- Return the empty shape if there is no such handler.
   unwindShape : Shape -> \bN -> Shape
   unwindShape (Han _ :: xs) zero    = xs
   unwindShape (Han _ :: xs) (suc n) = unwindShape xs n
@@ -994,9 +1000,9 @@ First, we need to know whether there is an appropriate handler on the stack and 
   unwindShape []           _       = []
 \end{code}
 
-\noindent Then we can define the data types; first the resumption point, which
+\noindent Now we can define the data types. First, the resumption point, which
 represents information needed to resume computation after skipping the instructions
-belonging to the exception-throwing expression.
+of the current handler frame.
 \begin{code}
   -- Normal operation resumption point.
   data Resume (s : Shape) : Maybe U -> Set where
