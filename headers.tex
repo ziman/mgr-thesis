@@ -59,6 +59,10 @@
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing,patterns}
 
+\makeatletter
+  \def\vhrulefill#1{\leavevmode\leaders\hrule\@height#1\hfill \kern\z@}
+\makeatother
+
 \usepackage{fancyhdr}
 \lhead[\thepage]{\textsc{\nouppercase{\rightmark}}}
 \rhead[\textsc{\nouppercase{\leftmark}}]{\thepage}
@@ -68,7 +72,7 @@
 {\flushright\rm}%
 {\scshape\Large Chapter\Huge\hspace{0.5em}\thechapter}%
 {20pt}%
-{\hrulefill\vspace{11pt}\\\itshape\LARGE}%
+{\vhrulefill{2pt}\vspace{11pt}\\\itshape\LARGE}%
 [\hrulefill]
 
 \titleformat{\section}[block]{\centering\rm\itshape}{\Large\thesection}{1ex}{\Large}
