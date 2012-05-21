@@ -677,9 +677,14 @@ Unlike Hutton and Wright, we also need to care about the type of stack shapes.
 This will no longer be a plain
 list of types (that is, elements of the universe \ident{U}); instead, we  will
 distinguish between \emph{values} and \emph{handlers} pushed on the stack.
+\footnote{Actually, there is even more ``dependent'' approach: we could
+index the type of stack shapes by the list of handlers on the stack, so we get
+\ident{Shape : List U $\to$ Set}. In this setup, pushing a value on the stack
+will change its shape but not the type of the shape, while pushing a handler
+on the stack will change both the shape and its type. However, we will not take
+this route as it turns out to be more complicated, while not yielding substantial
+advantages in return.}
 
-%\inset{First, Hutton and Wright propose altering the type of stacks because besides
-%values, now we are going to push exception handlers on the stack, too.}
 \begin{code}
   data Item : Set where
     Val : U -> Item
@@ -839,7 +844,8 @@ two modes of operation:
 		in this mode, the machine just keeps discarding values from the top of the stack
 		until it finds a suitable exception handler.
 \end{itemize}
-While in real machines, the above distinction would result in yet another state variable
+While in real machines, the above distinction would be represented by yet another
+state variable
 determining which mode of operation the machine is in, we will model it as different
 constructors of the \ident{State} data type.
 
