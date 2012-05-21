@@ -22,6 +22,7 @@
 %\setlength\textheight{247mm}
 
 \setlength{\headsep}{3em}
+\setlength{\headheight}{15pt}
 %\setlength\textwidth{145mm}
 %\setlength\textwidth{145mm}
 %\setlength\oddsidemargin{15mm}
@@ -58,11 +59,20 @@
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing,patterns}
 
+\makeatletter
+  \def\vhrulefill#1{\leavevmode\leaders\hrule\@height#1\hfill \kern\z@}
+\makeatother
+
+\usepackage{fancyhdr}
+\lhead[\thepage]{\textsc{\nouppercase{\rightmark}}}
+\rhead[\textsc{\nouppercase{\leftmark}}]{\thepage}
+\cfoot[]{}
+
 \titleformat{\chapter}[display]%
 {\flushright\rm}%
 {\scshape\Large Chapter\Huge\hspace{0.5em}\thechapter}%
 {20pt}%
-{\hrulefill\vspace{11pt}\\\itshape\LARGE}%
+{\vhrulefill{2pt}\vspace{11pt}\\\itshape\LARGE}%
 [\hrulefill]
 
 \titleformat{\section}[block]{\centering\rm\itshape}{\Large\thesection}{1ex}{\Large}
@@ -109,7 +119,7 @@
        	{<-}{{$\leftarrow$}}2
         {<=}{{$\leq$}}2
         {=>}{{$\Rightarrow\;$}}2 
-        {\\...}{{$\cdots$}}2
+        {\\...}{{$\cdots\;$}}2
         {\ .}{{$\circ$}}2
         {\ .\ }{{$\circ$}}2
         {>>}{{>>}}2
