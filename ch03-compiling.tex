@@ -678,12 +678,12 @@ This will no longer be a plain
 list of types (that is, elements of the universe \ident{U}); instead, we  will
 distinguish between \emph{values} and \emph{handlers} pushed on the stack.
 \footnote{Actually, there is even more ``dependent'' approach: we could
-index the type of stack shapes by the list of handlers on the stack, so we get
+index the type of stack shapes by the list of handlers on the stack, getting
 \ident{Shape : List U $\to$ Set}. In this setup, pushing a value on the stack
 will change its shape but not the type of the shape, while pushing a handler
-on the stack will change both the shape and its type. However, we will not take
-this route as it turns out to be more complicated, while not yielding substantial
-advantages in return.}
+on the stack will change both the shape and the type of the shape. However, we
+will not take this route as it turns out to be more complicated, while the author
+could not see any advantages this would yield.}
 
 \begin{code}
   data Item : Set where
