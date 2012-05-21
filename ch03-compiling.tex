@@ -847,9 +847,9 @@ The normal mode of operation contains simply the stack. However, the exceptional
 is a bit more involved; let us declare the datatypes and the auxiliary functions first
 and describe them afterwards.
 
-First, we need to know whether there is a handler on the stack and what type it has.
-\begin{code}& \inset{foo} &
-  -- Get the type of the top-most handler in the Shape.
+First, we need to know whether there is an appropriate handler on the stack and what type it has.
+\begin{code}
+  -- Get the type of the &\cident{n}&\-th top\-most handler in the Shape.
   -- Return &\cident{nothing}& if there is no handler.
   unwindHnd : Shape -> \bN -> Maybe U
   unwindHnd (Han u :: xs) zero    = just u
@@ -860,7 +860,7 @@ First, we need to know whether there is a handler on the stack and what type it 
 
 \noindent We also need to know what shape the unwound stack will have.
 \begin{code}
-  -- Unwind the shape up to just below the top\-most handler.
+  -- Unwind the shape up to just below the &\cident{n}&\-th top\-most handler.
   -- Return the empty shape if there is no handler.
   unwindShape : Shape -> \bN -> Shape
   unwindShape (Han _ :: xs) zero    = xs
