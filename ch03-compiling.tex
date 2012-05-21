@@ -675,9 +675,9 @@ mind.
 First, Hutton and Wright propose altering the type of stacks because besides
 values, now we are going to push exception handlers on the stack, too.
 
-Unlike Hutton and Wright, we also need to care about the type of stack shapes.
-This will no longer be a plain
-list of types (that is, elements of the universe \ident{U}); instead, we  will
+Unlike Hutton and Wright, we also need to care about stack shapes.
+The type of stack shapes will no longer be a plain
+list of types (that is, elements of the universe~\ident{U}); instead, we  will
 distinguish between \emph{values} and \emph{handlers} pushed on the stack.
 \footnote{Actually, there is even more ``dependent'' approach: we could
 index the type of stack shapes by the list of handlers on the stack, getting
@@ -736,13 +736,15 @@ reflects in extending the \ident{Instr} type, which must now reside in a
 \noindent The definition of code doesn't change: it is still a simple
 ``index-matching list'' of instructions.
 
-\subsubsection{Machine state, take one}
+\subsection{Execution, take one}
+
+\subsubsection{Machine state}
 
 The topic of machine state is left implicit in the paper by Hutton and Wright,
 yet it is one of the most involved parts of this Agda development. The state must
 certainly contain the stack but -- is it sufficient?
 
-To be put it precisely and explicitly, the state of the virtual machine includes
+To put it precisely and explicitly, the state of the virtual machine includes
 these components:
 \begin{itemize}
 	\item the position in the executed code (e.g. instruction pointer);
@@ -752,9 +754,14 @@ these components:
 For now, we will leave the position in the code implicit and we will not count it
 as a component of the state.
 
-One approach to execution not requiring any additional flags and variables would
-be extending the stack type with a new constructor;
-let us call it \ident{\void\scons\!\!\_}.
+\subsubsection{Placeholder method}
+
+One approach\footnote{This approach is not considered by Hutton and Wright at all;
+we include it for illustration as the most na\"{i}ve strategy, whose disadvantages
+will be gradually solved we will be switching to better and better approaches.}
+to execution not requiring any additional flags and variables
+would be extending the stack type with a new constructor; let us call it
+\ident{\void\scons\!\!\_}.
 \begin{code}
   data Stack : Shape -> Set where
     snil : Stack []
@@ -764,7 +771,8 @@ let us call it \ident{\void\scons\!\!\_}.
 \end{code}
 The new constructor acts as a placeholder for missing values if an exception is raised.
 
-Note the strong similarity to the \ident{THROW} instruction and the \ident{Throw}
+Note the strong similarity of the new constructor \ident{\void\scons\_} to the
+\ident{THROW} instruction and the \ident{Throw}
 expression. The instruction \ident{THROW} is indexed as an instruction that pushes
 a value of any specified type on the stack -- but it actually does not. The 
 \ident{Throw} expression is indexed as an expression that yields a value of any specified
@@ -825,26 +833,135 @@ While this low-level representation does work, it leaves much to be desired. In 
 sections (and chapters), we will address these objections. Let us begin with the first two
 of them.
 
-\subsubsection{Machine state, take two}
+\subsection{Execution, take two}
 
-This approach is actually an adaptation of the one presented by Hutton and Wright,
-except that we make the state completely explicit in order to adhere to our objectives.
-We discard our attempts with placeholders and return to the original stack representation:
+We will adapt the method of \emph{stack unwinding}, described in the paper by Hutton
+and Wright. Now the machine has two modes of execution, as hinted in
+\cite[p.~7]{gmh:exceptions}.
+
+The normal mode is exactly what one would expect: executing instructions on a stack, nothing surprising.
+
+However, the non-trivial part is the exception-handling mode. When an exception is thrown,
+two things need to be done in order to execute the exception handler:
+\begin{itemize}
+	\item The position in the sequence of instructions needs to be advanced
+		appropriately. In general, we need to skip all instructions that belong
+		to the part of computation being abandoned.
+	\item Next, the stack needs to be unwound. This means removing items from the stack
+		until the first exception handler is found.\footnote{Here we do not distinguish types
+		of exception handlers so any handler is always appropriate. If we had typed
+		exceptions, we might need to skip handlers that don't match the exception
+		being processed.} When this is done, we can pop the handler from the stack
+		and the resulting stack is now suitable for execution of the popped handler.
+\end{itemize}
+
+\subsubsection{Handler frames}
+In a sense, we can talk about \emph{handler frames} that we need to discard
+while looking for an exception handler. This is best demonstrated on an example.
+Consider the following expression of the high-level language:
 \begin{code}
-  data Stack : Shape -> Set where
-    snil : Stack []
-    _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
-    _\sconsh\_ : forall {u s} -> Code s (Val u :: s) -> Stack s -> Stack (Han u :: s)
+  Bin Plus
+  	(Catch
+  		(Bin Plus (Lit 1) (Lit 4))
+  		(Lit 2))
+  	(Lit 3)
 \end{code}
+The above expression compiles to the following instruction sequence, where we use
+the name~\ident{h} for the compiled handler code\footnote{In this case, the handler
+code is \ident{[PUSH 2]}.} for readability.
+\begin{code}
+  [PUSH 3, MARK h, PUSH 4, PUSH 1, ADD, UNMARK, ADD]
+\end{code}
+This code does not throw any exceptions so we already know how it should be executed.
+Let us plot the intermediate stacks in a graph, with the executed instructions
+on the horizontal axis, and the stack growing vertically from the baseline. This is
+how we get Figure \ref{fig:stack-frames}.
 
-\noindent However, we extend the \emph{state} of the machine instead. We will distinguish
+\begin{figure}[tp]
+	\centering
+	\begin{tikzpicture}[x=4em,y=1em,font=\footnotesize]
+		\draw[lightgray,step=1,dotted] (0,0) grid (7,8);
+		\draw[->] (0,0) -- (7,0) node[below] {\textit{code}};
+		\draw[->] (0,0) -- (0,8) node[left] {\textit{stack}};
+
+		\draw
+			(0.5,0.5) node {\ident{3 : nat}}
+			
+			(1.5,0.5) node {\ident{3 : nat}}
+			(1.5,1.5) node {\ident{\textit{h : nat}}}
+			
+			(2.5,0.5) node {\ident{3 : nat}}
+			(2.5,1.5) node {\ident{\textit{h : nat}}}
+			(2.5,2.5) node {\ident{4 : nat}}
+			
+			(3.5,0.5) node {\ident{3 : nat}}
+			(3.5,1.5) node {\ident{\textit{h : nat}}}
+			(3.5,2.5) node {\ident{4 : nat}}
+			(3.5,3.5) node {\ident{1 : nat}}
+			
+			(4.5,0.5) node {\ident{3 : nat}}
+			(4.5,1.5) node {\ident{\textit{h : nat}}}
+			(4.5,2.5) node {\ident{5 : nat}}
+			
+			(5.5,0.5) node {\ident{3 : nat}}
+			(5.5,1.5) node {\ident{5 : nat}}
+			
+			(6.5,0.5) node {\ident{8 : nat}}
+			;
+		\draw
+			(0,0) node[below] {\ident{PUSH 3}}
+			(1,0) node[below] {\ident{MARK h}}
+			(2,0) node[below] {\ident{PUSH 4}}
+			(3,0) node[below] {\ident{PUSH 1}}
+			(4,0) node[below] {\ident{ADD}}
+			(5,0) node[below] {\ident{UNMARK}}
+			(6,0) node[below] {\ident{ADD}}
+			;
+		\draw[line width=1.5pt]
+			(1,5) -- (1,1) -- (5,1) -- (5,5);
+		\draw[line width=1.5pt,dotted]
+			(1,5) -- (1,6)    (5,5) -- (5,6);
+		\draw[dashed]
+			(1,2) -- (5,2);
+		\draw[->]
+			(5,1.55) -- (5.14,1.55);
+	\end{tikzpicture}
+	\caption{Execution of an expression with the handler frame outlined.}
+	\label{fig:stack-frames}
+\end{figure}
+
+The handler frame is delimited by the corresponding \ident{MARK} from the left,
+the corresponding \ident{UNMARK} from the right, and the corresponding handler
+on the stack from the bottom. Within the handler frame, evaluation of the
+guarded\footnote{%
+By ``guarded'' we mean that the expression is the main expression of
+some catch-expression.
+} expression runs independently from the context. Finally, after executing
+\ident{UNMARK}, a single value is left on top of the stack: if no exceptions
+were thrown, this is exactly the denotation of the guarded expression.
+
+Of course, handler frames may be nested since catch-expressions may also
+be nested arbitrarily.
+
+\subsubsection{Stack unwinding}
+Now that handler frames are defined, we can describe exception handling
+by stack unwinding quite concisely: quit the innermost handler frame\footnote{%
+Note that this involves discarding stack items but also skipping instructions.},
+remembering the handler found at the bottom of the frame, and then
+execute the handler as ordinary code on the resulting stack.
+
+\subsubsection{Machine state}
+
+In contrast with Hutton and Wright, we make the state completely explicit in order
+to adhere to our objectives.
+
+Of course, we discard our experiments with placeholders and return to the original
+stack representation with two cons-constructors.
+Instead, we extend the \emph{state} of the machine. We will distinguish between
 two modes of operation:
 \begin{itemize}
 	\item normal operation, where we just need to keep track of the stack;
 	\item exception handling mode, where we keep additional state variables besides the stack.
-		This mode is also called \emph{stack unwinding} because
-		in this mode, the machine just keeps discarding values from the top of the stack
-		until it finds a suitable exception handler.
 \end{itemize}
 While in real machines, the above distinction would be represented by yet another
 state variable
@@ -915,116 +1032,9 @@ two (explicit) parameters.
 \end{itemize}
 This perhaps vague description will be made clearer in the following subsection.
 
-\subsection{Execution}
 
-The machine has two modes of execution, as hinted in \cite[p.~7]{gmh:exceptions}.
 
-The normal mode is exactly what one would expect: executing instructions on a stack,
-nothing surprising.
 
-What we need to discuss is the exception-handling mode. When an exception is thrown,
-two things need to be done in order to execute the exception handler:
-\begin{itemize}
-	\item The position in the sequence of instructions needs to be advanced
-		appropriately. In general, we need to skip all instructions that belong
-		to the part of computation being abandoned.
-	\item Next, the stack needs to be unwound. This means removing items from the stack
-		until the first exception handler is found.\footnote{Here we do not distinguish types
-		of exception handlers so any handler is always appropriate. If we had typed
-		exceptions, we might need to skip handlers that don't match the exception
-		being processed.} When this is done, we can pop the handler from the stack
-		and the resulting stack is now suitable for execution of the popped handler.
-\end{itemize}
-In a sense, we can talk about \emph{handler frames} that we need to discard
-while looking for an exception handler. This is best demonstrated on an example.
-Consider the following expression of the high-level language:
-\begin{code}
-  Bin Plus
-  	(Catch
-  		(Bin Plus (Lit 1) (Lit 4))
-  		(Lit 2))
-  	(Lit 3)
-\end{code}
-The above expression compiles to the following instruction sequence, where we use
-the name~\ident{h} for the compiled handler code\footnote{In this case, the handler
-code is \ident{[PUSH 2]}.} for readability.
-\begin{code}
-  [PUSH 3, MARK h, PUSH 4, PUSH 1, ADD, UNMARK, ADD]
-\end{code}
-This code does not throw any exceptions so we already know how it should be executed.
-Let us plot the intermediate stacks in a graph, with the executed instructions
-on the horizontal axis, and the stack growing vertically from the baseline. This is
-how we get Figure \ref{fig:stack-frames}.
-
-\begin{figure}[htp]
-	\centering
-	\begin{tikzpicture}[x=4em,y=1em,font=\footnotesize]
-		\draw[lightgray,step=1,dotted] (0,0) grid (7,8);
-		\draw[->] (0,0) -- (7,0) node[below] {\textit{code}};
-		\draw[->] (0,0) -- (0,8) node[left] {\textit{stack}};
-
-		\draw
-			(0.5,0.5) node {\ident{3 : nat}}
-			
-			(1.5,0.5) node {\ident{3 : nat}}
-			(1.5,1.5) node {\ident{\textit{h : nat}}}
-			
-			(2.5,0.5) node {\ident{3 : nat}}
-			(2.5,1.5) node {\ident{\textit{h : nat}}}
-			(2.5,2.5) node {\ident{4 : nat}}
-			
-			(3.5,0.5) node {\ident{3 : nat}}
-			(3.5,1.5) node {\ident{\textit{h : nat}}}
-			(3.5,2.5) node {\ident{4 : nat}}
-			(3.5,3.5) node {\ident{1 : nat}}
-			
-			(4.5,0.5) node {\ident{3 : nat}}
-			(4.5,1.5) node {\ident{\textit{h : nat}}}
-			(4.5,2.5) node {\ident{5 : nat}}
-			
-			(5.5,0.5) node {\ident{3 : nat}}
-			(5.5,1.5) node {\ident{5 : nat}}
-			
-			(6.5,0.5) node {\ident{8 : nat}}
-			;
-		\draw
-			(0,0) node[below] {\ident{PUSH 3}}
-			(1,0) node[below] {\ident{MARK h}}
-			(2,0) node[below] {\ident{PUSH 4}}
-			(3,0) node[below] {\ident{PUSH 1}}
-			(4,0) node[below] {\ident{ADD}}
-			(5,0) node[below] {\ident{UNMARK}}
-			(6,0) node[below] {\ident{ADD}}
-			;
-		\draw[line width=1.5pt]
-			(1,5) -- (1,1) -- (5,1) -- (5,5);
-		\draw[line width=1.5pt,dotted]
-			(1,5) -- (1,6)    (5,5) -- (5,6);
-		\draw[dashed]
-			(1,2) -- (5,2);
-		\draw[->]
-			(5,1.55) -- (5.14,1.55);
-	\end{tikzpicture}
-	\caption{Execution of an expression with the handler frame outlined.}
-	\label{fig:stack-frames}
-\end{figure}
-
-The handler frame is delimited by the corresponding \ident{MARK} from the left,
-the corresponding \ident{UNMARK} from the right, and the corresponding handler
-on the stack from the bottom. Within the handler frame, evaluation of the
-guarded\footnote{%
-By ``guarded'' we mean that the expression is the main expression of
-some catch-expression.
-} expression runs independently from the context. Finally, after executing
-\ident{UNMARK}, a single value is left on top of the stack: if no exceptions
-were thrown, this is exactly the denotation of the guarded expression.
-
-Note that handler frames may be nested since catch-expressions may also
-be nested arbitrarily.
-
-Now that handler frames are defined, we can describe exception handling quite
-concisely: discard the innermost handler frame, remembering the associated
-handler, and then execute the handler as ordinary code on the resulting stack.
 
 \section{Termination}
 
