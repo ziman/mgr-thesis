@@ -200,7 +200,9 @@ module \ident{Data.Star}.
   data Star {a b : Set} (R : a -> b -> Set) : a -> b -> Set where
     \nil : forall {x} -> Star R x x
     _<|\_ : forall {x y z} -> R x y -> Star R y z -> Star R x z
+\end{code}
 
+\begin{code}
   Code : Shape -> Shape -> Set
   Code = Star Instr
 \end{code}
@@ -832,7 +834,10 @@ We discard our attempts with placeholders and return to the original stack repre
 two modes of operation:
 \begin{itemize}
 	\item normal operation, where we just need to keep track of the stack;
-	\item exception handling, where we keep additional state variables besides the stack.
+	\item exception handling mode, where we keep additional state variables besides the stack.
+		This mode is also called \emph{stack unwinding} \note{Stack unwinding.} because
+		in this mode, the machine just keeps discarding values from the top of the stack
+		until it finds a suitable exception handler.
 \end{itemize}
 While in real machines, the above distinction would result in yet another state variable
 determining which mode of operation the machine is in, we will model it as different
@@ -842,8 +847,8 @@ The normal mode of operation contains simply the stack. However, the exceptional
 is a bit more involved; let us declare the datatypes and the auxiliary functions first
 and describe them afterwards.
 
-\inset{We need to know whether there is a handler on the stack and what type it has.}
-\begin{code}
+First, we need to know whether there is a handler on the stack and what type it has.
+\begin{code}& \inset{foo} &
   -- Get the type of the top-most handler in the Shape.
   -- Return &\cident{nothing}& if there is no handler.
   unwindHnd : Shape -> \bN -> Maybe U
@@ -853,7 +858,7 @@ and describe them afterwards.
   unwindHnd []           _       = nothing
 \end{code}
 
-\inset{We also need to know what shape the unwound stack will have.}
+\noindent We also need to know what shape the unwound stack will have.
 \begin{code}
   -- Unwind the shape up to just below the top\-most handler.
   -- Return the empty shape if there is no handler.
@@ -864,10 +869,8 @@ and describe them afterwards.
   unwindShape []           _       = []
 \end{code}
 
-\noindent Then we can define the data types: the resumption point and, finally,
-the type of machine states.
-
-\inset{Information needed to resume computation after finding the exception handler.}
+\noindent Then we can define the data types; first the resumption point, which
+represents information needed to resume computation after finding the exception handler.
 \begin{code}
   -- Normal operation resumption point.
   data Resume (s : Shape) : Maybe U -> Set where
@@ -878,7 +881,8 @@ the type of machine states.
     Uncaught : Resume s nothing
 \end{code}
 
-\inset{This finally leads to the data type of machine states, which are twofold.}
+\noindent This finally allows us to define the data type of machine states, which represents
+the two operational modes of the machine: normal mode and exception-handling mode.
 \begin{code}
   data State : Shape -> Set where
   	-- Normal state
@@ -888,6 +892,21 @@ the type of machine states.
   	  -> Resume (unwindShape s n) (unwindHnd s n)
   	  -> State s
 \end{code}
+
+\noindent As mentioned above, the alternative \ident{\tick[\_]} represents the normal mode
+of operation, where the machine just needs to keep track of the stack.
+
+The alternative \ident{$\times$[\_,\_]} represents the exception-handling state, described by
+two (explicit) parameters.
+\begin{itemize}
+	\item The parameter~\ident{n} describes how many stack frames we need to
+		\emph{unconditionally} unwind before starting to search for an exception handler.
+	\item The other parameter describes how to resume normal execution when
+		the exception handler is found.
+\end{itemize}
+This perhaps vague description will be made clearer in the following subsection.
+
+\subsection{Execution}
 
 
 \section{Termination}
