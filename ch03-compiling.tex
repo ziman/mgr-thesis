@@ -745,14 +745,20 @@ yet it is one of the most involved parts of this Agda development. The state mus
 certainly contain the stack but -- is it sufficient?
 
 To put it precisely and explicitly, the state of the virtual machine includes
-these components:
+these components:%
+\footnote{For now, we will leave the position in the code implicit and we will not count
+it as a component of the state. The motivation for doing so is retaining
+the ability to recurse over code structurally, which we would lose if we
+permitted any manipulation with code (beyond un-consing done by the execution
+function).}
 \begin{itemize}
 	\item the position in the executed code (e.g. instruction pointer);
 	\item the stack;
 	\item a bounded number of other flags and variables.
 \end{itemize}
-For now, we will leave the position in the code implicit and we will not count it
-as a component of the state.
+
+Then, execution is fully specified if for each instruction, we define its
+effect on the machine state.
 
 \subsubsection{Placeholder method}
 
@@ -971,13 +977,46 @@ In real machines, the above distinction would be represented by yet another
 state variable determining which mode of operation the machine is in.
 We will model it as different constructors of the \ident{State} data type.
 
-Like in the placeholder method, we will push handlers on the stack, which contradicts
-the principles we pursue and isn't really executable by real machines. We will address
-this issue later, in Chapter \ref{chap:compiling2}.
+Like in the placeholder method, we will push handlers on the stack, which
+contradicts the principles we pursue and isn't really executable by real
+machines. We will address this issue later, in Chapter \ref{chap:compiling2}.%
+\footnote{This also causes trouble with termination but, unlike the
+executability objection, termination issues can be worked around with
+standard termination-proving methods.}
 
-For quitting the current handler frame, we need to skip all instructions left to execute
-within the frame.
-\\ \todo{Frame skipping as machine state. Termination. Measure.}
+For quitting the current handler frame, we need to skip all instructions
+belonging to it. This is not so straightforward if we want to keep the
+recursion structural. The termination checker of Agda requires that our
+definitions be \emph{obviously} terminating, namely, structurally recursive,
+which the following definition is not.
+\begin{code}
+  execCode : forall {s t} -> Code s t -> State s -> State t
+  execCode nil state = state
+  execCode (i <| is) state = execCode is (execInstr i state)
+  execCode (THROW <| is) state = execInstr (skipToHandler is) state
+\end{code}
+In the snippet above, there is no single argument of \ident{execCode} that
+obviously decreases in every recursive call: on the third line, the second
+argument does not; on the fourth line, the first one does not -- and there
+is no other argument that could possibly take the constantly-decreasing role.
+
+There are several standard ways how to cope with this issue: accessibility
+predicates, decreasing measures, or rewriting the algorithm to be
+structurally recursive -- and we will aim for the last one.
+
+This is the reason why we ``simulate'' the jump by switching the machine to an
+alternative mode of execution and keep the function \ident{execCode}
+structurally recursing over the instruction sequence.
+
+Also, the type of the function \ident{execInstr}, that describes effects of
+instructions on the machine state, takes only the instruction and state and
+returns the new state. Since we don't include the ``instruction pointer'' in
+the state, there is no way for the instructions to cause jumps in the code in
+this setup without adding the special states or changing how execInstr works.
+
+
+\todo{Not worse than GHM because they don't jump to addresses when looking for
+the handler either; they even use implicit stacks.}
 
 \subsubsection{Implementation}
 
@@ -1044,7 +1083,6 @@ two (explicit) parameters.
 	\item The other parameter describes how to resume normal execution when
 		the machine has finished skipping instructions.
 \end{itemize}
-This perhaps vague description will be made clearer in the following subsection.
 
 
 
@@ -1052,7 +1090,7 @@ This perhaps vague description will be made clearer in the following subsection.
 
 \section{Termination}
 
-
+\todo{Structurality not the only option. Measure. Bove-Capretta.}
 
 
 
