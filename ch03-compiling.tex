@@ -741,18 +741,13 @@ reflects in extending the \ident{Instr} type, which must now reside in a
 \subsubsection{Machine state}
 
 The topic of machine state is left implicit in the paper by Hutton and Wright,
-yet it is one of the most involved parts of this Agda development. The state must
-certainly contain the stack but -- is it sufficient?
+yet it is one of the most involved parts of this Agda development. We have to
+make it completely explicit in order to adhere to our objectives.
 
-To put it precisely and explicitly, the state of the virtual machine includes
-these components:%
-\footnote{For now, we will leave the position in the code implicit and we will not count
-it as a component of the state. The motivation for doing so is retaining
-the ability to recurse over code structurally, which we would lose if we
-permitted any manipulation with code (beyond un-consing done by the execution
-function).}
+To put it precisely, the state of the virtual machine includes
+the following components:
 \begin{itemize}
-	\item the position in the executed code (e.g. instruction pointer);
+	\item the position in the executed code (``instruction pointer'');
 	\item the stack;
 	\item a bounded number of other flags and variables.
 \end{itemize}
@@ -760,11 +755,17 @@ function).}
 Then, execution is fully specified if for each instruction, we define its
 effect on the machine state.
 
+For now, we will leave the position in the code implicit and we will not count
+it as a component of the state. The motivation for doing so is retaining
+the ability to recurse over code structurally, which we would lose if we
+permitted any manipulation with code (beyond un-consing done by the execution
+function).
+
 \subsubsection{Placeholder method}
 
 One approach\footnote{This approach is not considered by Hutton and Wright at all;
 we include it for illustration as the most na\"{i}ve strategy, whose disadvantages
-will be gradually solved we will be switching to better and better approaches.}
+will be gradually solved as we will be switching to better and better approaches.}
 to execution not requiring any additional flags and variables
 would be extending the stack type with a new constructor; let us call it
 \ident{\void\scons\!\!\_}.
@@ -842,7 +843,7 @@ of them.
 \subsection{Execution, take two}
 
 We will adapt the method of \emph{stack unwinding}, described in the paper by Hutton
-and Wright. Now the machine has two modes of execution, as hinted in
+and Wright. Now the machine will have two modes of execution, as hinted in
 \cite[p.~7]{gmh:exceptions}.
 
 The normal mode is exactly what one would expect: executing instructions on a stack, nothing surprising.
@@ -850,15 +851,15 @@ The normal mode is exactly what one would expect: executing instructions on a st
 However, the non-trivial part is the exception-handling mode. When an exception is thrown,
 two things need to be done in order to execute the exception handler:
 \begin{itemize}
-	\item The position in the sequence of instructions needs to be advanced
-		appropriately. In general, we need to skip all instructions that belong
-		to the part of computation being abandoned.
-	\item Next, the stack needs to be unwound. This means removing items from the stack
-		until the first exception handler is found.\footnote{Here we do not distinguish types
+	\item The stack needs to be unwound. This means removing items from the stack
+		until the first exception handler.\footnote{Here we do not distinguish types
 		of exception handlers so any handler is always appropriate. If we had typed
 		exceptions, we might need to skip handlers that don't match the exception
 		being processed.} When this is done, we can pop the handler from the stack
 		and the resulting stack is now suitable for execution of the popped handler.
+	\item The position in the sequence of instructions needs to be advanced
+		appropriately. In general, we need to skip all instructions that belong
+		to the computation being abandoned.
 \end{itemize}
 
 \subsubsection{Handler frames}
@@ -951,16 +952,13 @@ be nested arbitrarily.
 
 \subsubsection{Stack unwinding}
 Now that handler frames are defined, we can describe exception handling
-by stack unwinding quite concisely: quit the innermost handler frame\footnote{%
+by stack unwinding quite concisely: abandon the innermost handler frame\footnote{%
 Note that this involves discarding stack items but also skipping all instructions
 to be executed within the handler frame.},
 remembering the handler found at the bottom of the frame, and then
 execute the handler as ordinary code on the resulting stack.
 
 \subsubsection{Machine state}
-
-In contrast with Hutton and Wright, we make the state completely explicit in order
-to adhere to our objectives.
 
 Of course, we discard our experiments with placeholders and return to the original
 stack representation with two cons-constructors.
@@ -1013,7 +1011,6 @@ instructions on the machine state, takes only the instruction and state and
 returns the new state. Since we don't include the ``instruction pointer'' in
 the state, there is no way for the instructions to cause jumps in the code in
 this setup without adding the special states or changing how execInstr works.
-
 
 \todo{Not worse than GHM because they don't jump to addresses when looking for
 the handler either; they even use implicit stacks.}
