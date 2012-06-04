@@ -944,25 +944,30 @@ guarded\footnote{%
 By ``guarded'' we mean that the expression is the main expression of
 some catch-expression.
 } expression runs independently from the context. Finally, after executing
-\ident{UNMARK}, a single value is left on top of the stack: if no exceptions
-were thrown, this is exactly the denotation of the guarded expression.
+\ident{UNMARK}, a single value is left on top of the stack: this is exactly
+the denotation of the guarded expression.
 
 Of course, handler frames may be nested since catch-expressions may also
 be nested arbitrarily.
+Hence, handler frames is what corresponds to catch-expressions on the operational
+side of the matter.
+
+\todo{Extended handler frames. Generalize for any expression. Exploitable for proving?
+Is there some yet undiscovered direct 1:1 correspondence that would trivialize proofs?}
 
 \subsubsection{Stack unwinding}
 Now that handler frames are defined, we can describe exception handling
 by stack unwinding quite concisely: abandon the innermost handler frame\footnote{%
 Note that this involves discarding stack items but also skipping all instructions
-to be executed within the handler frame.},
+that were to be executed within the handler frame.},
 remembering the handler found at the bottom of the frame, and then
 execute the handler as ordinary code on the resulting stack.
 
 \subsubsection{Machine state}
 
-Of course, we discard our experiments with placeholders and return to the original
-stack representation with two cons-constructors.
-Instead, we extend the \emph{state} of the machine. We will distinguish between
+As for the machine state, we discard our experiments with placeholders and return
+to the original stack representation with two cons-constructors.
+Instead of placeholders, we extend the state of the machine by distinguishing between
 two modes of operation:
 \begin{itemize}
 	\item normal operation, where we just need to keep track of the stack;
@@ -980,7 +985,7 @@ contradicts the principles we pursue and isn't really executable by real
 machines. We will address this issue later, in Chapter \ref{chap:compiling2}.%
 \footnote{This also causes trouble with termination but, unlike the
 executability objection, termination issues can be worked around with
-standard termination-proving methods.}
+standard termination-proving methods or other tricks.}
 
 For quitting the current handler frame, we need to skip all instructions
 belonging to it. This is not so straightforward if we want to keep the
@@ -1012,7 +1017,7 @@ returns the new state. Since we don't include the ``instruction pointer'' in
 the state, there is no way for the instructions to cause jumps in the code in
 this setup without adding the special states or changing how execInstr works.
 
-\todo{Not worse than GHM because they don't jump to addresses when looking for
+\todo{Not worse than GMH because they don't jump to addresses when looking for
 the handler either; they even use implicit stacks.}
 
 \subsubsection{Implementation}
@@ -1022,7 +1027,7 @@ is a bit more involved; let us declare the datatypes and the auxiliary functions
 and describe them afterwards.
 
 First, we need to know whether there is an appropriate handler on the stack and what type
-it has.
+it has. The shape of the stack is sufficient to determine this.
 \begin{code}
   -- Get the type of the &\cident{n}&\-th top\-most handler in the Shape.
   -- Return &\cident{nothing}& if there is no such handler.
@@ -1064,7 +1069,8 @@ the two operational modes of the machine: normal mode and exception-handling mod
   	-- Normal state
   	\tick[_] : forall {s} -> Stack s -> State s
   	-- Exception\-processing state
-  	\x[_,_] : forall {s : Shape} (n : \bN&\!&)
+  	\x[_,_] : forall {s : Shape}
+  	  -> (n : \bN&\!&)
   	  -> Resume (unwindShape s n) (unwindHnd s n)
   	  -> State s
 \end{code}
@@ -1075,14 +1081,70 @@ of operation, where the machine just needs to keep track of the stack.
 The alternative \ident{$\times$[\_,\_]} represents the exception-handling state, described by
 two (explicit) parameters.
 \begin{itemize}
-	\item The parameter~\ident{n} describes how many stack frames we need to
+	\item The parameter~\ident{n} describes how many handler frames we need to
 		\emph{unconditionally} unwind before starting to search for an exception handler.
+		
+		This is needed because while skipping instructions belonging to the current
+		handler frame, we might enter additional handler frames nested within. Hence
+		we need to keep track of the depth of nesting.
+		
+		\todo{This is exactly the point where Hutton \& Wright use implied stacks.}
+		
 	\item The other parameter describes how to resume normal execution when
 		the machine has finished skipping instructions.
+		
+		If there was an appropriate handler on the stack at the time of throwing
+		the exception, this parameter contains the handler and the stack obtained
+		by stack unwinding. If not, the (appropriately typed) constructor
+		\ident{Uncaught} indicates that an uncaught exception was thrown.
 \end{itemize}
 
+\noindent Note that the whole machinery of types ensures a great part of correctness:
+\begin{itemize}
+	\item of course, types of all values, handlers and expressions match;
+	\item resumption points representing uncaught exceptions cannot be included in the state
+		if there is a handler on the stack;
+	\item vice versa, resumption points representing handled exceptions cannot be included
+		in the state if there is no handler on the stack.
+\end{itemize}
 
+\subsubsection{Operation}
 
+Now that we know what the state \emph{looks like}, we can take a look at how it \emph{works}.
+This involves redefining the function \ident{execInstr} to describe effects of instructions
+in our new setting.
+
+But first, we need to define a prerequisite for \ident{execInstr}: the function
+\ident{unwindStack} that calculates a resumption record from the given stack. This record
+is needed for reinstation of computation once all appropriate instructions have been skipped.
+
+\begin{codei}
+  mutual
+    execInstr : forall {s t} -> Instr s t -> State s -> State t
+  	-- Normal operation
+    execInstr ADD 			\tick[ x \scons y \scons st ]	= \tick[ (x + y) \scons st ]
+    execInstr (PUSH x)		\tick[ st ] 		= \tick[ x \scons st ]
+    execInstr (MARK h)		\tick[ st ] 		= \tick[ h \sconsh st ]
+    execInstr UNMARK		\tick[ x \scons h \sconsh st ]	= \tick[ x \scons st ]
+    -- Exception throwing  
+    execInstr THROW			\tick[ st ]			= \x[ zero , unwindStack st zero ] 
+    -- Nontrivial exception processing
+    execInstr (MARK _)		\x[ n	, r				] = \x[ suc n, r ]
+    execInstr UNMARK		\x[ suc n, r				] = \x[ n	, r ]
+    execInstr UNMARK		\x[ zero	, Caught h st	] = execCode h \tick[ st ]
+    -- Trivial exception processing: instruction skipping
+    execInstr THROW			\x[ n , r ]				= \x[ n , r ]
+    execInstr ADD			\x[ n , r ]				= \x[ n , r ]
+    execInstr (PUSH _)		\x[ n , r ]				= \x[ n , r ]
+\end{codei}
+\begin{code}
+    -- Code execution is still a left fold over instructions.
+    execCode : forall {s t} -> Code s t -> State s -> State t
+    execCode \nil st = st
+    execCode (i <| is) st = execCode is (execInstr i st)
+\end{code}
+
+\todo{Trivial exc. processing / instruction skipping only once for each instruction.}
 
 
 \section{Termination}

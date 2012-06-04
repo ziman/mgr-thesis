@@ -76,16 +76,12 @@
 
 \usepackage{listings}
 \lstloadlanguages{Haskell}
-\lstnewenvironment{code}
-    {\lstset{}%
-      \csname lst@SetFirstLabel\endcsname}
-    {\csname lst@SaveFirstLabel\endcsname}
-    \lstset{
+\lstdefinestyle{agda}{
       comment=[l]--,
       basicstyle=\small\sffamily,
       keywordstyle=\bf\sffamily,
       commentstyle=\color{gray}\it\rmfamily,
-      columns=fullflexible,
+      tabsize=4,
       basewidth={0.5em,0.45em},
       escapechar=&,
       xleftmargin=9pt,
@@ -132,7 +128,13 @@
         {==<}{{$\equiv\!\!\langle\;$}}1
         {\\>}{{$\rangle$}}1
         {\\_}{{\!\!\_}}1
-    }
+}
+\lstnewenvironment{code}
+	{\lstset{style=agda,columns=fullflexible}\csname lst@SetFirstLabel\endcsname}
+	{\csname lst@SaveFirstLabel\endcsname}
+\lstnewenvironment{codei}
+	{\lstset{style=agda,columns=flexible}\csname lst@SetFirstLabel\endcsname}
+	{\csname lst@SaveFirstLabel\endcsname}
    
 \newcommand{\bin}[1]{\_#1\!\!\_}
 
@@ -175,7 +177,7 @@
 \newcommand{\inset}[1]{\myinset{#1}}
 %\newcommand{\note}[1]{\marginpar{\footnotesize \textit{#1}}}
 %\newcommand{\note}[1]{\marginpar{\lrule{0.5pt}{\footnotesize \textit{#1}}}}
-\newcommand{\todo}[1]{\noindent\textssc{Todo:} #1}
+\newcommand{\todo}[1]{\textssc{Todo.} \textit{#1}}
 \newcommand{\note}[1]{\textssc{Note.}\, #1}
 
 % TODO:
