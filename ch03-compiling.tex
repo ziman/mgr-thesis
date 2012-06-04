@@ -73,12 +73,12 @@ universe.
 \noindent We omit the body of \ident{eqDecU} because it's just an ordinary
 uninteresting case analysis.
 
-In the following text, we will be a bit lax on wording related to type
+\note{In the following text, we will be a bit lax on wording related to type
 universes.  We will be talking about ``expressions of the type \ident{u}'',
 while actually referring to ``terms that represent expressions of \emph{the
 type denoted by \ident{u}}''. This simplified approach can hardly cause
 confusion, while adhering to precise wording in every situation at all costs
-would lead to incomprehensible sentences.
+would lead to incomprehensible sentences.}
 
 \subsection{Expressions}
 
@@ -711,7 +711,7 @@ constructor \ident{\sconsh\!\!} corresponds to pushing handlers on the stack.
 Note that we push arbitrarily large strands of code as single items on the stack,
 which contradicts one of our design principles -- that the
 code must be executable on a simple stack machine (Introduction, page~\pageref{objectives})
--- and we will address this objection in Chapter \ref{chap:compiling2}.
+-- and we will address this objection in \Fref{chap:compiling2}.
 
 \subsubsection{Instructions and code}
 
@@ -882,7 +882,7 @@ code is \ident{[PUSH 2]}.} for readability.
 This code does not throw any exceptions so we already know how it should be executed.
 Let us plot the intermediate stacks in a graph, with the executed instructions
 on the horizontal axis, and the stack growing vertically from the baseline. This is
-how we get Figure \ref{fig:stack-frames}.
+how we get \Fref{fig:stack-frames}.
 
 \begin{figure}[tp]
 	\centering

@@ -1,32 +1,7 @@
-%% Verze pro jednostranný tisk:
-% Okraje: levý 40mm, pravý 25mm, horní a dolní 25mm
-% (ale pozor, LaTeX si sám přidává 1in)
-%\documentclass[12pt,a4paper]{report}
-%\setlength\textwidth{145mm}
-%\setlength\textheight{247mm}
-%\setlength\oddsidemargin{15mm}
-%\setlength\evensidemargin{15mm}
-%\setlength\topmargin{0mm}
-%\setlength\headsep{0mm}
-%\setlength\headheight{0mm}
-% \openright zařídí, aby následující text začínal na pravé straně knihy
-%\let\openright=\clearpage
-
-%% Pokud tiskneme oboustranně:
 \documentclass[12pt,a4paper,twoside,openright,reqno]{book}
-%\documentclass[12pt,a4paper,symmetric,twoside,justified,nofonts,nohyper]{tufte-book}
-
-%\setlength\topmargin{0mm}
-%\setlength\headsep{0mm}
-%\setlength\headheight{0mm}
-%\setlength\textheight{247mm}
 
 \setlength{\headsep}{3em}
 \setlength{\headheight}{15pt}
-%\setlength\textwidth{145mm}
-%\setlength\textwidth{145mm}
-%\setlength\oddsidemargin{15mm}
-%\setlength\evensidemargin{15mm}
 \let\openright=\cleardoublepage
 
 \usepackage{etex}
@@ -56,6 +31,7 @@
 \usepackage{MinionPro}
 \usepackage{wrapfig}
 \usepackage{titlesec}
+\usepackage{fancyref}
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing,patterns}
 
@@ -160,39 +136,11 @@
    
 \newcommand{\bin}[1]{\_#1\!\!\_}
 
-%\usepackage{minion}
-%\renewcommand{\scdefault}{ssc}
-%\newfont{\chapnum}{eurb10 scaled 10000}
-%\newcommand{\lowercaps}[1]{\textsc{\MakeLowercase{#1}}}
-%\newcommand{\uppercaps}[1]{\textsc{\MakeUppercase{#1}}}
-
-%% Balíček hyperref, kterým jdou vyrábět klikací odkazy v PDF,
-%% ale hlavně ho používáme k uložení metadat do PDF (včetně obsahu).
-%% POZOR, nezapomeňte vyplnit jméno práce a autora.
 \usepackage{color}
 \definecolor{link}{rgb}{0,0,0.5}
 \usepackage[colorlinks=true,linkcolor=link,urlcolor=link,citecolor=link,unicode]{hyperref}
 \hypersetup{pdftitle=On the semantics of exceptions for high level and low level languages}
 \hypersetup{pdfauthor=Matus Tejiscak}
-
-%%% Drobné úpravy stylu
-
-% Tato makra přesvědčují mírně ošklivým trikem LaTeX, aby hlavičky kapitol
-% sázel příčetněji a nevynechával nad nimi spoustu místa. Směle ignorujte.
-%\makeatletter
-%\def\@makechapterhead#1{
-%  {\parindent \z@ \raggedright \normalfont
-%   \Huge\bfseries \thechapter. #1
-%   \par\nobreak
-%   \vskip 20\p@
-%}}
-%\def\@makeschapterhead#1{
-%  {\parindent \z@ \raggedright \normalfont
-%   \Huge\bfseries #1
-%   \par\nobreak
-%   \vskip 20\p@
-%}}
-%\makeatother
 
 % Toto makro definuje kapitolu, která není očíslovaná, ale je uvedena v obsahu.
 \def\chapwithtoc#1{
@@ -226,14 +174,9 @@
 
 \newcommand{\inset}[1]{\myinset{#1}}
 %\newcommand{\note}[1]{\marginpar{\footnotesize \textit{#1}}}
-\newcommand{\note}[1]{\marginpar{\lrule{0.5pt}{\footnotesize \textit{#1}}}}
+%\newcommand{\note}[1]{\marginpar{\lrule{0.5pt}{\footnotesize \textit{#1}}}}
 \newcommand{\todo}[1]{\noindent\textssc{Todo:} #1}
-
-\newenvironment{agda}%
-{\begingroup\sf\small\tabbing%
- \newcommand{\with}{\textbf{with}}
-}
-{\endtabbing\endgroup}
+\newcommand{\note}[1]{\textssc{Note.}\, #1}
 
 % TODO:
 % - add \noindent after each \end{code}
