@@ -1088,7 +1088,10 @@ two (explicit) parameters.
 		handler frame, we might enter additional handler frames nested within. Hence
 		we need to keep track of the depth of nesting.
 		
-		\todo{This is exactly the point where Hutton \& Wright use implied stacks.}
+		This is exactly the point where Hutton \& Wright use an implied stack.\cite[pg.~7]{gmh:exceptions}
+		In their function \ident{skip}, they use the implicit call stack to count
+		the nesting levels. However, we want to make this counter explicit so we include
+		it as a natural number into the machine state.
 		
 	\item The other parameter describes how to resume normal execution when
 		the machine has finished skipping instructions.
@@ -1221,21 +1224,59 @@ saved exception handler.
 This is exactly the point where we use the resumption record to reinstate
 normal operation after having skipped all instructions that were to be skipped.
 
-\todo{Dependent types advocacy: only one case for UNMARK.}
+Note that in the non-trivial case for the instruction \ident{UNMARK}, we know
+for sure that the state contains an instance of the \ident{Caught} constructor%
+\footnote{As opposed to an instance of the \ident{Uncaught} constructor.}, so
+we can be always sure there is a saved handler and stack available for
+exception handling. The other option is simply ruled out by the type of the
+stack: we are executing \ident{UNMARK}, whose type indicates that a handler
+must be available.\footnote{To be explicit, because the type indices of the
+	instruction \ident{UNMARK} and of the current state must match, the shape
+	of the current state must contain a value \ident{Han u} for some \ident{u}
+	as the second-to-top item.  This prevents the function \ident{unwindHnd}
+from returning \ident{nothing}, but since \ident{nothing} is exactly the index
+of \ident{Uncaught}, this constructor cannot occur in this situation.} This all
+is understood by Agda and this pattern coverage is accepted as complete.
 
-\todo{Trivial exc. processing / instruction skipping only once for each instruction.}
+Finaly, we conclude our definition of the function \ident{execInstr} by
+defining that in the exception-handling mode, all other instructions are not
+interesting and they should be simply skipped without having any effect on the
+machine state.
 
-\todo{No implicit stacks, only structural tail recursion.}
+Note that, unlike in the placeholder method, there is only one case for each
+such ``uninteresting'' instruction causing the machine to simply skip it, as
+opposed to $2^{\mathrm{arity(instr)}} - 1$ cases in the placeholder method,
+where we had to account for every possible combination of placeholders on the
+stack. We have reduced both the number of cases, and their complexity.
 
-\todo{Both modes of execution are essentially the same; both contain stack, the error mode
-contains a number and a handler. Thus only the handler violates the simplicity requirement.}
+Also note that in the whole specification, there are no implicit stacks: our
+functions are completely tail-recursive. We designed the machine to work this
+way to meet our requirements from the Introduction (page~\pageref{objectives}).
 
+Both modes of execution are essentially the same; both contain stack, the
+exception-handling mode also contains a number and a saved exception handler.
+Thus only the arbitrarily-sized handler violates our simplicity requirement.
+We will deal with this issue later in the Chapter \ref{chap:compiling2}.
 
-\section{Termination}
+\subsubsection{Termination}
+
+However, this solution has a serious flaw: it is not structurally recursive.
+As already mentioned, Agda will accept only definitions that are \emph{obviously}
+terminating but the pair of functions \ident{execInstr} and \ident{execCode}
+is not.
+
+The apparent culprit is the call of \ident{execCode} from within
+\ident{execInstr} in the non-trivial, exception-handling case for
+\ident{UNMARK}. The function \ident{execCode} recurses structurally over its
+first (explicit) argument, the code sequence. However, the handler that is to
+be executed is not structurally smaller than the code sequence where the
+\ident{UNMARK} came from, let alone \emph{obviously} structurally smaller.
 
 \todo{Structurality not the only option. Measure. Bove-Capretta.}
 
+\subsubsection{Correctness}
 
+\todo{Proved in the attached Agda development.}
 
 
 \begin{comment}
