@@ -1118,6 +1118,23 @@ But first, we need to define a prerequisite for \ident{execInstr}: the function
 \ident{unwindStack} that calculates a resumption record from the given stack. This record
 is needed for reinstation of computation once all appropriate instructions have been skipped.
 
+\begin{code}
+  unwindStack : forall {s} -> Stack s -> (n : \bN&\!&)
+    -> Resume (unwindShape s n) (unwindHnd s n)
+  unwindStack (h \sconsh xs) zero = Caught h xs
+  unwindStack (h \sconsh xs) (suc n) = unwindStack xs n
+  unwindStack (x \scons xs) n = unwindStack xs n
+  unwindStack snil n = Uncaught
+\end{code}
+
+\noindent The function \ident{unwindStack}, in accord with the functions
+defined above, takes a natural number \ident{n} denoting how many handler
+frames are to be thrown right away before starting a search for a handler.  If
+there are no suitable handlers, the alternative \ident{Uncaught} is returned.
+
+Now we can proceed to the definition of the functions \ident{execInstr} and
+\ident{execCode}, this time in a \ident{mutual} block.
+
 \begin{codei}
   mutual
     execInstr : forall {s t} -> Instr s t -> State s -> State t
@@ -1127,15 +1144,15 @@ is needed for reinstation of computation once all appropriate instructions have 
     execInstr (MARK h)		\tick[ st ] 		= \tick[ h \sconsh st ]
     execInstr UNMARK		\tick[ x \scons h \sconsh st ]	= \tick[ x \scons st ]
     -- Exception throwing  
-    execInstr THROW			\tick[ st ]			= \x[ zero , unwindStack st zero ] 
+    execInstr THROW			\tick[ st ] = \x[ zero , unwindStack st zero ] 
     -- Nontrivial exception processing
-    execInstr (MARK _)		\x[ n	, r				] = \x[ suc n, r ]
-    execInstr UNMARK		\x[ suc n, r				] = \x[ n	, r ]
-    execInstr UNMARK		\x[ zero	, Caught h st	] = execCode h \tick[ st ]
+    execInstr (MARK _)		\x[ n	 ,	r	] = \x[ suc n, r ]
+    execInstr UNMARK		\x[ suc n ,	r	] = \x[ n	, r ]
+    execInstr UNMARK		\x[ zero	 , Caught h st	] = execCode h \tick[ st ]
     -- Trivial exception processing: instruction skipping
-    execInstr THROW			\x[ n , r ]				= \x[ n , r ]
-    execInstr ADD			\x[ n , r ]				= \x[ n , r ]
-    execInstr (PUSH _)		\x[ n , r ]				= \x[ n , r ]
+    execInstr THROW			\x[ n , r ] = \x[ n , r ]
+    execInstr ADD			\x[ n , r ] = \x[ n , r ]
+    execInstr (PUSH _)		\x[ n , r ] = \x[ n , r ]
 \end{codei}
 \begin{code}
     -- Code execution is still a left fold over instructions.
@@ -1144,7 +1161,13 @@ is needed for reinstation of computation once all appropriate instructions have 
     execCode (i <| is) st = execCode is (execInstr i st)
 \end{code}
 
+\noindent The above definition of the function \ident{execInstr} is mostly straightforward.
+First, we deal with the normal state, defining how it changes when different instructions
+are executed.
+
 \todo{Trivial exc. processing / instruction skipping only once for each instruction.}
+
+\todo{No implicit stacks, only structural tail recursion.}
 
 
 \section{Termination}
