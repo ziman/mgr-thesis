@@ -788,7 +788,7 @@ exactly the same way as the constructor that pushes values on the stack -- but i
 
 Thus, it is probably not a surprise that the \ident{THROW} instruction, instead of pushing
 a value on the stack, pushes the \ident{\void} placeholder. To be precise, execution would
-look the following way.
+look the following way. \label{code:placeholder}
 \begin{code}
   mutual
     execInstr : forall {s t} -> Instr s t -> Stack s -> Stack t
@@ -849,7 +849,7 @@ and Wright. Now the machine will have two modes of execution, as hinted in
 The normal mode is exactly what one would expect: executing instructions on a stack, nothing surprising.
 
 However, the non-trivial part is the exception-handling mode. When an exception is thrown,
-two things need to be done in order to execute the exception handler:
+two things need to be done in order to execute the exception handler: \label{subsubsec:stack-unwinding}
 \begin{itemize}
 	\item The stack needs to be unwound. This means removing items from the stack
 		until the first exception handler.\footnote{Here we do not distinguish types
@@ -1108,6 +1108,12 @@ two (explicit) parameters.
 		in the state if there is no handler on the stack.
 \end{itemize}
 
+Also note that in spite of these non-trivial data types used to model the
+machine state, it is probably obvious that in real implementations, they boil
+down to just a stack and a couple of additional state variables; with the
+notable exception of an arbitrarily-sized handler in the case of the
+constructor \ident{Caught}, which will be addressed later.
+
 \subsubsection{Operation}
 
 Now that we know what the state \emph{looks like}, we can take a look at how it \emph{works}.
@@ -1161,13 +1167,68 @@ Now we can proceed to the definition of the functions \ident{execInstr} and
     execCode (i <| is) st = execCode is (execInstr i st)
 \end{code}
 
-\noindent The above definition of the function \ident{execInstr} is mostly straightforward.
-First, we deal with the normal state, defining how it changes when different instructions
-are executed.
+\noindent The above definition of the function \ident{execInstr} is mostly
+straightforward.  First, we deal with the normal state, defining how it changes
+when different instructions are executed.
+
+The first block is essentially equivalent to what we defined for the
+placeholder method (page~\pageref{code:placeholder}).
+
+Then we define what effect the instruction \ident{THROW} has. The two actions
+that constitute stack unwinding (page~\pageref{subsubsec:stack-unwinding}) are
+represented as follows:
+
+\begin{itemize}
+	\item Popping items from the stack until a handler is found is done by the
+		function \ident{unwindStack}. If a handler is found, it is returned
+		along with the unwound stack as an instance of the constructor
+		\ident{Caught}. Otherwise, an instance of the constructor
+		\ident{Uncaught} is returned.
+		The result of the function \ident{unwindStack} is then stored in the
+		state of the machine.
+
+	\item Skipping instructions that belong to the handler frame is done by
+		switching the machine to the instruction-skipping state. The state also
+		contains a natural number that keeps track of nesting depth of handler
+		frames along the way (see the next paragraph for a more detailed
+		description). This value is initially zero.
+\end{itemize}
+
+The reason why we need to keep track of the nesting depth is that instruction
+skipping always ends at an \ident{UNMARK} instruction -- but not always the
+first one encountered. The instruction sequence we want to skip may contain
+more \ident{MARK}-\ident{UNMARK} pairs if the current handler frame contains
+more nested handler frames. Hence we need to count \ident{MARK}s along the way
+and then skip that number of \ident{UNMARK}s before stopping at the real
+\ident{UNMARK} we are looking for.
+
+Next, we define the core part of exception processing: dealing with the
+instructions \ident{MARK} and \ident{UNMARK}.
+
+In the exception-processing mode, the effect of the instruction \ident{MARK} is
+quite trivial: it just increments the handler frame nesting counter contained
+in the state.
+
+If the frame nesting counter is nonzero, then the effect of the instruction
+\ident{UNMARK} is trivial, too; it just \emph{decrements} the frame nesting
+handler.
+
+However, if the frame nesting counter is zero, the effect of the instruction
+\ident{UNMARK} is a bit more complex: it can be described as switching the
+machine to the normal mode using the saved stack, and then running the
+saved exception handler.
+
+This is exactly the point where we use the resumption record to reinstate
+normal operation after having skipped all instructions that were to be skipped.
+
+\todo{Dependent types advocacy: only one case for UNMARK.}
 
 \todo{Trivial exc. processing / instruction skipping only once for each instruction.}
 
 \todo{No implicit stacks, only structural tail recursion.}
+
+\todo{Both modes of execution are essentially the same; both contain stack, the error mode
+contains a number and a handler. Thus only the handler violates the simplicity requirement.}
 
 
 \section{Termination}
@@ -1177,8 +1238,15 @@ are executed.
 
 
 
+\begin{comment}
+Then we have sex and see what effect it has on our placeholder..
 
+... ... proceding...
 
+Conclusion: sex has no effect on placeholder, but now i can finally think clearly...
+thank you sex..
+\todo{Trivial sex. processing / instructor skipping only.. only structural tail recursion}
+\end{comment}
 
 
 
