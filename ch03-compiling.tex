@@ -1272,12 +1272,38 @@ first (explicit) argument, the code sequence. However, the handler that is to
 be executed is not structurally smaller than the code sequence where the
 \ident{UNMARK} came from, let alone \emph{obviously} structurally smaller.
 
+There are several ways of coping with this issue, as already mentioned.
+
+First, we can resign on naturally structural recursion altogether and, instead,
+use the pen-and-paper-like termination proving method: a decreasing measure.
+This approach is quite straightforward and although it works and offers no
+surprises, it is tedious and inelegant.
+
+Second, we could exploit a deeper insight in how our high-level and low-level
+languages are connected and define an intermediate data structure that would
+facilitate showing correspondence between the two.
+
+For example, in every catch-expression, there are actually two independent
+paths the code may take.  Note that the \emph{guarded expression} is
+``transactional'', in the sense that if it fails, all traces of its execution
+are cleared up and the handler code is run instead. When considering just
+effects of the code, it appears that in every handler frame, either the regular
+code is (completely) executed or the handler code is (completely) executed,
+which creates a ''fork'' of possible execution scenarios at the entrypoint of
+each handler frame -- and this can be modelled using a suitable data structure.
+
+However, while it looks promising and the transformation of
+
 \todo{Structurality not the only option. Measure. Bove-Capretta.}
 
 \subsubsection{Correctness}
 
-\todo{Proved in the attached Agda development.}
+\todo{Not proved in the attached Agda development: non-termination}
 
+\subsubsection{Remarks}
+
+\todo{List all insuffiencies of the placeholder approach and describe
+what's better here and what's not.}
 
 \begin{comment}
 Then we have sex and see what effect it has on our placeholder..
