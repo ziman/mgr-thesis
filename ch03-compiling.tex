@@ -736,7 +736,7 @@ reflects in extending the \ident{Instr} type, which must now reside in a
 \noindent The definition of code doesn't change: it is still a simple
 ``index-matching list'' of instructions.
 
-\subsection{Execution, take one}
+\subsection{Execution: placeholders}
 
 \subsubsection{Machine state}
 
@@ -788,7 +788,7 @@ exactly the same way as the constructor that pushes values on the stack -- but i
 
 Thus, it is probably not a surprise that the \ident{THROW} instruction, instead of pushing
 a value on the stack, pushes the \ident{\void} placeholder. To be precise, execution would
-look the following way. \label{code:placeholder}
+look the following way. \label{sec:placeholder}
 \begin{code}
   mutual
     execInstr : forall {s t} -> Instr s t -> Stack s -> Stack t
@@ -840,7 +840,7 @@ While this low-level representation does work, it leaves much to be desired. In 
 sections (and chapters), we will address these objections. Let us begin with the first two
 of them.
 
-\subsection{Execution, take two}
+\subsection{Execution: stack unwinding}
 
 We will adapt the method of \emph{stack unwinding}, described in the paper by Hutton
 and Wright. Now the machine will have two modes of execution, as hinted in
@@ -849,7 +849,7 @@ and Wright. Now the machine will have two modes of execution, as hinted in
 The normal mode is exactly what one would expect: executing instructions on a stack, nothing surprising.
 
 However, the non-trivial part is the exception-handling mode. When an exception is thrown,
-two things need to be done in order to execute the exception handler: \label{subsubsec:stack-unwinding}
+two things need to be done in order to execute the exception handler: \label{sec:stack-unwinding}
 \begin{itemize}
 	\item The stack needs to be unwound. This means removing items from the stack
 		until the first exception handler.\footnote{Here we do not distinguish types
@@ -1136,7 +1136,7 @@ is needed for reinstation of computation once all appropriate instructions have 
   unwindStack snil n = Uncaught
 \end{code}
 
-\noindent The function \ident{unwindStack}, in accord with the functions
+\noindent The function \ident{unwindStack}, in accordance with the functions
 defined above, takes a natural number \ident{n} denoting how many handler
 frames are to be thrown right away before starting a search for a handler.  If
 there are no suitable handlers, the alternative \ident{Uncaught} is returned.
@@ -1175,10 +1175,10 @@ straightforward.  First, we deal with the normal state, defining how it changes
 when different instructions are executed.
 
 The first block is essentially equivalent to what we defined for the
-placeholder method (page~\pageref{code:placeholder}).
+placeholder method in \Fref{sec:placeholder}.
 
 Then we define what effect the instruction \ident{THROW} has. The two actions
-that constitute stack unwinding (page~\pageref{subsubsec:stack-unwinding}) are
+that constitute stack unwinding (\Fref{sec:stack-unwinding}) are
 represented as follows:
 
 \begin{itemize}
@@ -1281,10 +1281,15 @@ surprises, it is tedious and inelegant.
 
 Second, we could exploit a deeper insight in how our high-level and low-level
 languages are connected and define an intermediate data structure that would
-facilitate showing correspondence between the two.
+facilitate showing correspondence between the two.%
+\footnote{In combination with this approach, the Bove-Capretta method can be used to
+extract termination proof obligations from the code, in order to separate the
+informative part and the termination proof, neither cluttering code with
+proofs, nor proofs with too much information.}
 
-For example, in every catch-expression, there are actually two independent
-paths the code may take.  Note that the \emph{guarded expression} is
+\todo{Insert a reference to the Bove-Capretta paper wherever it appears.}
+
+Note that any \emph{guarded expression} is
 ``transactional'', in the sense that if it fails, all traces of its execution
 are cleared up and the handler code is run instead. When considering just
 effects of the code, it appears that in every handler frame, either the regular
@@ -1292,18 +1297,27 @@ code is (completely) executed or the handler code is (completely) executed,
 which creates a ''fork'' of possible execution scenarios at the entrypoint of
 each handler frame -- and this can be modelled using a suitable data structure.
 
-However, while it looks promising and the transformation of
+However, while it looks promising and the transformation of code to the
+``forking'' data structure is not too complicated, the author has not been able
+to prove termination using this approach. This might be an interesting direction
+for further research.
 
-\todo{Structurality not the only option. Measure. Bove-Capretta.}
+Third, we can try hard and make the recursion structural. As already hinted,
+this is the approach we prefer to take in this thesis and we will develop it
+further in \Fref{sec:handlers-at-unmark}.
 
-\subsubsection{Correctness}
-
-\todo{Not proved in the attached Agda development: non-termination}
+\todo{Correctness not proved: non-termination.}
 
 \subsubsection{Remarks}
 
 \todo{List all insuffiencies of the placeholder approach and describe
 what's better here and what's not.}
+
+\subsection{Execution: handlers at \ident{UNMARK}}
+
+\subsubsection{Foo bar baz}
+
+\label{sec:handlers-at-unmark}
 
 \begin{comment}
 Then we have sex and see what effect it has on our placeholder..

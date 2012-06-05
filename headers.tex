@@ -62,10 +62,12 @@
 
 \titleformat{\section}[block]{\centering\rm\itshape}{\Large\thesection}{1ex}{\Large}
 \titlespacing*{\section}{0ex}{20pt}{10pt}
-\titleformat{\subsection}{\rm}{\large\thesection}{1ex}{\large}
+\titleformat{\subsection}{\rm}{\large\thesubsection}{1ex}{\large}
 \titlespacing*{\subsection}{0ex}{23pt}{10pt}
-\titleformat{\subsubsection}{\rm\sscshape}{}{0pt}{}
+\titleformat{\subsubsection}{\rm\sscshape}{}{0ex}{}
 \titlespacing*{\subsubsection}{0ex}{18pt}{8pt}
+
+\setcounter{secnumdepth}{2} % 3 = subsubsections, too
 
 \newcommand{\scons}{:-:\;}
 \newcommand{\sconsh}{!-!\;}
