@@ -304,7 +304,7 @@ putting their values on the top of the stack, and then execute the appropriate
 instruction, determined by the operator. This instruction pops the top
 two values from the stack as its operands and pushes the result back.
 
-\begin{code}
+\label{sec:simple-compiler}\begin{code}
   -- Syntactic sugar, promote an Instr to singleton Code
   [[_\;]] : forall {s t} -> Instr s t -> Code s t
   [[i\;]] = i <| \nil
@@ -699,7 +699,7 @@ A value, denoted by \ident{Val u}, is an actual value of the type
 denoted by \ident{u}; a handler, denoted by \ident{Han u}, is a piece of code
 that, when run, leaves a value of the type \ident{u} on the top of the stack.
 This naturally leads to the new type of stacks,
-\begin{code}
+\label{sec:gmh-ham-stack}\begin{code}
   data Stack : Shape -> Set where
     snil : Stack []
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
@@ -720,7 +720,7 @@ Next, Hutton and Wright introduce three new instructions of the virtual machine:
 reflects in extending the \ident{Instr} type, which must now reside in a
 \ident{mutual} block with \ident{Code}:
 
-\begin{code}
+\label{sec:gmh-ham-instr}\begin{code}
   mutual
     data Instr : Shape -> Shape -> Set where
       PUSH : forall {u s} -> el u -> Instr s (Val u :: s)
@@ -735,6 +735,28 @@ reflects in extending the \ident{Instr} type, which must now reside in a
 
 \noindent The definition of code doesn't change: it is still a simple
 ``index-matching list'' of instructions.
+
+\subsubsection{Compiler}
+
+\todo{Move this section?}
+
+The compiler is quite similar to the one introduced for simple exceptionless
+expressions in \Fref{sec:simple-compiler}. We keep all definitions: the
+functions $[\!\![\_]\!\!]$ and \ident{opInstr}, and both cases of the function
+\ident{compile} -- these will be extended with two new clauses for the expressions
+\ident{Throw} and \ident{Catch}.
+
+\label{sec:gmh-ham-compile}\begin{code}
+compile : forall {u s} -> Exp u -> Code s (Val u :: s)
+compile (Lit x) = [[ PUSH x ]]
+compile (Bin op l r) = compile r \app compile l \app [[ opInstr op ]] 
+compile Throw = [[ THROW ]]
+compile (Catch e h) = [[ MARK (compile h) ]] \app compile e \app [[ UNMARK ]]
+\end{code}
+
+The expression \ident{Throw} compiles to a single \ident{THROW} instruction;
+the expression \ident{Catch} generates a \ident{MARK}-\ident{UNMARK}-delimited
+block containing the \emph{guarded expression} and the associated handler.
 
 \subsection{Execution: placeholders}
 
@@ -1298,7 +1320,7 @@ be useful in proving correctness of the compiler, too.
 
 \todo{Insert a reference to the Bove-Capretta paper wherever it appears.}
 
-Note that any \emph{guarded expression} is
+For example, note that any \emph{guarded expression} is
 ``transactional'', in the sense that if it fails, all traces of its execution
 are cleared up and the handler code is run instead. When considering just
 effects of the code, it appears that in every handler frame, either the regular
@@ -1315,7 +1337,7 @@ Third, we can try hard and make the recursion structural. As already hinted,
 this is the approach we prefer to take in this thesis and we will develop it
 further in \Fref{sec:handlers-at-unmark}.
 
-\subsubsection{Remarks}
+\subsubsection{Compared to the placeholder method}
 
 So what about the objections we raised when evaluating the placeholder method
 in \Fref{sec:placeholders-objections}?
@@ -1329,8 +1351,8 @@ every instruction. In the exception-handling mode, (non-interesting)
 instructions are skipped without much fuss: there is only one case per
 instruction, compared to $2^\mathrm{arity}$ in the placeholder
 case.\footnote{Theoretically, we could even do better and replace all trivial
-cases with the wildcard pattern \ident{\_}. However, if we do that, Agda
-complains because it cannot check that the types involved are correct
+cases with the wildcard pattern \ident{\_}. However, if we do that, Agda will
+complain because it cannot check that the types involved are correct
 -- they are slightly different across different cases and they need to be
 checked separately.}
 
@@ -1341,7 +1363,7 @@ However, the work we do at every instruction in the exception-handling mode is
 trivial: we simply skip it. No stack inspection, no manipulation with machine
 state at all.  Hence, when entering the exception handling mode, the machine
 focuses just on the code sequence and starts to search an appropriate place to
-resume execution at. This maps better to real-world machines although we still
+resume execution at. This approximates real-world jumps better although we still
 need to keep track of what instruction is being skipped and when we need to
 stop skipping.
 
@@ -1357,30 +1379,76 @@ this aspect yet -- but we are going to as well, in later sections.
 
 \todo{Which sections? Insert references.}
 
-\todo{Mention jumps and labels done in GMH?}
+\subsubsection{Remarks}
 
-\todo{Is it better to recurse structurally over something else than code?}
+It is worth noting that the expression \ident{Throw} is indexed as an expression
+that yields a value of \emph{any} type, and the instruction \ident{THROW} is indexed
+as if it pushed a value of any type on the stack -- without actually having a value
+of that type (which would be of course impossible if it was the empty type).
 
-\todo{THROW fakes it, is indexed like a real PUSH instruction and has no effect
-on type indices involved -- these behave as if normal execution took place.}
+This resembles exceptions in typed functional languages; for example the function
+\ident{throw} in Haskell:
+\begin{code}
+  throw :: Exception e => e -> a
+\end{code}
+The function \ident{throw} can ``promise'' to yield a value of any type because,
+in fact, it never returns. In a way, it behaves as \emph{bottom}.
 
-\todo{Correctness not proved: non-termination.}
+Finally, we don't prove correctness of this implementation because we don't
+have a proof of termination and since we are going to fix that soon, let us
+leave it that way.
 
 \subsection{Execution: handlers at \ident{UNMARK}}
-
-\subsubsection{Foo bar baz}
-
 \label{sec:handlers-at-unmark}
 
-\begin{comment}
-Then we have sex and see what effect it has on our placeholder..
+Our (non-)termination trouble arises from the fact that before running an
+exception handler, we move it around, push it on the stack, run other code, pop
+it from the stack etc., which obscures the fact that we never execute the same
+instruction twice.
 
-... ... proceding...
+Instead of partitioning the code at runtime, shuffling the partitions and
+executing them in a different order, it is better to already \emph{generate}
+the code in a more convenient way.
 
-Conclusion: sex has no effect on placeholder, but now i can finally think clearly...
-thank you sex..
-\todo{Trivial sex. processing / instructor skipping only.. only structural tail recursion}
-\end{comment}
+A surprisingly simple change solves all the terminating trouble: let us just
+attach handler code to the instruction \ident{UNMARK} instead of the
+corresponding \ident{MARK}.
+
+\subsubsection{Virtual machine}
+
+First, we alter the definition of the type of instructions from
+\Fref{sec:gmh-ham-instr} a bit -- we make the \ident{UNMARK} constructor take
+the exception handler instead of the \ident{MARK} constructor.
+
+\begin{code}
+  data Instr : Shape -> Shape -> Set where
+    PUSH : forall {u s} -> el u -> Instr s (Val u :: s)
+    ADD : forall {s} -> Instr (Val nat :: Val nat :: s) (Val nat :: s)
+    MARK : forall {u s} -> Instr s (Han u :: s)
+    UNMARK : forall {u s} -> Code s (Val u :: s) -> Instr (Val u :: Han u :: s) (Val u :: s)
+    THROW : forall {u s} -> Instr s (Val u :: s)
+\end{code}
+
+Second, we also need to alter the type of stacks from \Fref{sec:gmh-ham-stack}
+because we will no longer push handlers on the stack. However, we want to
+preserve the overall principle of execution so we have to push \emph{something}
+to keep the stack well-typed.  Hence, we will push a placeholder instead of
+code.\footnote{Note that this placeholder is different from the one used in the
+placeholder execution method, where we pushed bogus \emph{values}, not
+handlers.}
+
+\begin{code}
+  infixr 50 _\scons\_
+  infixr 50 \void\sconsh\_
+  data Stack : Shape -> Set where
+    snil : Stack []
+    _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
+    \void\sconsh\_ : forall {u s} -> Stack s -> Stack (Han u :: s)
+\end{code}
+
+\subsubsection{Compiler}
+
+
 
 
 
