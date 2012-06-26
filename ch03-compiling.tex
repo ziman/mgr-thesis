@@ -345,7 +345,7 @@ To be more specific, for any operator \ident{op} and two values \ident{x} and
 values on top of the stack results in having the value \ident{denOp op x y}
 on the top of the stack afterwards.
 
-\begin{code}
+\label{sec:cor-op-correct}\begin{code}
   op\-correct : forall {s u v w} {st : Stack s} {x : el u} {y : el w}
     -> (op : Op u v w)
     -> execInstr (opInstr op) (x \scons y \scons st) == denOp op x y \scons st
@@ -364,7 +364,7 @@ concatenation of code. In other words, executing the code \ident{c $\lhd\!\lhd$
 d} has the same effect as first executing \ident{c} and then executing
 \ident{d} on the resulting stack.
 
-\begin{code}
+\label{sec:cor-compile-distr}\begin{code}
   compile\-distr : forall {s t u} {st : Stack s}
     -> (c : Code s t) -> (d : Code t u)
     -> execCode (c \app d) st == execCode d (execCode c st)
@@ -445,7 +445,7 @@ write the compiler: executing the compiled code for an expression should be
 equivalent to pushing the value of the expression (as given by the denotational
 semantics) onto the stack.
 
-\begin{code}
+\label{sec:cor-correctness}\begin{code}
   correctness : forall {u s}
     -> (e : Exp u) (st : Stack s)
     -> execCode (compile e) st == denExp e \scons st
@@ -1467,12 +1467,24 @@ compile Throw = [[ THROW ]]
 compile (Catch e h) = [[ MARK ]] \app compile e \app [[ UNMARK (compile h) ]]
 \end{code}
 
+\subsubsection{Machine state}
+
+With this approach, machine state is simplified quite a lot. There are no
+resumption records and both execution modes contain just the stack (augmented
+with a nesting counter in the exception-handling case).
+
+\begin{code}
+  data State (s : Shape) : Set where
+    \tick[_] : Stack s -> Shape s
+    \x[_,_] : (n : Nat&\!&) -> Stack (unwindShape s n) -> State s
+\end{code}
+
 \subsubsection{Execution}
 
-Suddenly, recursion is naturally completely structural. In the following code,
-we will use the auxiliary functions \ident{unwindStack}
-(\Fref{sec:ham-unwindStack}) and \ident{unwindShape}
-(\Fref{sec:ham-unwindShape}), trivially modified to work with the stack type we
+Execution is simplified as well.  Suddenly, recursion is naturally completely
+structural. In the following code, we will use the auxiliary functions
+\ident{unwindShape} (\Fref{sec:ham-unwindShape}) and \ident{unwindStack}
+(\Fref{sec:ham-unwindStack}), trivially modified to work with the stack type we
 are using here.
 
 \begin{codei}
@@ -1499,6 +1511,68 @@ are using here.
     execCode : forall {s t} -> Code s t -> State s -> State t
     execCode \nil st = st
     execCode (i <| is) st = execCode is (execInstr i st)
+\end{code}
+
+\noindent Note that:
+\begin{itemize}
+	\item the $\times[\_]$ constructor now takes only the (unwound) stack, nothing more;
+	\item in the third and fourth clause of the function \ident{execInstr},
+		we push and pop only placeholders;
+	\item in the eighth clause, we call \ident{execCode} recursively; this time however,
+		the code argument \ident{h} is \emph{structurally smaller} than that of
+		the (grand-)parent call to \ident{execCode}. Agda recognizes this and
+		accepts our definition without complaining.
+\end{itemize}
+This is actually all it takes to make execution work with this approach.
+
+\subsubsection{Correctness}
+
+Since we have eliminated the termination trouble, we can proceed to proving
+correctness. We do this by induction on the given expression, in a way
+very similar to how the proof was done in \Fref{sec:cor-correctness}, using
+equational reasoning.
+
+\todo{Insert a reference to the source code.} The complete proof can be found
+in the attached code; here we will just outline the main theorem and the
+accompanying lemmas.
+
+The theorem has almost the same shape as before in \Fref{sec:cor-correctness},
+namely:
+\begin{code}
+  correctness : forall {u} (e : Exp u) (s : Shape) (st : State s)
+    -> execCode (compile e) st == (denExp e ::: st)
+\end{code}
+
+\noindent This time, we don't prove the correctness with any \emph{stack} but
+with any \emph{state}, which is more useful in the proof (especially when
+using the induction hypothesis).
+
+The operator \ident{:::} is the ``smart stack pusher'' that pushes values
+to the stack contained within a state, dealing correctly with all combinations
+of cases that may occur; for example, the denotation function \ident{denExp}
+may return \ident{nothing} and the state \ident{st} may be in the process
+of handling an exception.
+
+\begin{code}
+  -- Smart stack pusher
+  infixr 5 _:::_
+  _:::_ : forall {u s} -> Maybe (el u) -> State s -> State (Val u :: s)
+  just x ::: \tick[ st ] = \tick[ x \scons st ]
+  nothing ::: \tick[ st ] = \x[ zero , unwindStack st zero ]
+  nothing ::: \x[ n , st ] = \x[ n , st ]
+  just x ::: \x[ n , st ] = \x[ n , st ]
+\end{code}
+
+\noindent The use of this operator makes our theorems quite neat and concise.
+
+As already mentioned, we prove this correctness theorem by induction on the expression
+\ident{e}
+
+First lemma we will need, we need a distributivity lemma, again practically identical to that in
+\Fref{sec:cor-compile-distr}.
+\begin{code}
+  distr : forall {s t u} (st : State s) (c : Code s t) (d : Code t u)
+    -> execCode (c \app d) st == (execCode d \o execCode c) st
 \end{code}
 
 
