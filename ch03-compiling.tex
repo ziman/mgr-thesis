@@ -738,13 +738,20 @@ reflects in extending the \ident{Instr} type, which must now reside in a
 
 \subsubsection{Compiler}
 
-\todo{Move this section?}
+We will first use the compiler presented by Hutton and Wright in
+\cite{gmh:exceptions}, studying how execution can be implemented in a
+dependently typed setting.
 
-The compiler is quite similar to the one introduced for simple exceptionless
-expressions in \Fref{sec:simple-compiler}. We keep all definitions: the
-functions $[\!\![\_]\!\!]$ and \ident{opInstr}, and both cases of the function
-\ident{compile} -- these will be extended with two new clauses for the expressions
-\ident{Throw} and \ident{Catch}.
+The general idea is that before evaluating a (sub-)expression, we push
+the corresponding exception handler on the stack, if available. After
+successful execution of the corresponding code, the handler is removed
+from the stack.
+
+This compiler is quite similar to the one we introduced for simple
+exceptionless expressions in \Fref{sec:simple-compiler}. We will keep all
+definitions: the functions $[\!\![\_]\!\!]$ and \ident{opInstr}, and both cases
+of the function \ident{compile} -- these will be just extended with two new
+clauses for the expressions \ident{Throw} and \ident{Catch}.
 
 \label{sec:gmh-ham-compile}\begin{code}
 compile : forall {u s} -> Exp u -> Code s (Val u :: s)
