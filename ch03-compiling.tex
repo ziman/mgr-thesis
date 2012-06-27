@@ -1517,7 +1517,7 @@ are using here.
 \begin{itemize}
 	\item the $\times[\_]$ constructor now takes only the (unwound) stack, nothing more;
 	\item in the third and fourth clause of the function \ident{execInstr},
-		we push and pop only placeholders;
+		we push and pop only placeholders instead of exception handlers;
 	\item in the eighth clause, we call \ident{execCode} recursively; this time however,
 		the code argument \ident{h} is \emph{structurally smaller} than that of
 		the (grand-)parent call to \ident{execCode}. Agda recognizes this and
@@ -1565,15 +1565,26 @@ of handling an exception.
 
 \noindent The use of this operator makes our theorems quite neat and concise.
 
-As already mentioned, we prove this correctness theorem by induction on the expression
-\ident{e}
+As already mentioned, we prove this correctness theorem by induction on the
+expression \ident{e}
 
-First lemma we will need, we need a distributivity lemma, again practically identical to that in
-\Fref{sec:cor-compile-distr}.
+The first lemma we use is the distributivity lemma, again, practically
+identical to that in \Fref{sec:cor-compile-distr}.
 \begin{code}
   distr : forall {s t u} (st : State s) (c : Code s t) (d : Code t u)
     -> execCode (c \app d) st == (execCode d \o execCode c) st
 \end{code}
+
+We also use two lemmas that perform specialized case analysis. When doing
+induction on the structure of the expression while proving correctness, there
+are two non-trivial cases: the case of binary operators\footnote{The
+constructor \ident{Bin}.} and the case of catch-expressions\footnote{The
+constructor \ident{Catch}.}. Apart from containing sub-expressions recursively
+(thus requiring the induction hypothesis), it is non-trivial to show that the
+effect of the code compiled from these expressions conforms to their
+denotational semantics with respect to exception propagation.
+
+This is where we use the two lemmas...
 
 
 % tra tra tra
