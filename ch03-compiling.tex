@@ -1541,7 +1541,7 @@ namely:
 \begin{code}
   correctness : forall {u} (e : Exp u) (s : Shape) (st : State s)
     -> execCode (compile e) st == (denExp e ::: st)
-\end{code}
+\end{code}\label{sec:hau-correctness}
 
 \noindent This time, we don't prove the correctness with any \emph{stack} but
 with any \emph{state}, which is more useful in the proof (especially when
@@ -1598,7 +1598,26 @@ use the two lemmas to analyze all these cases, one for the constructor
       == denExp (Catch e h) ::: st
 \end{code}
 
-The lemma \ident{lemma-catch} also takes the induction hypothesis as an argument.
+The lemma \ident{lemma-catch} also takes the induction hypothesis as an
+argument, instantiated for the compiled handler code.
+
+This is all we need to prove correctness (as stated in
+\Fref{sec:hau-correctness}): the cases for the constructors \ident{Throw} and
+\ident{Lit} can be trivially discharged using \ident{refl}; the cases for the
+constructors \ident{Bin} and \ident{Catch} are proved equationally, using the
+above lemmas.
+
+\subsubsection{Remarks}
+
+We have solved the fourth objection introduced in
+\Fref{sec:placeholders-objections}: recursion is now structural, termination
+follows trivially from this fact and need not be proved explicitly.
+
+What's left is the fifth problem related to pushing code blobs on the stack.
+This is solved by linearizing handlers in the main code sequence and adding
+jumps so that these handlers are skipped unless actually needed.
+
+\subsection{Linearized code}
 
 % tra tra tra
 
