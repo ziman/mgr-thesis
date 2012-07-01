@@ -11,3 +11,538 @@
 \section{Formal verification}
 
 \section{The Agda proof assistant}
+
+\section{A simple exceptionless language}
+
+All high-level languages in this thesis will be languages of simple, typed
+expressions.
+
+Our first language will feature only natural numbers and addition, not even
+exceptions. We will implement it to build the auxiliary ecosystem of the
+compiler and the skeleton of our development.
+
+% branch: no-exceptions
+
+\subsection{Type universe}
+
+
+The first thing we will introduce is the type universe representing the set of
+types of expressions of the high-level language. We will index our types with
+values of this type (most notably the type \ident{Exp u} of expressions, to
+indicate what the type of the expression is), and while we could use Agda types
+directly for indexing, with an explicit universe, we get decidable equality of
+types and all datatypes conveniently in \ident{Set}.
+
+We could parametrize our
+modules with the universe but let us just define a fixed one for the sake of
+simplicity.
+
+\begin{code}
+  infixr 5 _=>\_
+  data U : Set where
+    nat : U
+    _=>\_ : U -> U -> U
+\end{code}
+
+\todo{Omit the unused $\Rightarrow$ constructor entirely?}
+
+\noindent We will also need the interpretation function \ident{el} that maps
+types of our simple language to Agda types so that we can use Agda values in
+the modelled language, talk about its denotational semantics etc.
+
+\begin{code}
+  el : U -> Set
+  el nat = Nat
+  el (s => t) = el s -> el t
+\end{code}
+
+\noindent And, as promised, equality is decidable on the elements of the
+universe.
+
+\begin{code}
+  -- open import Relation.Nullary using (Dec)
+  data Dec (p : Set) : Set where
+    yes : p -> Dec p
+    no  : ~ p -> Dec p
+
+  -- open import Relation.Binary.PropositionalEquality using (_==\_)
+  data _==\_ {a : Set} (x : a) : a -> Set where
+    refl : x == x
+
+  eqDecU : (u v : U) -> Dec (u == v)
+  -- body omitted
+\end{code}
+
+\noindent We omit the body of \ident{eqDecU} because it's just an ordinary
+uninteresting case analysis.
+
+\note{In the following text, we will be a bit lax on wording related to type
+universes.  We will be talking about ``expressions of the type \ident{u}'',
+while actually referring to ``terms that represent expressions of \emph{the
+type denoted by \ident{u}}''. This simplified approach can hardly cause
+confusion, while adhering to precise wording in every situation at all costs
+would lead to incomprehensible sentences.}
+
+\subsection{Expressions}
+
+The core of the language we are going to model consists of its expressions, of
+course. For now, we will support nothing more than (numeric) literals and addition.
+However, for further extensibility, we separate the type of binary operators.
+
+The type of binary operators is indexed by the types of the two values that
+the operator accepts as arguments; the third index represents the type of
+the result of application of the operator on the two values.
+
+\begin{code}
+  data Op : U -> U -> U -> Set where
+    Plus : Op nat nat nat
+\end{code}
+
+\noindent Now we can define the expressions: literals and binary operators.
+Note that we index the datatype with elements of the universe \ident{U} so that
+the Agda type of an expression also incorporates the type of the expression in
+the modelled language.
+
+\begin{code}
+  data Exp : U -> Set where
+    -- Literals
+    Lit : forall {u} -> el u -> Exp u
+    -- Binary operators
+    Bin : forall {u v w} -> Bin u v w -> Exp u -> Exp v -> Exp w
+\end{code}
+
+\subsection{Semantics of expressions}
+
+Our definition of the high-level language would not be complete without giving
+the denotational semantics of its expressions. This is done in the following
+pair of simple functions.
+
+\begin{code}
+  denOp : forall {u v w} -> Op u v w -> el u -> el v -> el w
+  denOp Plus = _+\_
+
+  denExp : forall {u} -> Exp u -> el u
+  denExp (Lit x) = x
+  denExp (Bin op l r) = denOp op (denExp l) (denExp r)
+\end{code}
+
+\noindent The separate type of binary operators deserves a separate function
+converting an operator to a binary Agda function of the appropriate type.
+
+Expressions are then turned into Agda values recursively; literals in a trivial
+way, binary-operator expressions using the denotation of the corresponding
+operator.
+
+\subsection{Virtual machine}
+
+We will use a very simple stack machine to run the compiled code.
+
+\subsubsection{Stack}
+
+The stack of
+the machine is just a cons-list of values, indexed by types (elements of
+\ident{U}) of the values pushed on the stack.  This means that just by looking
+at the type of the stack, we can tell how many elements it contains and what
+types they have.
+\begin{code}
+  -- open import Data.List
+  infixr 5 _::_
+  data List (a : Set) : Set where
+    [] : List a
+    _::_ : a -> List a -> List a
+
+  Shape : Set
+  Shape = List U
+
+  infixr 5 _\scons\_
+  data Stack : Shape -> Set where
+    snil : Stack []
+    _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (u :: s)
+\end{code}
+\noindent The literal \ident{snil} represents the empty stack; new values are
+pushed onto it using the infix constructor \ident{\bin{\scons}}.
+
+\subsubsection{Instructions}
+
+At this stage, the machine supports only two instructions: \ident{PUSH}
+and \ident{ADD}.
+\begin{code}
+  data Instr : Shape -> Shape -> Set where
+    PUSH : forall {u s} -> el u -> Instr s (u :: s)
+    ADD : forall s -> Instr (nat :: nat :: s) (nat :: s)
+\end{code}
+The type of instructions is indexed by their action on stack. The first shape
+argument is the required stack shape so that the instruction can be executed;
+the second shape argument is the resulting shape of the stack after the
+instruction has been executed.
+
+For example, the instruction \ident{PUSH} takes any value of the type \ident{el u}
+and pushes it onto a stack having any shape \ident{s}, creating a new
+stack of the shape \ident{u :: s}.
+
+The instruction \ident{ADD} represents popping two natural numbers from the
+stack of any shape with two \ident{nat}s on top of it, (hence
+\ident{nat :: nat :: s})
+and subsequently pushing their sum onto it, resulting in the shape
+\ident{nat :: s}.
+
+\subsubsection{Code}
+
+Finally, code for the stack machine is a sequence of instructions, where
+type indices of subsequent instructions match. For example, if one instruction
+in the sequence produces a stack of the shape \ident{nat :: nat :: s},
+we want the next instruction in the code sequence to accept this shape.
+
+If we regard
+$\midt{Instr} : \midt{Shape} \to \midt{Shape} \to \midt{Set}$
+as a binary relation on \ident{Shape}, then code is the \emph{transitive reflexive closure}
+of \ident{Instr}, which is already included in the Agda standard library as the
+module \ident{Data.Star}.
+
+\begin{code}
+  -- require import Data.Star
+  infixr 5 _<|\_
+  data Star {a b : Set} (R : a -> b -> Set) : a -> b -> Set where
+    \nil : forall {x} -> Star R x x
+    _<|\_ : forall {x y z} -> R x y -> Star R y z -> Star R x z
+\end{code}
+
+\begin{code}
+  Code : Shape -> Shape -> Set
+  Code = Star Instr
+\end{code}
+
+\noindent The type of instruction sequences is indexed in exactly the same
+manner as the type of single instructions: the first index represents the
+acceptable shape of stack before execution of the piece of code; the second
+index represents the shape of stack after its execution.
+
+Let us conclude this section with an utility function for concatenation of
+instruction sequences, which is actually also included in \ident{Data.Star}.
+
+\begin{code}
+  infixr 5 _\app\_
+  _\app\_ : forall {R x y z} -> Star R x y -> Star R y z -> Star R x z
+  \nil \app ys = ys
+  (x <| xs) \app ys = x <| xs \app ys
+\end{code}
+
+\subsection{Execution}
+
+Now we will describe how the machine executes instructions, that is,
+the operational semantics of the low-level language.
+
+At this stage, the state of the machine is fully described by just its stack. This
+means that there are no other state variables, registers or any additional
+memory.
+
+\subsubsection{Instructions}
+
+Let us describe the effects of single instructions on the state of the machine
+(that is, on the stack).
+
+\begin{code}
+  execInstr : forall {s t} -> Instr s t -> Stack s -> Stack t
+  execInstr (PUSH x) st = x \scons st
+  execInstr ADD (x \scons y \scons st) = (x + y) \scons st
+\end{code}
+
+\noindent The above function simply says that
+\begin{itemize}
+  \item the effect of the instruction \ident{PUSH} is pushing the attached
+    value onto the stack. This consistently extends the information contained
+    in the type of \ident{PUSH x}.\footnote{\ident{Instr s (u $::$ s)} -- for
+    some \ident{u} and \ident{s}. This type is interpreted as ,,\ident{PUSH x}
+    pushes some value of type \ident{u} onto the stack''.}
+    What the type does not say (and \ident{execInstr}
+    does) is what this value exactly is.
+  \item the effect of the instruction \ident{ADD} pops two \ident{nat}s from
+    the top of the stack and pushes their sum back.
+\end{itemize}
+
+Note that in this definition of the execution function, we already reap some
+benefits of dependently typed programming.
+
+First, of course, Agda checks types of the terms behind
+the scenes and the machinery of types we have designed so far ensures that
+in the case for \ident{PUSH x}, pushing the value \ident{x} always yields
+a stack of the desired shape.
+
+Second, in the case for \ident{ADD}, the types ensure that there are always two
+\ident{nat}s on top of the stack and we can safely pattern-match with the
+pattern \ident{x} \scons \ident{y} \scons \ident{st} -- because this match
+will always succeed (and no other patterns for the \ident{ADD} case are needed). 
+
+Thus the above definition complies to the type signatures involved (relatively
+solid hints of correctness) and it is \emph{total} (esp. no pattern match failures),
+while compilers of non-dependently typed languages, like OCaml or Haskell,
+would complain about non-exhaustive patterns here --- there is no way to tell them
+that, for example, we needn't deal with empty stacks when executing \ident{ADD}.
+
+\todo{There's a paper saying that non-exhaustive matches are inevitable; insert
+a reference.}
+
+\subsubsection{Code}
+
+Execution of code is then just a left fold over the sequence of instructions,
+accepting the initial and yielding the resulting state of the machine.
+
+\begin{code}
+  execCode : forall {s t} -> Code s t -> Stack s -> Stack t
+  execCode \nil st = st
+  execCode (i <| is) st = execCode is (execInstr i st)
+\end{code}
+
+\noindent Execution of empty code has no effect on the stack; if the code
+contains instructions, then the first instruction is executed and on the
+resulting stack, the rest of code is executed.
+
+\subsection{Compiler}
+
+Compiling our simple high-level language for a stack machine is easy. The
+central idea is that execution of an expression of some type is equivalent to
+pushing its value onto the stack. Literal values are then pushed on the stack
+directly; binary-operator expressions first evaluate both operands, effectively
+putting their values on the top of the stack, and then execute the appropriate
+instruction, determined by the operator. This instruction pops the top
+two values from the stack as its operands and pushes the result back.
+
+\label{sec:simple-compiler}\begin{code}
+  -- Syntactic sugar, promote an Instr to singleton Code
+  [[_\;]] : forall {s t} -> Instr s t -> Code s t
+  [[i\;]] = i <| \nil
+
+  -- Determine what instruction performs the required calculation
+  opInstr : forall {u v w} -> Op u v w -> forall {s} -> Instr (u :: v :: s) (w :: s)
+  opInstr Plus = ADD
+
+  -- Turn the expression into code
+  compile : forall {u} -> Exp u -> forall {s} -> Code s (u :: s)
+  compile (Lit x) = [[ PUSH x ]]
+  compile (Bin op l r) = compile r \app compile l \app [[ opInstr op ]]
+\end{code}
+
+\noindent Again, behind the scenes, Agda ensures that all types match and the
+code compiled by this function will not make the stack machine fail.\footnote{
+  To be fair, this is already a property of \ident{Code}, ,,inherited'' by the
+  function \ident{compile} via its return type.  However, it does constrain
+possible definitions of the function \ident{compile}.} For example, there is no
+way to have the function \ident{compile} output code where \ident{ADD} would
+not have two \ident{nat}s on the top of the stack.
+
+\subsection{Correctness}
+
+This is the only place in this thesis where we will include the complete proof
+of correctness. All proofs are of course contained in the attached Agda source
+code.
+
+\subsubsection{Operator lemma}
+
+There are two auxiliary lemmas that we will need to prove our main result. The
+first one of them is called \ident{op-correct} and it says that for any binary
+operator, the instruction picked by the compiler indeed does what the
+denotation of the binary operator says.
+
+To be more specific, for any operator \ident{op} and two values \ident{x} and
+\ident{y} of appropriate types, executing \ident{opInstr op} with the two
+values on top of the stack results in having the value \ident{denOp op x y}
+on the top of the stack afterwards.
+
+\label{sec:cor-op-correct}\begin{code}
+  op\-correct : forall {s u v w} {st : Stack s} {x : el u} {y : el w}
+    -> (op : Op u v w)
+    -> execInstr (opInstr op) (x \scons y \scons st) == denOp op x y \scons st
+  op\-correct Plus = refl
+\end{code}
+
+\noindent In the case for \ident{Plus}, Agda substitutes the term \ident{Plus}
+in the appropriate places, normalizes the resulting equality (expanding
+function definitions etc.) and the proof becomes a trivial observation of
+equality of normal forms, which is indicated by \ident{refl}.
+
+\subsubsection{Distributivity lemma}
+
+The other lemma that we will need says that execution of code distributes over
+concatenation of code. In other words, executing the code \ident{c $\lhd\!\lhd$
+d} has the same effect as first executing \ident{c} and then executing
+\ident{d} on the resulting stack.
+
+\label{sec:cor-compile-distr}\begin{code}
+  compile\-distr : forall {s t u} {st : Stack s}
+    -> (c : Code s t) -> (d : Code t u)
+    -> execCode (c \app d) st == execCode d (execCode c st)
+\end{code}
+
+\noindent We will proceed by induction on the parameter \ident{c}, which yields
+two cases: either \ident{c} is empty or it consists of an instruction and the
+rest of code. The first case is trivial by substituting $\varepsilon$ and
+comparing the normal forms.
+
+\begin{code}
+  compile\-distr \nil d = refl
+\end{code}
+
+\noindent For writing the proof for the second case, we will use the wonderful
+way supported by the Agda module $\midt{\equiv}$-\ident{Reasoning}\footnote{Actually,
+there are also other similar modules, like \ident{$\le$-Reasoning} etc.}, which
+lets us write proofs in the equational-reasoning style; just the way we would
+do it with pen and paper.
+
+\begin{code}
+  compile\-distr (i <| is) d = begin
+    execCode (i <| is \app d) st
+      ==< refl \>
+    execCode (is \app d) (execInstr i st)
+      ==< compile\-distr is d \>
+    execCode d (execCode is (execInstr i st))
+      ==< refl \>
+    execCode d (execCode c st)
+    \qed
+\end{code}
+
+\noindent The proof begins with the word \ident{begin} and continues with the
+first line, which is usually exactly the left-hand side of the equality we aim
+to prove.  The second line contains the proof that the first line is equal to
+the third line and so on -- by alternating terms and equality proofs, we can
+gradually rewrite the left-hand term to the right-hand term of the desired
+equality.
+
+The first proof is just comparison of normal forms, as indicated by
+\ident{refl}.
+
+The second proof uses \ident{compile-distr} recursively as an induction
+hypothesis to break the execution of composite code into two stages: first
+executing \ident{is}, then executing \ident{d}.
+
+The third proof is just \ident{refl} again and we use it to restructure the
+term to the desired final form.
+
+\subsubsection{Alternative proof of distributivity}
+
+Starting from Agda 2.2.4, we can shorten our previous proof considerably
+by using the \ident{rewrite} keyword:
+
+\todo{Which version of Agda?}
+
+\begin{code}
+  compile\-distr : forall {s t u} {st : Stack s}
+    -> (c : Code s t) -> (d : Code t u)
+    -> execCode (c \app d) st == execCode d (execCode c st)
+  compile\-distr \nil d = refl
+  compile\-distr (i <| is) d rewrite compile\-distr is d (execInstr i st) = refl
+\end{code}
+
+\noindent The \ident{rewrite} construct expands to a specific pattern-matching
+mechanism behind the scenes, effectively rewriting subterms of the goal using
+the provided equality (which is the recursive application of
+\ident{compile-distr} here). The resulting goal is then easily solvable by
+\ident{refl}.
+
+\subsubsection{Main correctness theorem}
+
+This is the central result of this stage that relates together everything we
+have defined so far in a single proof of correctness.
+
+This proof formalizes the idea that we informally mentioned when we started to
+write the compiler: executing the compiled code for an expression should be
+equivalent to pushing the value of the expression (as given by the denotational
+semantics) onto the stack.
+
+\label{sec:cor-correctness}\begin{code}
+  correctness : forall {u s}
+    -> (e : Exp u) (st : Stack s)
+    -> execCode (compile e) st == denExp e \scons st
+\end{code}
+
+\noindent We will proceed by induction on the expression \ident{e}. The literal
+case is trivial and solvable with \ident{refl}.
+
+\begin{code}
+  correctness (Lit x) _ = refl
+\end{code}
+
+\noindent The binary-operator case is a bit more involved and we will prove it
+using equational reasoning, again.
+
+\begin{code}
+  correctness (Binop op l r) st = begin
+    execCode (compile (Binop op l r)) st
+      ==< refl \>
+    execCode (compile r \app compile l \app [[ opInstr op ]]) st
+      ==< compile\-distr (compile r) _ _ \>
+    execCode (compile l \app [[ opInstr op ]]) (execCode (compile r) st)
+      ==< compile\-distr (compile l) _ _ \>
+    execCode [[ opInstr op ]] (execCode (compile l) (execCode (compile r) st))
+      ==< cong (\lam z -> execCode [[ opInstr op ]] (execCode (compile l) z) (correctness r st) \>
+    execCode [[ opInstr op ]] (execCode (compile l) (denExp r \scons st))
+      ==< cong (\lam z -> execCode [[ opInstr op ]] z) (correctness l st) \>
+    execCode [[ opInstr op ]] (denExp l \scons denExp r \scons st)
+      ==< refl \>
+    execInstr (opInstr op) (denExp l \scons denExp r \scons st)
+      ==< op\-correct op \>
+    denOp op (denExp l) (denExp r) \scons st
+      ==< refl \>
+    denExp (Binop op l r) \scons st
+    \qed
+\end{code}
+
+\noindent The first \ident{refl} is used to expand the definition of compile
+for the \ident{Binop} case so that human readers can see what's going on more
+easily.
+
+Then we make two appeals to the lemma \ident{compile-distr}. Each usage of this
+lemma removes a part of the code sequence (exactly corresponding to an operand
+of the binary operator) and transforms it to the effect that this piece of code
+has on the stack until only a single instruction is left in the code sequence.
+Note that we omit two of three arguments of \ident{compile-distr} in both
+applications. This omission improves readability of the proof and Agda can
+infer these terms, anyway.
+
+The following two rather cryptic steps use the function \ident{cong} that allows
+us to prove equality of two terms, given a proof of equality of their subterms
+in a common context.
+
+\begin{code}
+  cong : forall {a b : Set} {x y : a}
+    -> (f : a -> b)
+    -> x == y -> f x == f y
+\end{code}
+
+\noindent This function is used with recursive applications of the theorem
+\ident{correctness} to both operands of the binary operator. This allows us
+to rewrite the subterms in the form \ident{execCode (compile operand) state}
+to their equivalents in the form \ident{denExp operand \scons state}. These
+two recursive applications are actually inductive hypotheses.
+
+The two steps using \ident{exec-distr} and \ident{correctness} for each operand
+actually correspond to ,,accelerated execution'' of these pieces of code -- we
+do not execute the instructions; instead, we rely on the induction hypothesis
+to simultaneously remove the code corresponding to the operand and push its
+denotation onto the stack.
+
+Finally, we use the lemma \ident{op-correct} to show that executing the
+leftover instruction is exactly what is left to do to get the desired value
+on top of the stack.
+
+\subsection{Remarks}
+
+Totality of Agda functions give us a proof of termination and the above
+correctness proof gives us a guarantee that the compiler calculates the correct
+code, given the defined semantics.
+
+This is a very strong guarantee and it did not cost us that much -- the code we
+have written looks much like the equivalent in any other functional language.
+However, we have been maintaining much stronger invariants along the way, being
+able to, for example, afford including only \emph{relevant}\footnote{In this
+  context, by \emph{relevant} we mean the cases that arise during normal and
+  expected operation of the program; for example, as already mentioned, we
+needn't specify what to do when the instruction \ident{ADD} gets an
+inappropriate number or types of elements on the stack -- just because this
+cannot happen \emph{and the compiler knows it}.} pattern cases in a completely
+safe way, without triggering compiler warnings.
+
+Implementation-wise, the above (sub-)sections form separate modules in the
+accompanying Agda code and these modules define the overall structure of our
+development. In the following sections (and chapters), we will develop
+the code further by extending and improving particular modules.
+
