@@ -1553,22 +1553,21 @@ of cases that may occur; for example, the denotation function \ident{denExp}
 may return \ident{nothing} and the state \ident{st} may be in the process
 of handling an exception.
 
-\begin{code}
-  -- Smart stack pusher
+\begin{codei}
   infixr 5 _:::_
   _:::_ : forall {u s} -> Maybe (el u) -> State s -> State (Val u :: s)
-  just x ::: \tick[ st ] = \tick[ x \scons st ]
-  nothing ::: \tick[ st ] = \x[ zero , unwindStack st zero ]
-  nothing ::: \x[ n , st ] = \x[ n , st ]
-  just x ::: \x[ n , st ] = \x[ n , st ]
-\end{code}
+  just x	:::	\tick[ st ]		= \tick[ x \scons st ]
+  nothing	:::	\tick[ st ]		= \x[ zero , unwindStack st zero ]
+  just x	:::	\x[ n , st ]	= \x[ n , st ]
+  nothing	:::	\x[ n , st ]	= \x[ n , st ]
+\end{codei}
 
 \noindent The use of this operator makes our theorems quite neat and concise.
 
 As already mentioned, we prove this correctness theorem by induction on the
 expression \ident{e}
 
-The first lemma we use is the distributivity lemma, again, practically
+The first lemma we use is the distributivity lemma; again, practically
 identical to that in \Fref{sec:cor-compile-distr}.
 \begin{code}
   distr : forall {s t u} (st : State s) (c : Code s t) (d : Code t u)
@@ -1582,10 +1581,24 @@ constructor \ident{Bin}.} and the case of catch-expressions\footnote{The
 constructor \ident{Catch}.}. Apart from containing sub-expressions recursively
 (thus requiring the induction hypothesis), it is non-trivial to show that the
 effect of the code compiled from these expressions conforms to their
-denotational semantics with respect to exception propagation.
+denotational semantics with respect to exception propagation.  This is where we
+use the two lemmas to analyze all these cases, one for the constructor
+\ident{Bin}, the other for the constructor \ident{Catch}.
 
-This is where we use the two lemmas...
+\begin{code}
+  lemma\-op : forall {s t u v} (r : Exp t) (l : Exp u) (op : Op u t v) (st : State s)
+    -> execInstr (opInstr op) (denExp l ::: denExp r ::: st)
+      == denExp (Bin op l r) ::: st
+\end{code}
 
+\begin{code}
+  lemma\-catch : forall {s u} (e : Exp u) (h : Exp u) (st : State s)
+    -> (forall {s} (st' : State s) -> execCode (compile h) st' == denExp h ::: st')
+    -> execInstr (UNMARK (compile h)) (denExp e ::: execInstr MARK st)
+      == denExp (Catch e h) ::: st
+\end{code}
+
+The lemma \ident{lemma-catch} also takes the induction hypothesis as an argument.
 
 % tra tra tra
 
