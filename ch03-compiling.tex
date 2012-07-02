@@ -1087,15 +1087,13 @@ jumps so that these handlers are skipped unless actually needed.
 \section{Linearized code}
 
 As already mentioned, we need jumps for skipping handlers that are not needed.
-Since due to structurality requirements we cannot simply jump in the code, we
-need to make several changes throughout our development.
+Since, due to structurality requirements on recursion, we cannot simply jump in
+the code, we need to make several changes throughout our development.
 
-\subsection{Virtual machine}
-
-The first component we change is the virtual machine, where rather small
-changes affect almost every aspect.
-
-\subsubsection{Compiled code layout}
+\label{sec:linearized-code-layout}The key difference to the previous section
+lies in how code for exception handlers is compiled. The overall idea of
+compilation remains the same; however, compared to \Fref{sec:hau-compile}, we
+change the compiler for catch-expressions.
 
 The instruction \ident{UNMARK} no longer takes any piece of code whatsoever.
 The role of this instruction is taken by the newly-introduced instruction
@@ -1132,6 +1130,11 @@ the \emph{result} is more logical and intuitive:
 \caption{Linearized code layout}
 \label{fig:linearized-code}
 \end{figure}
+
+\subsection{Virtual machine}
+
+The first component we change is the virtual machine, where rather small
+changes affect almost every aspect.
 
 \subsubsection{Stack}
 
@@ -1192,6 +1195,24 @@ We rename the instruction \ident{UNMARK} to \ident{HANDLE}, adding a new
 \end{code}
 \noindent Note that the types \ident{Instr} and \ident{Code} are no longer mutually recursive
 and code sequences are truely just plain sequences of simple instructions.
+
+\subsection{Compiler}
+
+As already hinted in \Fref{sec:linearized-code-layout}, the compiler remains
+mostly the same as the one in \Fref{sec:hau-compile}. The only change takes
+place in the clause for the constructor \ident{Catch}.
+
+\label{sec:lin-compile}\begin{code}
+  compile : forall {u s} -> Exp u -> Code s (Val u :: s)
+  compile (Lit x) = [[ PUSH x ]]
+  compile (Bin op l r) = compile r \app compile l \app [[ opInstr op ]] 
+  compile Throw = [[ THROW ]]
+  compile (Catch e h) =
+      [[ MARK ]] \app compile e \app [[ HANDLE ]] \app compile h \app [[ UNMARK ]]
+\end{code}
+
+Clearly seen here, no instruction except \ident{PUSH} takes any argument whatsoever,
+and the resulting code is completely linear.
 
 \subsection{Execution}
 
