@@ -1065,7 +1065,7 @@ use the two lemmas to analyze all these cases, one for the constructor
       == denExp (Catch e h) ::: st
 \end{code}
 
-The lemma \ident{lemma-catch} also takes the induction hypothesis as an
+The function \ident{lemma-catch} also takes the induction hypothesis as an
 argument, instantiated for the compiled handler code.
 
 This is all we need to prove correctness (as stated in
@@ -1085,6 +1085,137 @@ This is solved by linearizing handlers in the main code sequence and adding
 jumps so that these handlers are skipped unless actually needed.
 
 \section{Linearized code}
+
+As already mentioned, we need jumps for skipping handlers that are not needed.
+Since due to structurality requirements we cannot simply jump in the code, we
+need to make several changes throughout our development.
+
+\subsection{Virtual machine}
+
+The first component we change is the virtual machine, where rather small
+changes affect almost every aspect.
+
+\subsubsection{Compiled code layout}
+
+The instruction \ident{UNMARK} no longer takes any piece of code whatsoever.
+The role of this instruction is taken by the newly-introduced instruction
+\ident{HANDLE}, which introduces the handler code.  The instruction
+\ident{UNMARK} now indicates the end of the handler\footnote{This \emph{change}
+of naming may be a bit confusing with respect to our previous development but
+the \emph{result} is more logical and intuitive:
+\ident{MARK}-\ident{HANDLE}-\ident{UNMARK}.}, as sketched in
+\Fref{fig:linearized-code}.
+
+\begin{figure}[htp]
+\footnotesize
+\hspace{1em}In the previous section, handlers were attached to \ident{UNMARK}.
+\begin{center}
+\mbox{\footnotesize
+\begin{tabular}{rcccccl}
+    \ldots
+	& \ident{MARK}
+	& \textit{expression code}
+	& \ident{UNMARK} + \textit{handler}
+	& \ldots \\
+    \hline
+    \ldots
+    	& \ident{MARK}
+	& \textit{expression code}
+	& \ident{HANDLE}
+	& \textit{handler}
+	& \ident{UNMARK}
+	& \ldots
+\end{tabular}
+}
+\end{center}
+\hspace{1em}In this section, we will use inline handlers.
+\caption{Linearized code layout}
+\label{fig:linearized-code}
+\end{figure}
+
+\subsubsection{Stack}
+
+This code layout leads to changes in the shape of stacks and the stack itself.
+
+Besides handler placeholders, we will push yet another kind of placeholders on
+the stack, which leads to addition of another item constructor:
+\begin{code}
+  data Item : Set where
+    Val : U -> Item
+    Han : U -> Item
+    Skp : U -> Item
+
+  Shape : Set
+  Shape = List Item
+\end{code}
+\noindent These new placeholders will not actually carry any information; their
+purpose is to keep the stack well-typed during skipping. The resulting stack type
+now changes to:
+\begin{code}
+  infixr 50 _\scons\_ han_\scons\_ skp_\scons\_
+  data Stack : Set where
+    snil : Stack []
+    _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
+    han_\scons\_ : forall {s} -> (u : U) -> Stack s -> Stack (Han u :: s)
+    skp_\scons\_ : forall {s} -> (u : U) -> Stack s -> Stack (Skp u :: s)
+\end{code}
+\noindent Besides values, we will push two kinds of placeholders on the stack:
+the placeholder \ident{han u} to indicate availability of a (complete) handler
+of the type \ident{u}, and the placeholder \ident{skp u} to indicate that a
+(not necessarily complete) handler of the type \ident{u} is currently present
+in the code sequence and may be skipped.
+
+If a handler is present in the code sequence completely, both corresponding
+placeholders occur in the stack. If the handler is being skipped or executed,
+just the \ident{skp} placeholder occurs in the stack.
+
+\subsubsection{Instructions and code}
+
+The type of instructions and code needs to be altered as well, due to the above
+changes.
+
+We rename the instruction \ident{UNMARK} to \ident{HANDLE}, adding a new
+\ident{UNMARK} with a different meaning.
+
+\begin{code}
+  data Instr : Shape -> Shape -> Set where
+    PUSH : forall {u s} -> el u -> Instr s (Val u :: s)
+    THROW : forall {u s} -> Instr s (Val u :: s)
+    ADD : forall {s} -> Instr (Val nat :: Val nat :: s) (Val nat :: s)
+    MARK : forall {u s} -> Instr s (Han u :: Skp u :: s)
+    HANDLE : forall {u s} -> Instr (Val u :: Han u :: Skp u :: s) (Skp u :: s)
+    UNMARK : forall {u s} -> Instr (Val u :: Skp u :: s) (Val u :: s)
+\end{code}
+\begin{code}
+  Code : Shape -> Shape -> Set
+  Code = Star Instr
+\end{code}
+\noindent Note that the types \ident{Instr} and \ident{Code} are no longer mutually recursive
+and code sequences are truely just plain sequences of simple instructions.
+
+\subsection{Execution}
+
+\begin{code}
+  -- Shape of the stack after skipping the n-th skip-mark from the top.
+  skipShape : Shape -> Nat -> Shape
+  skipShape (Han _ :: xs)  n      = skipShape xs n
+  skipShape (Skp u :: xs)  zero   = Val u :: xs
+  skipShape (Skp _ :: xs) (suc n) = skipShape xs n
+  skipShape (Val _ :: xs)  n      = skipShape xs n
+  skipShape []            _      = []
+\end{code}
+
+
+\begin{code}
+  data State (s : Shape) : Set where
+    \tick[_] : Stack s -> Shape s
+    \x[_,_] : (n : Nat&\!&) -> Stack (unwindShape s n) -> State s
+    ![_,_,_] : (u : U) -> (n : Nat&\!&) -> (st : Stack (skipShape s n)) -> State s
+\end{code}
+
+\section{Adding more operations}
+
+\todo{less-than, if}
 
 % tra tra tra
 
