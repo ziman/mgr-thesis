@@ -1309,6 +1309,29 @@ recursive.
   execInstr  HANDLE		\tick[ x \scons han\scons skp\scons st ] = ![ zero , x \scons st ]
 \end{codei}
 
+\noindent And, as always, the function \ident{execCode} is a simple left fold over
+instructions.
+
+\begin{code}
+    execCode : forall {s t} -> Code s t -> State s -> State t
+    execCode \nil st = st
+    execCode (i <| is) st = execCode is (execInstr i st)
+\end{code}
+
+\noindent This concludes the operational semantics of instructions of the low-level
+virtual machine.
+
+\subsection{Correctness}
+
+The general schema of the proof is identical to that in Section
+\ref{sec:hau-correctness}. The proof differs only in minor details, despite the
+fact that we have three machine states now. Basically, all functions performing
+case analysis get several new clauses dealing with the new handler-skipping
+machine state -- and that's all.
+
+The detailed proof can be found in the accompanying code.\\
+\todo{Add a reference to the Agda development.}
+
 \section{Adding more operations}
 
 \todo{less-than, if}
