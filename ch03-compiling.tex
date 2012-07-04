@@ -15,7 +15,7 @@ diverge a bit, in details at first, in parts of the design later.
 Now we are about to add exceptions to our language(s). The first approach is to
 examine the ways found in the literature.
 
-Code in this section is modelled after the paper \cite{gmh:exceptions} by
+Code in this section is modeled after the paper \cite{gmh:exceptions} by
 Graham Hutton and Joel Wright. The authors used Haskell in their development.
 This approach was later formalized by Tobias Nipkow in \cite{nipkow} in
 Isabelle, an interactive theorem prover/proof assistant, in exactly the same
@@ -75,7 +75,7 @@ exception occurs. To express that, the function \ident{denExp} will now return
 \ident{nothing}\footnote{In contrast with Haskell, Agda uses lowercase initials
 of the constructors \ident{just} and \ident{nothing}.} to indicate uncaught
 exceptions and the value \ident{just x} to indicate that the expression
-succesfully evaluates to the value~\ident{x}.
+successfully evaluates to the value~\ident{x}.
 
 The second change is adding pattern cases for the newly added constructors
 of \ident{Exp} to the denotation function \ident{denExp}.
@@ -527,7 +527,7 @@ the handler either; they even use implicit stacks.}
 \subsection{Implementation}
 
 The normal mode of operation contains simply the stack. However, the exceptional state
-is a bit more involved; let us declare the datatypes and the auxiliary functions first
+is a bit more involved; let us declare the data types and the auxiliary functions first
 and describe them afterwards.
 
 First, we need to know whether there is an appropriate handler on the stack and what type
@@ -742,7 +742,7 @@ from returning \ident{nothing}, but since \ident{nothing} is exactly the index
 of \ident{Uncaught}, this constructor cannot occur in this situation.} This all
 is understood by Agda and this pattern coverage is accepted as complete.
 
-Finaly, we conclude our definition of the function \ident{execInstr} by
+Finally, we conclude our definition of the function \ident{execInstr} by
 defining that in the exception-handling mode, all other instructions are not
 interesting and they should be simply skipped without having any effect on the
 machine state.
@@ -800,7 +800,7 @@ are cleared up and the handler code is run instead. When considering just
 effects of the code, it appears that in every handler frame, either the regular
 code is (completely) executed or the handler code is (completely) executed,
 which creates a ''fork'' of possible execution scenarios at the entrypoint of
-each handler frame -- and this can be modelled using a suitable data structure.
+each handler frame -- and this can be modeled using a suitable data structure.
 
 However, while it looks promising and the transformation of code to the
 ``forking'' data structure is not too complicated, the author has not been able
@@ -1095,7 +1095,7 @@ lies in how code for exception handlers is compiled. The overall idea of
 compilation remains the same; however, compared to \Fref{sec:hau-compile}, we
 change the compiler for catch-expressions.
 
-The instruction \ident{UNMARK} no longer takes any piece of code whatsoever.
+The instruction \ident{UNMARK} no longer takes any piece of code.
 The role of this instruction is taken by the newly-introduced instruction
 \ident{HANDLE}, which introduces the handler code.  The instruction
 \ident{UNMARK} now indicates the end of the handler\footnote{This \emph{change}
@@ -1134,7 +1134,8 @@ the \emph{result} is more logical and intuitive:
 \subsection{Virtual machine}
 
 The first component we change is the virtual machine, where rather small
-changes affect almost every aspect.
+changes affect almost every aspect. Details of machine state will be covered
+a bit later in \Fref{sec:lin-machine-state}.
 
 \subsubsection{Stack}
 
@@ -1194,7 +1195,7 @@ We rename the instruction \ident{UNMARK} to \ident{HANDLE}, adding a new
   Code = Star Instr
 \end{code}
 \noindent Note that the types \ident{Instr} and \ident{Code} are no longer mutually recursive
-and code sequences are truely just plain sequences of simple instructions.
+and code sequences are truly just plain sequences of simple instructions.
 
 \subsection{Compiler}
 
@@ -1215,6 +1216,14 @@ Clearly seen here, no instruction except \ident{PUSH} takes any argument whatsoe
 and the resulting code is completely linear.
 
 \subsection{Execution}
+
+This section describes what the machine state looks like and how it changes as
+instructions are executed.
+
+\subsubsection{Machine state}\label{sec:lin-machine-state}
+
+As usual, we will need some auxiliary functions so that we can express the
+shapes of stacks in type declarations.
 
 \begin{code}
   -- Shape of the stack after skipping the n-th skip-mark from the top.
