@@ -1086,9 +1086,10 @@ jumps so that these handlers are skipped unless actually needed.
 
 \section{Linearized code}
 
-As already mentioned, we need jumps for skipping handlers that are not needed.
-Since, due to structurality requirements on recursion, we cannot simply jump in
-the code, we need to make several changes throughout our development.
+As already mentioned, if we linearize handler code within the main instruction
+sequence, we need jumps for skipping handlers that are not needed.  Since, due
+to structurality requirements on recursion, we cannot simply jump in the code,
+we need to make several changes throughout our development.
 
 \label{sec:linearized-code-layout}The key difference to the previous section
 lies in how code for exception handlers is compiled. The overall idea of
@@ -1156,12 +1157,12 @@ the stack, which leads to addition of another item constructor:
 purpose is to keep the stack well-typed during skipping. The resulting stack type
 now changes to:
 \begin{code}
-  infixr 50 _\scons\_ han_\scons\_ skp_\scons\_
+  infixr 50 _\scons\_ han\scons\_ skp\scons\_
   data Stack : Set where
     snil : Stack []
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
-    han_\scons\_ : forall {s} -> (u : U) -> Stack s -> Stack (Han u :: s)
-    skp_\scons\_ : forall {s} -> (u : U) -> Stack s -> Stack (Skp u :: s)
+    han\scons\_ : forall {s} -> {u : U} -> Stack s -> Stack (Han u :: s)
+    skp\scons\_ : forall {s} -> {u : U} -> Stack s -> Stack (Skp u :: s)
 \end{code}
 \noindent Besides values, we will push two kinds of placeholders on the stack:
 the placeholder \ident{han u} to indicate availability of a (complete) handler
@@ -1189,7 +1190,7 @@ We rename the instruction \ident{UNMARK} to \ident{HANDLE}, adding a new
     MARK : forall {u s} -> Instr s (Han u :: Skp u :: s)
     HANDLE : forall {u s} -> Instr (Val u :: Han u :: Skp u :: s) (Skp u :: s)
     UNMARK : forall {u s} -> Instr (Val u :: Skp u :: s) (Val u :: s)
-\end{code}
+\end{code}\label{sec:lin-code}
 \begin{code}
   Code : Shape -> Shape -> Set
   Code = Star Instr
@@ -1225,8 +1226,23 @@ instructions are executed.
 As usual, we will need some auxiliary functions so that we can express the
 shapes of stacks in type declarations.
 
+The function \ident{unwindShape} is an old hat: it calculates the shape of the stack
+on top of which the top-most handler would be run if an exception occurred now.
 \begin{code}
-  -- Shape of the stack after skipping the n-th skip-mark from the top.
+  -- Unwind the shape up to just below the n\-th handle\-mark from the top.
+  unwindShape : Shape -> Nat -> Shape
+  unwindShape (Han _ :: xs)  zero   = xs
+  unwindShape (Han _ :: xs) (suc n) = unwindShape xs n
+  unwindShape (Skp _ :: xs)  n      = unwindShape xs n
+  unwindShape (Val _ :: xs)  n      = unwindShape xs n
+  unwindShape []            _      = []
+\end{code}
+
+\noindent In addition, we also define the function \ident{skipShape} that calculates
+the shape of the stack with which execution will continue after skipping
+the top-most handler, if no exception occurs.
+\begin{code}
+  -- Shape of the stack after skipping the n\-th skip\-mark from the top.
   skipShape : Shape -> Nat -> Shape
   skipShape (Han _ :: xs)  n      = skipShape xs n
   skipShape (Skp u :: xs)  zero   = Val u :: xs
@@ -1235,13 +1251,63 @@ shapes of stacks in type declarations.
   skipShape []            _      = []
 \end{code}
 
+\noindent Simply put, the function \ident{unwindShape} unwinds the shape just
+below the \ident{n}-th ``handler placeholder''; the function \ident{skipShape}
+unwinds the shape just below the \ident{n}-th ``skip placeholder'' (preserving
+the \ident{Val u} on top that comes from a successful evaluation of either the
+main expression code or the handler code).
 
+Now we are ready to define the machine state. The state is modeled by a data
+type with three alternatives/constructors: the regular state, the
+exception-handling state, and the new handler-skipping state.
 \begin{code}
   data State (s : Shape) : Set where
     \tick[_] : Stack s -> Shape s
     \x[_,_] : (n : Nat&\!&) -> Stack (unwindShape s n) -> State s
-    ![_,_,_] : (u : U) -> (n : Nat&\!&) -> (st : Stack (skipShape s n)) -> State s
+    ![_,_] : (n : Nat&\!&) -> Stack (skipShape s n) -> State s
 \end{code}
+
+\noindent The two alternative constructors are very similar to each other,
+differing only in how the resulting stack shape is calculated from the current
+one.
+
+\subsubsection{State transitions}
+
+The core of execution is given by the function \ident{execInstr} that describes
+effects of single instructions on the state of the machine.
+
+Note that, like the instruction/code type declarations in \Fref{sec:lin-code},
+the functions \ident{execCode} and \ident{execInstr} are no longer mutually
+recursive.
+
+\begin{codei}
+  execInstr : forall {s t} -> Instr s t -> State s -> State t
+  -- Normal operation
+  execInstr (PUSH  x ) \tick[         	st ] = \tick[ x \scons st ]
+  execInstr  ADD       \tick[  x \scons y \scons	st ] = \tick[ (x + y) \scons st ]
+  execInstr  MARK      \tick[          	st ] = \tick[ han\scons skp\scons st ]
+  execInstr  THROW     \tick[          	st ] = \x[ zero , unwindStack st zero ]
+  execInstr  UNMARK    \tick[ x \scons skp u \scons st ] = \tick[ x \scons st ]
+  -- Exception handling: trivial
+  execInstr  THROW		\x[     n , st ] = \x[     n , st ]
+  execInstr (PUSH x)	\x[     n , st ] = \x[     n , st ]
+  execInstr  ADD		\x[     n , st ] = \x[     n , st ]
+  execInstr  UNMARK		\x[     n , st ] = \x[     n , st ]
+  execInstr  MARK		\x[     n , st ] = \x[ suc n , st ]
+  execInstr  HANDLE		\x[ suc n , st ] = \x[     n , st ]
+  -- Forward jump: trivial
+  execInstr  THROW		![ n , st ] = ![ n , st ]
+  execInstr (PUSH x)	![ n , st ] = ![ n , st ]
+  execInstr  ADD		![ n , st ] = ![ n , st ]
+  execInstr  HANDLE		![ n , st ] = ![ n , st ]
+  execInstr  MARK		![     n , st ] = ![ suc n , st ]
+  execInstr  UNMARK		![ suc n , st ] = ![     n , st ]
+  execInstr  UNMARK		![ zero  , st ] = \tick[ st ]
+  -- Exception handling: run the handler on exception
+  execInstr  HANDLE		\x[ zero , st ] = \tick[ st ]
+  -- Exception handling: no exception, skip the handler, keep the stack
+  execInstr  HANDLE		\tick[ x \scons han\scons skp\scons st ] = ![ zero , x \scons st ]
+\end{codei}
 
 \section{Adding more operations}
 
