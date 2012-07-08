@@ -1332,68 +1332,196 @@ machine state -- and that's all.
 The detailed proof can be found in the accompanying code.\\
 \todo{Add a reference to the Agda development.}
 
-\section{Adding more operations}
+\section{Adding types and binary operators}
 
-\todo{less-than, if}
+To demonstrate that having done all this work, adding new types and operators
+is trivial, we extend our high-level language with the Boolean type, along with
+two new binary operators: the \ident{Leq} operator that compares natural
+numbers, and the \ident{And} operator calculating conjunction of two Boolean
+values.
 
-% tra tra tra
+The changes are simple, straightforward, and mechanical. They mostly involve
+adding new cases in pattern matches in various places. The upside is that,
+where relevant, the number of cases grows linearly in the number of operators.
+The downside is that the constant factor in one of the lemmas belonging to the
+correctness proof is as much as $12$ (trivial) clauses per binary operator.
 
+\subsection{High-level language}
 
+\subsubsection{Type universe}
 
+We start by extending the type universe with the new Boolean type, along with
+its interpretation in Agda types.
 
+\begin{code}
+  data U : Set where
+    nat : U
+    bool : U
+\end{code}
 
+\noindent In the above type declaration, we just added the \ident{bool}
+constructor. Now we need to extend the function \ident{el} with a new clause
+covering the case for the newly introduced \ident{bool} constructor.
 
+\begin{code}
+  -- open import Data.Bool
+  data Bool : Set where
+    true : Bool
+    false : Bool
 
+  el : U -> Set
+  el nat = Nat
+  el bool = Bool
+\end{code}
 
+\subsubsection{Expressions}
 
+The type of expressions \ident{Exp} remains unchanged; we just need to add the two new
+binary operators to the data type \ident{Op} as new, appropriately typed,
+constructors.
 
+\begin{code}
+  data Op : U -> U -> U -> Set where
+    Plus : Op nat nat nat
+    Leq : Op nat nat bool
+    And : Op bool bool bool
+\end{code}
 
+\noindent Recall that a constructor of the type \ident{Op p q r} represents a
+binary operator taking two values of the types \ident{p} and \ident{q},
+returning a value of the type \ident{r}.
 
+\subsubsection{Denotational semantics}
 
+Since we changed only the operator data type, we need to alter just the
+corresponding denotation function \ident{denOp}.
 
+First, we add two auxiliary functions operating on Agda types, implementing
+the action of the two new operators.
 
+\begin{code}
+  infixl 50 _\and\_
+  _\and\_ : Bool -> Bool -> Bool
+  false \and b = false
+  true \and b = b
+\end{code}
+\begin{code}
+  infix 50 _\leq\_
+  _\leq\_ : Nat -> Nat -> Bool
+  zero \leq n = true
+  suc m \leq suc n = m \leq n
+  _ \leq _ = false
+\end{code}
 
+\noindent Now we can use these functions as denotation of the new operators.
 
+\begin{code}
+  denOp : forall {u v w} -> Op u v w -> el u -> el v -> el w
+  denOp Plus = _+\_
+  denOp Leq  = _\leq\_
+  denOp And  = _\and\_
+\end{code}
 
+\subsection{Low-level language}
 
+\subsubsection{Instructions}
 
+Next, we extend the virtual machine with two new instructions representing
+the two new operations. We do this through adding new constructors to the
+\ident{Instr} data type.
 
+\begin{code}
+  data Instr : Shape -> Shape -> Set where
+    PUSH : forall {u s} -> el u -> Instr s (Val u :: s)
+    THROW : forall {u s} -> Instr s (Val u :: s)
+    ADD : forall {s} -> Instr (Val nat :: Val nat :: s) (Val nat :: s)
+    MARK : forall {u s} -> Instr s (Han u :: Skp u :: s)
+    HANDLE : forall {u s} -> Instr (Val u :: Han u :: Skp u :: s) (Skp u :: s)
+    UNMARK : forall {u s} -> Instr (Val u :: Skp u :: s) (Val u :: s)
+    --  new instructions
+    LEQ : forall {s} -> Instr (Val nat :: Val nat :: s) (Val bool :: s)
+    AND : forall {s} -> Instr (Val bool :: Val bool :: s) (Val bool :: s)
+\end{code}
 
+\subsubsection{Compiler}
 
+After adding the two instructions, we relate them to the corresponding operators
+by adding new clauses to the function \ident{opInstr}. Recall that this
+function determines what instructions different binary operators compile to.
 
+\begin{code}
+  opInstr : forall {u v w s} -> Op u v w -> Instr (Val u :: Val v :: s) (Val w :: s)
+  opInstr Plus = ADD
+  opInstr Leq = LEQ
+  opInstr And = AND
+\end{code}
 
+\subsubsection{Execution}
 
+Finally, we need to extend the instruction interpreter to include the two new
+instructions.
 
+We add a pair of clauses into every section of the function: \emph{normal
+operation}, \emph{trivial exception handling}, \emph{trivial forward jump}.
 
+\begin{codei}
+  execInstr : forall {s t} -> Instr s t -> State s -> State t
+  -- Normal operation
+  execInstr (PUSH  x ) \tick[         	st ] = \tick[ x \scons st ]
+  execInstr  ADD       \tick[  x \scons y \scons	st ] = \tick[ (x + y) \scons st ]
+  execInstr  MARK      \tick[          	st ] = \tick[ han\scons skp\scons st ]
+  execInstr  THROW     \tick[          	st ] = \x[ zero , unwindStack st zero ]
+  execInstr  UNMARK    \tick[ x \scons skp u \scons st ] = \tick[ x \scons st ]
+  execInstr  LEQ       \tick[  x \scons y \scons	st ] = \tick[ (x \leq y) \scons st ]
+  execInstr  AND       \tick[  x \scons y \scons	st ] = \tick[ (x \and y) \scons st ]
+  -- Exception handling: trivial
+  execInstr  THROW		\x[     n , st ] = \x[     n , st ]
+  execInstr (PUSH x)	\x[     n , st ] = \x[     n , st ]
+  execInstr  ADD		\x[     n , st ] = \x[     n , st ]
+  execInstr  UNMARK		\x[     n , st ] = \x[     n , st ]
+  execInstr  MARK		\x[     n , st ] = \x[ suc n , st ]
+  execInstr  HANDLE		\x[ suc n , st ] = \x[     n , st ]
+  execInstr  LEQ		\x[     n , st ] = \x[     n , st ]
+  execInstr  AND		\x[     n , st ] = \x[     n , st ]
+  -- Forward jump: trivial
+  execInstr  THROW		![ n , st ] = ![ n , st ]
+  execInstr (PUSH x)	![ n , st ] = ![ n , st ]
+  execInstr  ADD		![ n , st ] = ![ n , st ]
+  execInstr  HANDLE		![ n , st ] = ![ n , st ]
+  execInstr  MARK		![     n , st ] = ![ suc n , st ]
+  execInstr  UNMARK		![ suc n , st ] = ![     n , st ]
+  execInstr  UNMARK		![ zero  , st ] = \tick[ st ]
+  execInstr  LEQ		![ n , st ] = ![ n , st ]
+  execInstr  AND		![ n , st ] = ![ n , st ]
+  -- Exception handling: run the handler on exception
+  execInstr  HANDLE		\x[ zero , st ] = \tick[ st ]
+  -- Exception handling: no exception, skip the handler, keep the stack
+  execInstr  HANDLE		\tick[ x \scons han\scons skp\scons st ] = ![ zero , x \scons st ]
+\end{codei}
 
+\noindent Note that the only non-trivial addition was the one in the
+\emph{normal execution} section, which defines the operational semantics of the
+two new instructions. The remaining two pairs are just obligatory no-ops,
+consistent with the skipping interpretation of these two modes of execution.
 
+\subsection{Correctness}
 
+The largest chunk of code gets added to the proof of correctness, namely the
+operator lemma called \ident{lemma-op}. In this function, 12 cases per binary
+operator are examined so we end up with $2 \times 24$ new trivial\footnote{All
+these proof obligations can be discharged using a simple \ident{refl}.}
+clauses. However, the rest of the proof remains completely untouched.
 
+\todo{Add a reference to the source code.}
 
+\subsection{Remarks}
 
+Thus, our development is extensible in this way quite easily. This wouldn't be
+possible if, instead of keeping track of the types of elements on the stack, we
+kept just the size of the stack.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Of course, there are lots of things to improve. Most notably, the large number
+of cases in the operator lemma belonging to the proof of correctness might
+probably be factored into smaller functions, resulting in slower growth of
+the clause count when adding new instructions.
 
