@@ -1,33 +1,33 @@
 \chapter{Compiling exceptions totally correctly}
 
 \todo{Blah blah about differences between FP and total FP, substantiate the
-title of the section}
+title of the chapter}
 
 The basic approach to compiling exceptions was shown in \cite{gmh:exceptions}.
 This article provides excellent insight and inspiration how such code can be written
 in a language such as Haskell.
 However, peculiarities of programming with dependent types will make us
 diverge a bit, in details at first, in parts of the design later.
-\todo{The above is not completely true, FIXME.}
 
-\section{Adding exceptions, GMH-style}
+\todo{Reword the above more accurately.}
 
-Now we are about to add exceptions to our language(s). The first approach is to
-examine the ways found in the literature.
+\section{Compiling exceptions, after Hutton \& Wright}
 
-Code in this section is modeled after the paper \cite{gmh:exceptions} by
-Graham Hutton and Joel Wright. The authors used Haskell in their development.
-This approach was later formalized by Tobias Nipkow in \cite{nipkow} in
-Isabelle, an interactive theorem prover/proof assistant, in exactly the same
-way; the development even uses the same lemmas and their numbering as the
-paper.
+We will build upon our introductory example of the simple exceptionless
+language introduced in \Fref{sec:simple-language}.  Code in this section will
+be modeled after the paper \cite{gmh:exceptions} by Graham Hutton and Joel
+Wright.  The authors used Haskell in their development.  This approach was
+later formalized by Tobias Nipkow in \cite{nipkow} in Isabelle, an interactive
+theorem prover/proof assistant, in exactly the same way; the development even
+uses the same lemmas and their numbering as the paper.
 
 In contrast with the original paper and Tobias Nipkow's formalization thereof,
 our aim is to create a dependently typed program, which means we don't want to
-copy the Haskell code as is; instead, we will adapt it for the dependently
-typed setting and see how it works out.
+\emph{copy} the Haskell code as is and prove it correct; instead, we will
+\emph{adapt} it for the dependently typed setting and see how it works out.
 
-\subsection{Changes to the high-level language}
+
+\subsection{High-level language}
 
 \subsubsection{Expressions}
 
@@ -111,16 +111,17 @@ way.}
 \subsubsection{Remarks}
 
 To keep things simple, the \ident{Throw} expression does not take a value,
-unlike its counterparts in most programming languages. At this stage, we will
+unlike its counterparts in most programming languages. In this thesis, we will
 worry only about whether an exception has been thrown or not, not about its
 particular value.
 
 Also, in most programming languages, exception handlers can inspect the
 exceptions being handled and return different values depending on some
 attributes of the exception. In our language, it would be pointless to do that
-because our exceptions do not carry values. Thus, our exception handlers are
-just simple expressions of the same type as the main expression and they have
-no means to refer to the exception being handled.
+because our exceptions do not carry values.  Furthermore, inspection of
+exceptions would require us to implement lambdas or a similar mechanism.  Thus,
+our exception handlers are just simple expressions of the same type as the main
+expression and they have no means to refer to the exception being handled.
 
 This concludes the definition of our high-level language and the rest of this thesis
 will be mostly devoted to how to make it work operationally.
@@ -142,17 +143,18 @@ mind.
 First, Hutton and Wright propose altering the type of stacks because besides
 values, now we are going to push exception handlers on the stack, too.
 
-Unlike Hutton and Wright, we also need to care about stack shapes.
-The type of stack shapes will no longer be a plain
-list of types (that is, elements of the universe~\ident{U}); instead, we  will
-distinguish between \emph{values} and \emph{handlers} pushed on the stack.
-\footnote{Actually, there is even more ``dependent'' approach: we could
-index the type of stack shapes by the list of handlers on the stack, getting
-\ident{Shape : List U $\to$ Set}. In this setup, pushing a value on the stack
-will change its shape but not the type of the shape, while pushing a handler
-on the stack will change both the shape and the type of the shape. However, we
-will not take this route as it turns out to be more complicated, while the author
-could not see any advantages this would yield.}
+Unlike Hutton and Wright, we also need to care about stack shapes.  The type of
+stack shapes will no longer be a plain list of types (that is, elements of the
+universe~\ident{U}); instead, we  will distinguish between \emph{values} and
+\emph{handlers} pushed on the stack.  \footnote{Actually, there is even more
+	``dependent'' approach: we could index the type of stack shapes by the
+	list of handlers on the stack, getting \ident{Shape : List U $\to$
+	Set}. In this setup, pushing a value on the stack will change its shape
+	but not the type of the shape, while pushing a handler on the stack
+	will change both the shape and the type of the shape. However, we will
+	not take this route as, however promising it may look, it turns out to
+	be more complicated, while the author could not see any advantages this
+would yield.}
 
 \begin{code}
   data Item : Set where
@@ -178,7 +180,7 @@ constructor \ident{\sconsh\!\!} corresponds to pushing handlers on the stack.
 Note that we push arbitrarily large strands of code as single items on the stack,
 which contradicts one of our design principles -- that the
 code must be executable on a simple stack machine (Introduction, page~\pageref{objectives})
--- and we will address this objection in \Fref{chap:compiling2}.
+-- and we will finally address this objection in Section \ref{sec:linearized-code}.
 
 \subsubsection{Instructions and code}
 
@@ -248,14 +250,13 @@ the following components:
 	\item a bounded number of other flags and variables.
 \end{itemize}
 
-Then, execution is fully specified if for each instruction, we define its
-effect on the machine state.
+Then, execution is fully specified if for each instruction, we define the
+effect of that instruction on the machine state.
 
 For now, we will leave the position in the code implicit and we will not count
-it as a component of the state. The motivation for doing so is retaining
-the ability to recurse over code structurally, which we would lose if we
-permitted any manipulation with code (beyond un-consing done by the execution
-function).
+it as a component of the state. The motivation for doing so is the ability to
+recurse structurally over code, which we would lose if we permitted any
+manipulation with code (beyond un-consing done by the execution function).
 
 \subsection{Placeholder method}
 
@@ -330,6 +331,9 @@ handle exceptions means that these instructions are going to be executed.
 However, we can do better: simply skip the appropriate number of instructions
 -- and real machines are good at skipping efficiently.
 
+\todo{We won't do jumps but we will use execution modes that can be obviously%
+\raisebox{3pt}{\sc tm} replaced by jumps.}
+
 Fourth, the Agda termination checker rejects the exception-handling case for
 \ident{UNMARK} in the function \ident{execInstr}. Recursion isn't structural
 here and we need to convince Agda about termination using a decreasing measure
@@ -347,7 +351,11 @@ begin with the first three of them.
 \section{Execution: stack unwinding}
 
 We will adapt the method of \emph{stack unwinding}, described in the paper by Hutton
-and Wright. Now the machine will have two modes of execution, as hinted in
+and Wright.
+
+\subsection{Virtual machine}
+
+Now the machine will have two modes of execution, as hinted in
 \cite[p.~7]{gmh:exceptions}.
 
 The normal mode is exactly what one would expect: executing instructions on a stack, nothing surprising.
@@ -355,8 +363,8 @@ The normal mode is exactly what one would expect: executing instructions on a st
 However, the non-trivial part is the exception-handling mode. When an exception is thrown,
 two things need to be done in order to execute the exception handler: \label{sec:stack-unwinding}
 \begin{itemize}
-	\item The stack needs to be unwound. This means removing items from the stack
-		until the first exception handler.\footnote{Here we do not distinguish types
+	\item The stack needs to be unwound. This means that items need to be removed from the stack
+		until the first exception handler is found.\footnote{Here we do not distinguish types
 		of exception handlers so any handler is always appropriate. If we had typed
 		exceptions, we might need to skip handlers that don't match the exception
 		being processed.} When this is done, we can pop the handler from the stack
@@ -366,7 +374,8 @@ two things need to be done in order to execute the exception handler: \label{sec
 		to the computation being abandoned.
 \end{itemize}
 
-\subsection{Handler frames}
+
+\subsubsection{Handler frames}
 In a sense, we can talk about \emph{handler frames} that we need to discard
 while looking for an exception handler. This is best demonstrated on an example.
 Consider the following expression of the high-level language:
@@ -457,9 +466,10 @@ Hence, handler frames is what corresponds to catch-expressions on the operationa
 side of the matter.
 
 \todo{Extended handler frames. Generalize for any expression. Exploitable for proving?
-Is there some yet undiscovered direct 1:1 correspondence that would trivialize proofs?}
+Is there some yet undiscovered direct 1:1 correspondence that would trivialize proofs?
+C++ has a superhandler that aborts if an uncaught exception occurs.}
 
-\subsection{Stack unwinding}
+\subsubsection{Stack unwinding}
 Now that handler frames are defined, we can describe exception handling
 by stack unwinding quite concisely: abandon the innermost handler frame\footnote{%
 Note that this involves discarding stack items but also skipping all instructions
@@ -467,7 +477,7 @@ that were to be executed within the handler frame.},
 remembering the handler found at the bottom of the frame, and then
 execute the handler as ordinary code on the resulting stack.
 
-\subsection{Machine state}
+\subsubsection{Machine state}
 
 As for the machine state, we discard our experiments with placeholders and return
 to the original stack representation with two cons-constructors.
@@ -475,7 +485,7 @@ Instead of placeholders, we extend the state of the machine by distinguishing be
 two modes of operation:
 \begin{itemize}
 	\item normal operation, where we just need to keep track of the stack;
-	\item exception handling mode, where we keep additional state variables besides the stack.
+	\item exception-handling mode, where we keep additional state variables besides the stack.
 \end{itemize}
 
 \subsection{Differences to real machines}
@@ -543,7 +553,7 @@ it has. The shape of the stack is sufficient to determine this.
 \end{code}
 
 \noindent We also need to know what shape the unwound stack will have.
-\label{sec:ham-unwindShape}\begin{code}
+\begin{code}
   -- Unwind the shape up to just below the &\cident{n}&\-th top\-most handler.
   -- Return the empty shape if there is no such handler.
   unwindShape : Shape -> \bN -> Shape
@@ -551,7 +561,7 @@ it has. The shape of the stack is sufficient to determine this.
   unwindShape (Han _ :: xs) (suc n) = unwindShape xs n
   unwindShape (Val _ :: xs) n       = unwindShape xs n
   unwindShape []           _       = []
-\end{code}
+\end{code}\label{sec:ham-unwindShape}
 
 \noindent Now we can define the data types. First, the resumption point, which
 represents information needed to resume computation after skipping the instructions
@@ -592,10 +602,17 @@ two (explicit) parameters.
 		handler frame, we might enter additional handler frames nested within. Hence
 		we need to keep track of the depth of nesting.
 		
-		This is exactly the point where Hutton \& Wright use an implied stack.\cite[pg.~7]{gmh:exceptions}
-		In their function \ident{skip}, they use the implicit call stack to count
-		the nesting levels. However, we want to make this counter explicit so we include
-		it as a natural number into the machine state.
+		By the way, this is the point where Hutton \& Wright
+		\cite[pg.~7]{gmh:exceptions} use an implicit stack.  In their
+		function \ident{skip}, the implicit call stack is used to count
+		the nesting levels; and this is perfectly okay when the
+		skipping function is mostly symbolic, isolated, and obvious.
+		
+		However, our machine does not have a call stack usable for this
+		purpose and we perform instruction skipping by switching to a
+		different machine state so we need to make this counter
+		explicit. Hence we include it as a natural number into the
+		machine state.
 		
 	\item The other parameter describes how to resume normal execution when
 		the machine has finished skipping instructions.
@@ -621,7 +638,7 @@ down to just a stack and a couple of additional state variables; with the
 notable exception of an arbitrarily-sized handler in the case of the
 constructor \ident{Caught}, which will be addressed later.
 
-\subsection{Operation}
+\subsection{Execution}
 
 Now that we know what the state \emph{looks like}, we can take a look at how it \emph{works}.
 This involves redefining the function \ident{execInstr} to describe effects of instructions
@@ -642,7 +659,7 @@ is needed for reinstation of computation once all appropriate instructions have 
 
 \noindent The function \ident{unwindStack}, in accordance with the functions
 defined above, takes a natural number \ident{n} denoting how many handler
-frames are to be thrown right away before starting a search for a handler.  If
+frames are to be discarded right away before starting a search for a handler.  If
 there are no suitable handlers, the alternative \ident{Uncaught} is returned.
 
 Now we can proceed to the definition of the functions \ident{execInstr} and
@@ -717,16 +734,15 @@ quite trivial: it just increments the handler frame nesting counter contained
 in the state.
 
 If the frame nesting counter is nonzero, then the effect of the instruction
-\ident{UNMARK} is trivial, too; it just \emph{decrements} the frame nesting
-handler.
+\ident{UNMARK} is trivial, too: it just \emph{decrements} the frame nesting
+counter.
 
 However, if the frame nesting counter is zero, the effect of the instruction
 \ident{UNMARK} is a bit more complex: it can be described as switching the
-machine to the normal mode using the saved stack, and then running the
-saved exception handler.
-
-This is exactly the point where we use the resumption record to reinstate
-normal operation after having skipped all instructions that were to be skipped.
+machine to the normal mode using the saved stack, and then running the saved
+exception handler -- this is exactly the point where we use the resumption
+record to reinstate normal operation after having skipped all instructions that
+were to be skipped.
 
 Note that in the non-trivial case for the instruction \ident{UNMARK}, we know
 for sure that the state contains an instance of the \ident{Caught} constructor%
@@ -753,14 +769,15 @@ opposed to $2^{\mathrm{arity(instr)}} - 1$ cases in the placeholder method,
 where we had to account for every possible combination of placeholders on the
 stack. We have reduced both the number of cases, and their complexity.
 
-Also note that in the whole specification, there are no implicit stacks: our
+Also note that in the whole specification, there are no implicit stacks and our
 functions are completely tail-recursive. We designed the machine to work this
-way to meet our requirements from the Introduction (page~\pageref{objectives}).
+way to meet our machine simplicity requirements from the Introduction
+(page~\pageref{objectives}).
 
 Both modes of execution are essentially the same; both contain stack, the
 exception-handling mode also contains a number and a saved exception handler.
 Thus only the arbitrarily-sized handler violates our simplicity requirement.
-We will deal with this issue later in the Chapter \ref{chap:compiling2}.
+We will deal with this issue later in Section \ref{sec:linearized-code}.
 
 \subsection{Termination}
 
@@ -807,9 +824,11 @@ However, while it looks promising and the transformation of code to the
 to prove termination using this approach. This might be an interesting direction
 for further research.
 
+\todo{Generalized handler frames, maybe?}
+
 Third, we can try hard and make the recursion structural. As already hinted,
 this is the approach we prefer to take in this thesis and we will develop it
-further in \Fref{sec:handlers-at-unmark}.
+further in Section \ref{sec:handlers-at-unmark}.
 
 \subsection{Compared to the placeholder method}
 
@@ -833,7 +852,8 @@ checked separately.}
 Third, actual efficiency of the pattern match is comparable to that of the
 placeholder method. We actually cannot do better than going through every
 single instruction if we want to recurse structurally over \ident{code}.
-However, the work we do at every instruction in the exception-handling mode is
+However, the work we do at every instruction\footnote{Well, every one
+except \ident{MARK} and \ident{UNMARK}.} in the exception-handling mode is
 trivial: we simply skip it. No stack inspection, no manipulation with machine
 state at all.  Hence, when entering the exception handling mode, the machine
 focuses just on the code sequence and starts to search an appropriate place to
@@ -844,16 +864,14 @@ stop skipping.
 Fourth, unfortunately, our recursion is still not structural and the
 termination checker rejects the recursive call to \ident{execCode} in the
 handler-running clause of \ident{execInstr}. However, we are going to address
-this shortcoming soon in the next sections.
-
-\todo{Which sections? Insert references.}
+this shortcoming soon in the Section \ref{sec:handlers-at-unmark}.
 
 Fifth, we still keep pushing blobs of code on the stack so we haven't improved
-this aspect yet -- but we are going to as well, in later sections.
-
-\todo{Which sections? Insert references.}
+this aspect yet -- but we are going to as well, in Section \ref{sec:linearized-code}.
 
 \subsection{Remarks}
+
+\todo{Move this to the high-level language definition?}
 
 It is worth noting that the expression \ident{Throw} is indexed as an expression
 that yields a value of \emph{any} type, and the instruction \ident{THROW} is indexed
@@ -946,9 +964,17 @@ with a nesting counter in the exception-handling case).
     \x[_,_] : (n : Nat&\!&) -> Stack (unwindShape s n) -> State s
 \end{code}
 
+\todo{blah}
+
+\todo{blah}
+
+\todo{blah}
+
+\todo{blah}
+
 \subsection{Execution}
 
-Execution is simplified as well.  Suddenly, recursion is naturally completely
+Execution is simplified as well. Suddenly, recursion is naturally completely
 structural. In the following code, we will use the auxiliary functions
 \ident{unwindShape} (\Fref{sec:ham-unwindShape}) and \ident{unwindStack}
 (\Fref{sec:ham-unwindStack}), trivially modified to work with the stack type we
@@ -1041,9 +1067,9 @@ identical to that in \Fref{sec:cor-compile-distr}.
     -> execCode (c \app d) st == (execCode d \o execCode c) st
 \end{code}
 
-We also use two lemmas that perform specialized case analysis. When doing
-induction on the structure of the expression while proving correctness, there
-are two non-trivial cases: the case of binary operators\footnote{The
+\noindent We also use two lemmas that perform specialized case analysis. When
+doing induction on the structure of the expression while proving correctness,
+there are two non-trivial cases: the case of binary operators\footnote{The
 constructor \ident{Bin}.} and the case of catch-expressions\footnote{The
 constructor \ident{Catch}.}. Apart from containing sub-expressions recursively
 (thus requiring the induction hypothesis), it is non-trivial to show that the
@@ -1085,6 +1111,7 @@ This is solved by linearizing handlers in the main code sequence and adding
 jumps so that these handlers are skipped unless actually needed.
 
 \section{Linearized code}
+\label{sec:linearized-code}
 
 As already mentioned, if we linearize handler code within the main instruction
 sequence, we need jumps for skipping handlers that are not needed.  Since, due
@@ -1092,9 +1119,9 @@ to structurality requirements on recursion, we cannot simply jump in the code,
 we need to make several changes throughout our development.
 
 \label{sec:linearized-code-layout}The key difference to the previous section
-lies in how code for exception handlers is compiled. The overall idea of
-compilation remains the same; however, compared to \Fref{sec:hau-compile}, we
-change the compiler for catch-expressions.
+lies in how code for exception handlers is laid out. The overall idea remains
+the same; however, compared to the compiler in \Fref{sec:hau-compile}, we
+change the layout for catch-expressions.
 
 The instruction \ident{UNMARK} no longer takes any piece of code.
 The role of this instruction is taken by the newly-introduced instruction
