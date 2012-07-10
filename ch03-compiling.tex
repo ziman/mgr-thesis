@@ -331,8 +331,8 @@ handle exceptions means that these instructions are going to be executed.
 However, we can do better: simply skip the appropriate number of instructions
 -- and real machines are good at skipping efficiently.
 
-\todo{We won't do jumps but we will use execution modes that can be obviously%
-\raisebox{3pt}{\sc tm} replaced by jumps.}
+\todo{We won't do jumps but we will use execution modes that can be obviously
+(tm) replaced by jumps.}
 
 Fourth, the Agda termination checker rejects the exception-handling case for
 \ident{UNMARK} in the function \ident{execInstr}. Recursion isn't structural
@@ -496,7 +496,7 @@ We will model it as different constructors of the \ident{State} data type.
 
 Like in the placeholder method, we will push handlers on the stack, which
 contradicts the principles we pursue and isn't really executable by real
-machines. We will address this issue later, in Chapter \ref{chap:compiling2}.%
+machines. We will address this issue later, in Section \ref{sec:linearized-code}.%
 \footnote{This also causes trouble with termination but, unlike the
 executability objection, termination issues can be worked around with
 standard termination-proving methods or other tricks.}
@@ -890,7 +890,7 @@ Finally, we don't prove correctness of this implementation because we don't
 have a proof of termination and since we are going to fix that soon, let us
 leave it that way.
 
-\section{Execution: handlers at \ident{UNMARK}}
+\section{Execution: handlers at UNMARK}
 \label{sec:handlers-at-unmark}
 
 Our (non-)termination trouble arises from the fact that before running an
@@ -917,7 +917,8 @@ the exception handler instead of the \ident{MARK} constructor.
     PUSH : forall {u s} -> el u -> Instr s (Val u :: s)
     ADD : forall {s} -> Instr (Val nat :: Val nat :: s) (Val nat :: s)
     MARK : forall {u s} -> Instr s (Han u :: s)
-    UNMARK : forall {u s} -> Code s (Val u :: s) -> Instr (Val u :: Han u :: s) (Val u :: s)
+    UNMARK : forall {u s} -> Code s (Val u :: s)
+      -> Instr (Val u :: Han u :: s) (Val u :: s)
     THROW : forall {u s} -> Instr s (Val u :: s)
 \end{code}
 

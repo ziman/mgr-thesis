@@ -15,67 +15,58 @@
 \section{A simple exceptionless language}
 \label{sec:simple-language}
 
-All high-level languages in this thesis will be languages of simple, typed
-expressions.
+As a brief Agda crash-course, we will implement a very simple compiler
+for a language of arithmetical expressions to instructions for a stack machine.
+Being a simple and instructive task, this has been done many times in different
+programming languages in other
+papers, publications, blog posts, et cetera; for example in \cite{epigram-compiler}
+(in Epigram) or \cite{chlipala:compiler} (in Coq).
 
-Our first language will feature only natural numbers and addition, not even
-exceptions. We will implement it to build the auxiliary ecosystem of the
-compiler and the skeleton of our development.
+All high-level languages in this thesis will be languages of simple, typed
+expressions and our first language will feature only natural numbers, addition,
+and no exceptions. Besides demonstrating how dependent programming in Agda looks like,
+we will implement it to build the auxiliary ecosystem of the compiler and the skeleton
+of our development, upon which we will build later throughout the thesis.
+
+\todo{Add a reference to the source code.}
 
 % branch: no-exceptions
 
 \subsection{Type universe}
 
-
 The first thing we will introduce is the type universe representing the set of
-types of expressions of the high-level language. We will index our types with
-values of this type (most notably the type \ident{Exp u} of expressions, to
-indicate what the type of the expression is), and while we could use Agda types
+types of expressions of our high-level language. We will index our types with
+values of this type -- most notably the type \ident{Exp} of expressions, to
+indicate what the type of the expression is -- and while we could use Agda types
 directly for indexing, with an explicit universe, we get decidable equality of
-types and all datatypes conveniently in \ident{Set}.
+types and all datatypes conveniently in \ident{Set}.\footnote{
+To avoid cardinality trouble, reified in Agda as Girard's Paradox
+\cite{girard:dissertation} (simplified by Hurkens in \cite{hurkens}), Agda
+features stratified type universes with universe
+polymorphism. This approach lets us have all types flat in the lowest Agda type
+universe, called \ident{Set}, relieving us from the burden of caring about the
+stratification.}
 
 We could parametrize our
 modules with the universe but let us just define a fixed one for the sake of
 simplicity.
 
 \begin{code}
-  infixr 5 _=>\_
   data U : Set where
     nat : U
-    _=>\_ : U -> U -> U
 \end{code}
 
-\todo{Omit the unused $\Rightarrow$ constructor entirely?}
+\noindent The universe could not be much simpler. It is probably a reasonable
+requirement that the language
 
-\noindent We will also need the interpretation function \ident{el} that maps
+We will also need the interpretation function \ident{el} that maps
 types of our simple language to Agda types so that we can use Agda values in
 the modelled language, talk about its denotational semantics etc.
 
 \begin{code}
   el : U -> Set
   el nat = Nat
-  el (s => t) = el s -> el t
 \end{code}
-
-\noindent And, as promised, equality is decidable on the elements of the
-universe.
-
-\begin{code}
-  -- open import Relation.Nullary using (Dec)
-  data Dec (p : Set) : Set where
-    yes : p -> Dec p
-    no  : ~ p -> Dec p
-
-  -- open import Relation.Binary.PropositionalEquality using (_==\_)
-  data _==\_ {a : Set} (x : a) : a -> Set where
-    refl : x == x
-
-  eqDecU : (u v : U) -> Dec (u == v)
-  -- body omitted
-\end{code}
-
-\noindent We omit the body of \ident{eqDecU} because it's just an ordinary
-uninteresting case analysis.
 
 \note{In the following text, we will be a bit lax on wording related to type
 universes.  We will be talking about ``expressions of the type \ident{u}'',
