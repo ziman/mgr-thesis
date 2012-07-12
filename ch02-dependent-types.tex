@@ -98,7 +98,7 @@ We will also need an interpretation function that maps
 types of our simple language to Agda types so that we can use Agda values in
 the modelled language, talk about its denotational semantics etc.
 
-Function declarations in Agda consist of a type declaration and a (nonzero)
+Function declarations in Agda consist of a type declaration and a (possibly multiple)
 number of clauses describing the outcomes of the function depending on
 its arguments.
 
@@ -116,7 +116,23 @@ would contain another clause in the form:
 Users of languages belonging (syntactically) to the Miranda family will feel safely at
 home here; the difference to ML-style languages here is that instead of a big match expression
 on the right side of a single equation, there are multiple equations where pattern
-matching takes place on the left side of each equation.
+matching takes place on the left side of each equation.\footnote{Seen for example in
+the definition of the function \ident{denExp} in \Fref{sec:simple-denExp}.}
+
+Furthermore, beyond standard type checking etc., Agda, being a \emph{total} functional
+programming language, performs two special checks on every function definition.
+\begin{itemize}
+	\item The \emph{coverage checker} checks that pattern coverage of every
+		function definition is exhaustive. In other words, whatever arguments
+		are given to the function, \emph{some} pattern from its definition must match
+		them.
+	\item The \emph{termination checker} checks that recursion used (if any) by the
+		given function is structural and hence this function is obviously terminating.
+\end{itemize}
+This ensures that every function terminates on every input, which is important for soundness
+of proofs. This will be discussed later.
+
+\todo{Don't forget to discuss it and insert a reference here.}
 
 \subsection{Expressions}
 
@@ -158,7 +174,6 @@ the expression in the modelled language.
 \end{code}\label{sec:simple-exp}
 
 \noindent This is a bit more elaborate declaration using several Agda features.
-
 \begin{itemize}
 	\item Agda supports \emph{Unicode} in its source files and is very liberal about what
 		characters may occur in tokens; this enables Agda source code to get much closer
@@ -171,23 +186,26 @@ the expression in the modelled language.
 		\ident{u} is inferred from the context of the application.
 		
 	\item The $\forall$ sign in front of the implicit arguments enables us to \emph{leave
-		out the types of the arguments} -- these will be inferred from the context of
+		out the types} of the arguments -- these will be inferred from the context of
 		the constructor declaration. An equivalent declaration of the constructor \ident{Lit}
-		would be \ident{Lit : \{u : U\}  $\to$ (x : el u) $\to$ Exp u}.
-		This also works with explicit arguments. 
+		would be \ident{Lit : \{u : U\}  $\to$ el u $\to$ Exp u}.
+		This also works with explicit (non-braced) arguments.
 
 	\item The implicit arguments above are \emph{named}. Explicit arguments can be named, too;
 		we could well write \ident{Lit : $\forall$ \{u\} $\to$ (x : el u) $\to$ Exp u}.
 		However, we do not use the name \ident{x} anywhere, unlike the name \ident{u},
 		so we don't need to even create it.
 		
+	\item Note that we \emph{apply a function in the declaration} of the constructor
+		\ident{Lit}. In a language with dependent types, we can use function application
+		in type declarations freely.
 \end{itemize}
 
-% unicode
-% forall
-% implicit params
-% functions in args
-% named args
+Given the above definition of the type of expressions, it can be immediately seen that
+literals of our expression language carry appropriately typed values of the type \ident{el u}.
+
+The typing machinery also ensures that binary operators receive operands of correct
+types, yielding an expression typed exactly as given by the operator type specification.
 
 \subsection{Semantics of expressions}
 
@@ -198,18 +216,26 @@ pair of simple functions.
 \begin{code}
   denOp : forall {u v w} -> Op u v w -> el u -> el v -> el w
   denOp Plus = _+\_
+\end{code}
 
+\noindent The function \ident{denOp} can be interpreted as taking a value representing
+a binary operator of the type \ident{Op u v w} and returning an appropriately-typed Agda
+function of the type \ident{(el u $\to$ el v $\to$ el w)}.
+
+Expressions are then turned into Agda values as follows; literals in a trivial
+way, binary-operator expressions using the denotation of the corresponding
+operator and recursively obtained denotations of the operands.
+
+\begin{code}
   denExp : forall {u} -> Exp u -> el u
   denExp (Lit x) = x
   denExp (Bin op l r) = denOp op (denExp l) (denExp r)
-\end{code}
+\end{code}\label{sec:simple-denExp}
 
-\noindent The separate type of binary operators deserves a separate function
-converting an operator to a binary Agda function of the appropriate type.
-
-Expressions are then turned into Agda values recursively; literals in a trivial
-way, binary-operator expressions using the denotation of the corresponding
-operator.
+\noindent As already mentioned, pattern matching happens on the left side of defining equations,
+it is \emph{exhaustive}: both of the two possible constructors are covered; and recursion
+is structural: both recursive applications are made to a subterm of the argument of the function.
+Hence this function is total and provably terminating.
 
 \subsection{Virtual machine}
 
