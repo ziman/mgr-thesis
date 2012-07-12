@@ -160,10 +160,8 @@
 \addcontentsline{toc}{chapter}{#1}
 }
 
-\newcommand{\ident}[1]{\mbox{\textsf{#1}}}
-\newcommand{\midt}[1]{\mathsf{#1}}
-\newcommand{\cident}[1]{\textsf{\textit{\color{gray}#1}}}
-%\newcommand{\to}{\rightarrow}
+\newcommand{\ident}[1]{\mbox{\textsf{\small #1}}}
+\newcommand{\cident}[1]{\textsf{\textit{\color{gray}#1}}} % for comments in code
 
 \newcommand{\lrule}[2]{%
   \noindent\hbox{{\vrule width #1}\hskip 0.5em\vbox{\noindent #2}}%
@@ -189,6 +187,8 @@
 %\newcommand{\note}[1]{\marginpar{\lrule{0.5pt}{\footnotesize \textit{#1}}}}
 \newcommand{\todo}[1]{\textssc{Todo.} \textit{#1}}
 \newcommand{\note}[1]{\textsc{Note.}\, #1}
+
+\newcommand{\infixl}{\textbf{infixl}}
 
 % TODO:
 % - add \noindent after each \end{code}

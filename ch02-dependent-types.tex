@@ -176,9 +176,16 @@ the expression in the modelled language.
 \noindent This is a bit more elaborate declaration using several Agda features.
 \begin{itemize}
 	\item Agda supports \emph{Unicode} in its source files and is very liberal about what
-		characters may occur in tokens; this enables Agda source code to get much closer
+		characters may occur in tokens. This enables Agda source code to get much closer
 		to standard math notation. Hence the $\forall$ and $\to$ characters
 		are contained literally in it.
+		
+		What's more, Agda does not distinguish tokens as operators or identifiers
+		on a lexical basis; (almost) anything may be an infix or mixfix operator,
+		if properly declared\footnote{Discussed in \Fref{sec:fixity}.} and ordinary
+		identifiers may consist purely of special characters.
+		This also means that operators must be surrounded by whitespace: for example,
+		``\ident{foo-bar}'' parses as a single identifier containing a hyphen.
 		
 	\item The names enclosed in braces are \emph{implicit arguments}, as usual
 		in dependently typed languages. For example, a fully saturated application of the
@@ -202,7 +209,8 @@ the expression in the modelled language.
 \end{itemize}
 
 Given the above definition of the type of expressions, it can be immediately seen that
-literals of our expression language carry appropriately typed values of the type \ident{el u}.
+literals of our expression language always carry appropriately typed values of the
+type \ident{el u}.
 
 The typing machinery also ensures that binary operators receive operands of correct
 types, yielding an expression typed exactly as given by the operator type specification.
@@ -213,14 +221,25 @@ Our definition of the high-level language would not be complete without giving
 the denotational semantics of its expressions. This is done in the following
 pair of simple functions.
 
+\subsubsection{Operator semantics}
+
+Semantics of operators is given by the function \ident{denOp} as follows.
+
 \begin{code}
   denOp : forall {u v w} -> Op u v w -> el u -> el v -> el w
   denOp Plus = _+\_
 \end{code}
 
-\noindent The function \ident{denOp} can be interpreted as taking a value representing
+\noindent The function \ident{denOp} can be interpreted as taking a value that represents
 a binary operator of the type \ident{Op u v w} and returning an appropriately-typed Agda
 function of the type \ident{(el u $\to$ el v $\to$ el w)}.
+
+The function returned for the operator \ident{Plus} is the ordinary addition function
+from the standard library. Surrounded with underscores, the infix operator \ident{+} becomes
+a standard function identifier.\footnote{See \Fref{sec:fixity} for more information on
+\textvisiblespace\hspace{0.8pt}fix operators in Agda.}
+
+\subsubsection{Expression semantics}
 
 Expressions are then turned into Agda values as follows; literals in a trivial
 way, binary-operator expressions using the denotation of the corresponding
@@ -239,25 +258,58 @@ Hence this function is total and provably terminating.
 
 \subsection{Virtual machine}
 
-We will use a very simple stack machine to run the compiled code.
+We will use a very simple machine to run the compiled code, featuring only a stack
+of values.
 
 \subsubsection{Stack}
 
-The stack of
-the machine is just a cons-list of values, indexed by types (elements of
-\ident{U}) of the values pushed on the stack.  This means that just by looking
-at the type of the stack, we can tell how many elements it contains and what
-types they have.
+The stack of the machine is just a cons-list of values, indexed by the list
+of types (elements of the universe \ident{U}) of the values pushed on the stack.
+This means that just by looking at the type of the stack, we can tell how many
+elements it contains and what types they have. Let us first define the type
+of stack shapes.
 \begin{code}
   -- open import Data.List
   infixr 5 _::_
   data List (a : Set) : Set where
     [] : List a
     _::_ : a -> List a -> List a
-
+\end{code}
+\begin{code}
   Shape : Set
   Shape = List U
+\end{code}
+\label{sec:fixity} In the definition of the standard list data type above,
+we encountered a declaration of an infix constructor. While it is true that
+an infix operator surrounded by underscores becomes an ordinary identifier,
+Agda goes much further and permits (almost) arbitrary prefix, infix, postfix
+and mixfix operators with an arbitrary number of underscores.
 
+Declaring an identifier containing underscores modifies the Agda parser
+to recognize occurrences of that identifier where the underscores have been
+replaced by subexpressions. Combined with Unicode support and the (practical) absence
+of lexical rules, this is a very powerful device. A few examples (some coming
+from the standard library) can be seen
+in \Fref{tab:mixfix}.
+
+\begin{table}[htp]
+\centering
+\begin{tabular}{lll} \toprule
+\textit{Mixfix form} & \textit{Applicative form} & \textit{Description} \\ \midrule
+\ident{x :: xs}		& \ident{\_::\_ x xs} 			& standard infix \\
+\ident{x !}			& \ident{\_! x}					& postfix factorial \\
+\ident{$-$[ x +1]}	& \ident{$-$[\_+1] x}	& negative whole number constructor \\
+\ident{$\langle$ 2 * x $\rangle$} & \ident{$\langle\_\rangle$ (2 * x)}& non-trivial constructs work fine \\
+\ident{x * 1 + y}	& \ident{\_+\_ (\_*\_ x 1) y}	& fixity and precedence work as defined \\
+\ident{if x then y else z} & \ident{if\_then\_else\_ x y z} & mixfix with non-symbols \\
+\ident{x $\lhd$ $\varepsilon$} & \ident{$\_\!\lhd\!\_$ x $\varepsilon$} & unicode \\
+\bottomrule
+\end{tabular}
+\caption{Agda mixfix operator examples}
+\label{tab:mixfix}
+\end{table}
+
+\begin{code}
   infixr 5 _\scons\_
   data Stack : Shape -> Set where
     snil : Stack []
@@ -298,7 +350,7 @@ in the sequence produces a stack of the shape \ident{nat :: nat :: s},
 we want the next instruction in the code sequence to accept this shape.
 
 If we regard
-$\midt{Instr} : \midt{Shape} \to \midt{Shape} \to \midt{Set}$
+\ident{Instr : Shape $\to$ Shape $\to$ Set}
 as a binary relation on \ident{Shape}, then code is the \emph{transitive reflexive closure}
 of \ident{Instr}, which is already included in the Agda standard library as the
 module \ident{Data.Star}.
@@ -487,7 +539,7 @@ comparing the normal forms.
 \end{code}
 
 \noindent For writing the proof for the second case, we will use the wonderful
-way supported by the Agda module $\midt{\equiv}$-\ident{Reasoning}\footnote{Actually,
+way supported by the Agda module \ident{$\equiv$-Reasoning}\footnote{Actually,
 there are also other similar modules, like \ident{$\le$-Reasoning} etc.}, which
 lets us write proofs in the equational-reasoning style; just the way we would
 do it with pen and paper.
@@ -615,7 +667,7 @@ in a common context.
 \noindent This function is used with recursive applications of the theorem
 \ident{correctness} to both operands of the binary operator. This allows us
 to rewrite the subterms in the form \ident{execCode (compile operand) state}
-to their equivalents in the form \ident{denExp operand \scons state}. These
+to the form \ident{denExp operand \scons state}, which is equivalent. These
 two recursive applications are actually inductive hypotheses.
 
 The two steps using \ident{exec-distr} and \ident{correctness} for each operand
