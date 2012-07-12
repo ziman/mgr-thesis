@@ -43,15 +43,18 @@ It is probably a reasonable requirement that our language should be able to repr
 expressions of different types (e.g. numeric or Boolean).
 
 Hence the first thing we will introduce is the type universe representing the set of
-types of expressions of our high-level language. We will index our types with
-values of this type -- most notably the type \ident{Exp} of expressions, to
+types of expressions of our high-level language. We will \emph{index} our types with
+values of this type, most notably the type \ident{Exp} of expressions, to
 indicate what the type of the expression is -- and while we could use Agda
 types directly for indexing, with an explicit universe, we get decidable
 equality of types and all datatypes conveniently in \ident{Set}.%
 \footnote{To avoid cardinality trouble, reified in Agda as Girard's Paradox
 \cite{girard:dissertation} (simplified by Hurkens in \cite{hurkens}),
 Agda features stratified type universes with universe polymorphism.
-This approach lets us have all types flat in the lowest Agda type
+
+Our approach, modeling the types of our expression language as values
+of the universe \ident{U} together with an interpretation function,
+lets us have all types flat in the lowest Agda type
 universe, called \ident{Set}, relieving us from the burden of caring about the
 stratification.}
 
@@ -74,8 +77,8 @@ visually clean code.
 
 \noindent This universe could not be much simpler. While we aim to support more
 types at a later stage, now we restrict the language to express only natural
-numbers. As long as we build the program to distinguish different types,
-this is just a quantitative difference.
+numbers, for the sake of simplicity. As long as we build the program to
+distinguish different types, this is just a quantitative difference.
 
 Being so simple, this is hardly a representative example of a data type
 declaration. A bit more elaborate example follows shortly in \Fref{sec:simple-exp}.
@@ -94,6 +97,8 @@ its arguments.
   el : U -> Set
   el nat = Nat
 \end{code}
+
+Users of the Miranda language.
 
 \note{In the following text, we will be a bit lax on wording related to type
 universes.  We will be talking about ``expressions of the type \ident{u}'',
