@@ -45,7 +45,9 @@ expressions of different types (e.g. numeric or Boolean).
 Hence the first thing we will introduce is the type universe representing the set of
 types of expressions of our high-level language. We will \emph{index} our types with
 values of this type, most notably the type \ident{Exp} of expressions, to
-indicate what the type of the expression is -- and while we could use Agda
+indicate what the type of the expression is.
+
+While we could use Agda
 types directly for indexing, with an explicit universe, we get decidable
 equality of types and all datatypes conveniently in \ident{Set}.%
 \footnote{To avoid cardinality trouble, reified in Agda as Girard's Paradox
@@ -57,6 +59,13 @@ of the universe \ident{U} together with an interpretation function,
 lets us have all types flat in the lowest Agda type
 universe, called \ident{Set}, relieving us from the burden of caring about the
 stratification.}
+
+\note{In this thesis, we will be a bit lax on wording related to type
+universes.  We will be talking about ``expressions of the type \ident{u}'',
+while actually referring to ``terms that represent expressions of \emph{the
+type denoted by \ident{u}}''. This simplified approach can hardly cause
+confusion, while adhering to precise wording in every situation at all costs
+would sacrifice comprehensibility.}
 
 \subsubsection{Data type declaration}
 
@@ -98,20 +107,24 @@ its arguments.
   el nat = Nat
 \end{code}
 
-Users of the Miranda language.
-
-\note{In the following text, we will be a bit lax on wording related to type
-universes.  We will be talking about ``expressions of the type \ident{u}'',
-while actually referring to ``terms that represent expressions of \emph{the
-type denoted by \ident{u}}''. This simplified approach can hardly cause
-confusion, while adhering to precise wording in every situation at all costs
-would lead to incomprehensible sentences.}
+\noindent There is one clause/equation per distinguished combination of arguments. If the
+universe \ident{U} contained another value \ident{bool : U}, the function \ident{el}
+would contain another clause in the form:
+\begin{code}
+  el bool = Bool
+\end{code}
+Users of languages belonging (syntactically) to the Miranda family will feel safely at
+home here; the difference to ML-style languages here is that instead of a big match expression
+on the right side of a single equation, there are multiple equations where pattern
+matching takes place on the left side of each equation.
 
 \subsection{Expressions}
 
 The core of the language we are going to model consists of its expressions, of
 course. For now, we will support nothing more than (numeric) literals and addition.
 However, for further extensibility, we separate the type of binary operators.
+
+\subsubsection{Operators}
 
 The type of binary operators is indexed by the types of the two values that
 the operator accepts as arguments; the third index represents the type of
@@ -122,10 +135,19 @@ the result of application of the operator on the two values.
     Plus : Op nat nat nat
 \end{code}
 
-\noindent Now we can define the expressions: literals and binary operators.
-Note that we index the datatype with elements of the universe \ident{U} so that
-the Agda type of an expression also incorporates the type of the expression in
-the modelled language.
+\noindent Put another way, a value of the type \ident{Op u v w} represents
+a binary operator whose operands have the types \ident{u} and \ident{w},
+and whose result has the type \ident{w}. Hence, the value \ident{Plus}
+represents an operator that takes two \ident{nat}s and returns a \ident{nat}.%
+\footnote{We will add more operators later. How the constructors representing
+different operators are typed can be seen in \Fref{sec:more-operators}.}
+
+\subsubsection{Expressions}
+
+Now we can define the expressions: literals and binary operators.
+Note that also this data type is indexed with elements of the type universe
+\ident{U} so that the Agda type of an expression also incorporates the type of
+the expression in the modelled language.
 
 \begin{code}
   data Exp : U -> Set where
@@ -133,7 +155,39 @@ the modelled language.
     Lit : forall {u} -> el u -> Exp u
     -- Binary operators
     Bin : forall {u v w} -> Bin u v w -> Exp u -> Exp v -> Exp w
-\end{code}\label{sec:simple-exp}.
+\end{code}\label{sec:simple-exp}
+
+\noindent This is a bit more elaborate declaration using several Agda features.
+
+\begin{itemize}
+	\item Agda supports \emph{Unicode} in its source files and is very liberal about what
+		characters may occur in tokens; this enables Agda source code to get much closer
+		to standard math notation. Hence the $\forall$ and $\to$ characters
+		are contained literally in it.
+		
+	\item The names enclosed in braces are \emph{implicit arguments}, as usual
+		in dependently typed languages. For example, a fully saturated application of the
+		constructor \ident{Lit} contains only one argument; the implicit argument
+		\ident{u} is inferred from the context of the application.
+		
+	\item The $\forall$ sign in front of the implicit arguments enables us to \emph{leave
+		out the types of the arguments} -- these will be inferred from the context of
+		the constructor declaration. An equivalent declaration of the constructor \ident{Lit}
+		would be \ident{Lit : \{u : U\}  $\to$ (x : el u) $\to$ Exp u}.
+		This also works with explicit arguments. 
+
+	\item The implicit arguments above are \emph{named}. Explicit arguments can be named, too;
+		we could well write \ident{Lit : $\forall$ \{u\} $\to$ (x : el u) $\to$ Exp u}.
+		However, we do not use the name \ident{x} anywhere, unlike the name \ident{u},
+		so we don't need to even create it.
+		
+\end{itemize}
+
+% unicode
+% forall
+% implicit params
+% functions in args
+% named args
 
 \subsection{Semantics of expressions}
 

@@ -69,6 +69,11 @@
 
 \setcounter{secnumdepth}{2} % 3 = subsubsections, too
 
+\makeatletter
+ \def\@textbottom{\vskip \z@ \@plus 14pt}
+ \let\@texttop\relax
+\makeatother
+
 \newcommand{\scons}{:-:\;}
 \newcommand{\sconsh}{!-!\;}
 \newcommand{\void}{$\square$}
