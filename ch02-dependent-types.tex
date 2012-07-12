@@ -1,27 +1,29 @@
-\chapter{Dependently-typed programming}
+\chapter{Dependently typed programming in Agda}
+\label{chap:dependent-types}
 
-\section{Dependent types}
+We will create our development in a dependently typed pure functional language named Agda.
+This chapter provides a brief introduction to Agda, along with some commentary about
+related topics and also presents reasons why Agda was chosen as the implementation language.
 
-\section{The Curry-Howard correspondence}
+\todo{Does it present the reasons?}
 
-\section{Total functional programming}
+The aim is to provide the bare necessities for reading this thesis if the reader is not
+familiar with Agda or dependently typed programming -- mostly an overview of Agda syntax and some
+basic techniques used.
 
-\subsection{Structural recursion and termination}
-
-\section{Formal verification}
-
-\section{The Agda proof assistant}
+\todo{Not only language but also logic. Per Martin-L\"{o}f's Type Theory? Dependent types. 
+The Curry-Howard correspondence. Total functional programming.
+Structural recursion and termination. Formal verification. The Agda proof assistant}
 
 \section{A simple exceptionless language}
 \label{sec:simple-language}
 
-In order to introduce Agda syntax, as a brief crash-course illustrating how to
-read code in the thesis, we will implement a very simple compiler for a
+As a brief Agda crash-course, we will implement a very simple compiler for a
 language of arithmetical expressions to instructions for a stack machine.
 
 Being a simple and instructive task, this has been done many times in a variety
 of programming languages in other papers, publications, blog posts, et cetera;
-for example in \cite{epigram-compiler} (in Epigram) or \cite{chlipala:compiler}
+for example in \cite{epigram-compiler} (in Epigram) or in \cite{chlipala:compiler}
 (in Coq).
 
 All high-level languages in this thesis will be languages of simple, typed
@@ -37,10 +39,10 @@ throughout the thesis.
 
 \subsection{Type universe}
 
-It is probably a reasonable requirement that our language should have
+It is probably a reasonable requirement that our language should be able to represent
 expressions of different types (e.g. numeric or Boolean).
 
-The first thing we will introduce is the type universe representing the set of
+Hence the first thing we will introduce is the type universe representing the set of
 types of expressions of our high-level language. We will index our types with
 values of this type -- most notably the type \ident{Exp} of expressions, to
 indicate what the type of the expression is -- and while we could use Agda
@@ -52,6 +54,8 @@ Agda features stratified type universes with universe polymorphism.
 This approach lets us have all types flat in the lowest Agda type
 universe, called \ident{Set}, relieving us from the burden of caring about the
 stratification.}
+
+\subsubsection{Data type declaration}
 
 Here we arrive at Agda \emph{type declarations}. These resemble GADTs from
 Haskell or type declarations from other dependently typed languages, like Coq.
@@ -68,12 +72,23 @@ visually clean code.
     nat : U
 \end{code}
 
-\noindent The universe could not be much simpler. It is probably a reasonable
-requirement that the language
+\noindent This universe could not be much simpler. While we aim to support more
+types at a later stage, now we restrict the language to express only natural
+numbers. As long as we build the program to distinguish different types,
+this is just a quantitative difference.
 
-We will also need the interpretation function \ident{el} that maps
+Being so simple, this is hardly a representative example of a data type
+declaration. A bit more elaborate example follows shortly in \Fref{sec:simple-exp}.
+
+\subsubsection{Interpretation function}
+
+We will also need an interpretation function that maps
 types of our simple language to Agda types so that we can use Agda values in
 the modelled language, talk about its denotational semantics etc.
+
+Function declarations in Agda consist of a type declaration and a (nonzero)
+number of clauses describing the outcomes of the function depending on
+its arguments.
 
 \begin{code}
   el : U -> Set
@@ -113,7 +128,7 @@ the modelled language.
     Lit : forall {u} -> el u -> Exp u
     -- Binary operators
     Bin : forall {u v w} -> Bin u v w -> Exp u -> Exp v -> Exp w
-\end{code}
+\end{code}\label{sec:simple-exp}.
 
 \subsection{Semantics of expressions}
 
