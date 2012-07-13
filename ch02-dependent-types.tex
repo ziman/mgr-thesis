@@ -529,6 +529,17 @@ type family.
     refl : x == x
 \end{code}
 
+\noindent The definition implies that all nonempty members (inhabited by \ident{refl}) of this
+family must have the index identical to the parameter.
+Therefore conversely, if we have a \ident{refl : a == b}, it must be the case that \ident{a}
+is identical to \ident{b}.
+
+This identity is taken into account by Agda when doing pattern matching on the constructor
+\ident{refl} and causes unification of the corresponding type variables. This is not special
+to propositional equality at all -- after all, propositional equality is expressed by
+an ordinary type family -- it is just a consequence of a more general unification mechanism,
+which works this way for any other data type.
+
 \subsubsection{Operator lemma}
 
 There are two auxiliary lemmas that we will need to prove our main result. The
@@ -549,9 +560,9 @@ on the top of the stack afterwards.
 \end{code}
 
 \noindent In the case for \ident{Plus}, Agda substitutes the term \ident{Plus}
-in the appropriate places, normalizes the resulting equality (expanding
-function definitions etc.) and the proof becomes a trivial observation of
-equality of normal forms, which is indicated by \ident{refl}.
+for the variable \ident{op} in the appropriate places in the equality, normalizes
+it (expanding function definitions etc.) and the proof becomes a trivial observation of
+identity of normal forms, which is indicated by \ident{refl}.
 
 \subsubsection{Distributivity lemma}
 
@@ -568,8 +579,8 @@ d} has the same effect as first executing \ident{c} and then executing
 
 \noindent We will proceed by induction on the parameter \ident{c}, which yields
 two cases: either \ident{c} is empty or it consists of an instruction and the
-rest of code. The first case is trivial by substituting $\varepsilon$ and
-comparing the normal forms.
+rest of code. The first case is trivial by substituting $\varepsilon$ for the variable
+\ident{c} in the equality and observing identity of the normal forms on both sides.
 
 \begin{code}
   compile\-distr \nil d = refl
@@ -578,11 +589,12 @@ comparing the normal forms.
 \noindent For writing the proof for the second case, we will use the wonderful
 way supported by the Agda module \ident{$\equiv$-Reasoning}\footnote{Actually,
 there are also other similar modules, like \ident{$\le$-Reasoning} etc.}, which
-lets us write proofs in the equational-reasoning style; just the way we would
-do it with pen and paper.
+lets us write proofs in the equational-reasoning style; appearing just the way
+it would if we did it with pen and paper.\footnote{This is achieved by clever
+mixfix hackery and Unicode usage.}
 
 \begin{code}
-  compile\-distr (i <| is) d = begin
+  compile\-distr (i <| is) d = let open ==\-Reasoning in begin
     execCode (i <| is \app d) st
       ==< refl \>
     execCode (is \app d) (execInstr i st)
@@ -593,43 +605,45 @@ do it with pen and paper.
     \qed
 \end{code}
 
-\noindent The proof begins with the word \ident{begin} and continues with the
-first line, which is usually exactly the left-hand side of the equality we aim
+\noindent The proof begins with the first line, which is usually exactly the
+left-hand side of the equality we aim
 to prove.  The second line contains the proof that the first line is equal to
 the third line and so on -- by alternating terms and equality proofs, we can
 gradually rewrite the left-hand term to the right-hand term of the desired
 equality.
 
 The first proof is just comparison of normal forms, as indicated by
-\ident{refl}.
+\ident{refl}. In this step we just unfold the definition of \ident{execCode},
+immediately obtaining the next term.
 
 The second proof uses \ident{compile-distr} recursively as an induction
-hypothesis to break the execution of composite code into two stages: first
+hypothesis to break the execution of concatenated code into two stages: first
 executing \ident{is}, then executing \ident{d}.
 
 The third proof is just \ident{refl} again and we use it to restructure the
-term to the desired final form.
+term to the desired final form, this time \emph{folding} the longer
+subterm to its definitional equivalent \ident{execCode c st}.
 
-\subsubsection{Alternative proof of distributivity}
+\subsubsection{A shorter proof of distributivity}
 
-Starting from Agda 2.2.4, we can shorten our previous proof considerably
-by using the \ident{rewrite} keyword:
-
-\todo{Which version of Agda?}
+Since \ident{refl} is a certificate of identity of normal forms, by rewriting
+a term to a diferent form using \ident{refl} as the proof, the normal form of
+that term remains the same. As normal forms is what Agda compares when typechecking,
+we can omit the intermediate \ident{refl}-based rewrites, which leaves us
+with just one proof in the chain.\footnote{Since a chain consists of equality
+proofs connected with transitivity of equality, a singleton chain is identical
+to the single proof itself.}
 
 \begin{code}
   compile\-distr : forall {s t u} {st : Stack s}
     -> (c : Code s t) -> (d : Code t u)
     -> execCode (c \app d) st == execCode d (execCode c st)
   compile\-distr \nil d = refl
-  compile\-distr (i <| is) d rewrite compile\-distr is d (execInstr i st) = refl
+  compile\-distr (i <| is) d = compile\-distr is d
 \end{code}
 
-\noindent The \ident{rewrite} construct expands to a specific pattern-matching
-mechanism behind the scenes, effectively rewriting subterms of the goal using
-the provided equality (which is the recursive application of
-\ident{compile-distr} here). The resulting goal is then easily solvable by
-\ident{refl}.
+\noindent However, often human readability is more desirable than terseness of
+the code and the equational proof may be more appropriate.
 
 \subsubsection{Main correctness theorem}
 
@@ -685,11 +699,11 @@ easily.
 
 Then we make two appeals to the lemma \ident{compile-distr}. Each usage of this
 lemma removes a part of the code sequence (exactly corresponding to an operand
-of the binary operator) and transforms it to the effect that this piece of code
-has on the stack until only a single instruction is left in the code sequence.
-Note that we omit two of three arguments of \ident{compile-distr} in both
-applications. This omission improves readability of the proof and Agda can
-infer these terms, anyway.
+of the binary operator being compiled) and transforms it to the effect that this
+piece of code has on the stack until only a single instruction is left in the
+code sequence.\footnote{Note that we omit two of three arguments of
+\ident{compile-distr} in both applications. This omission improves readability
+of the proof and Agda can infer these terms, anyway.}
 
 The following two rather cryptic steps use the function \ident{cong} that allows
 us to prove equality of two terms, given a proof of equality of their subterms
@@ -707,11 +721,11 @@ to rewrite the subterms in the form \ident{execCode (compile operand) state}
 to the form \ident{denExp operand \scons state}, which is equivalent. These
 two recursive applications are actually inductive hypotheses.
 
-The two steps using \ident{exec-distr} and \ident{correctness} for each operand
-actually correspond to ,,accelerated execution'' of these pieces of code -- we
-do not execute the instructions; instead, we rely on the induction hypothesis
-to simultaneously remove the code corresponding to the operand and push its
-denotation onto the stack.
+\note{In a way, the two steps using \ident{exec-distr} and \ident{correctness}
+for each operand actually correspond to ,,accelerated execution'' of these
+pieces of code -- we do not execute the instructions; instead, we rely on the
+induction hypothesis to simultaneously remove the code corresponding to the
+operand and push its denotation onto the stack.}
 
 Finally, we use the lemma \ident{op-correct} to show that executing the
 leftover instruction is exactly what is left to do to get the desired value
@@ -719,9 +733,9 @@ on top of the stack.
 
 \subsection{Remarks}
 
-Totality of Agda functions give us a proof of termination and the above
-correctness proof gives us a guarantee that the compiler calculates the correct
-code, given the defined semantics.
+Totality of Agda functions gives us a proof of termination of this algorithm and
+the above correctness proof gives us a guarantee that the compiler calculates
+the correct code, given the defined semantics.
 
 This is a very strong guarantee and it did not cost us that much -- the code we
 have written looks much like the equivalent in any other functional language.
@@ -734,8 +748,8 @@ inappropriate number or types of elements on the stack -- just because this
 cannot happen \emph{and the compiler knows it}.} pattern cases in a completely
 safe way, without triggering compiler warnings.
 
-Implementation-wise, the above (sub-)sections form separate modules in the
+Implementation-wise, the above sections form separate modules in the
 accompanying Agda code and these modules define the overall structure of our
-development. In the following sections (and chapters), we will develop
+development. In the following chapter, we will develop
 the code further by extending and improving particular modules.
 
