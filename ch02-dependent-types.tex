@@ -518,6 +518,17 @@ types correspond to their proofs. Hence, type checking coincides with proof chec
 
 \todo{Insert references to further explanation, Curry-Howard etc.}
 
+\subsubsection{Propositional equality}
+
+In the following proofs, we will use the operator $\equiv$ to denote
+\emph{propositional equality}. This is realized in Agda through the following
+type family.
+
+\begin{code}
+  data _==_ {a : Set} (x : a) : a -> Set where
+    refl : x == x
+\end{code}
+
 \subsubsection{Operator lemma}
 
 There are two auxiliary lemmas that we will need to prove our main result. The
