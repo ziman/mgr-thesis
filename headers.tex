@@ -29,7 +29,7 @@
 %\usepackage{tgpagella}
 %\usepackage{tgcursor}
 \usepackage{MinionPro}
-\usepackage{wrapfig}
+%\usepackage{wrapfig}
 \usepackage{titlesec}
 \usepackage{fancyref}
 \usepackage{tikz}
@@ -160,35 +160,47 @@
 \addcontentsline{toc}{chapter}{#1}
 }
 
-\newcommand{\ident}[1]{\mbox{\textsf{\small #1}}}
+\newcommand{\identsize}{\small}
+\newcommand{\ident}[1]{\mbox{\textsf{\identsize #1}}}
 \newcommand{\cident}[1]{\textsf{\textit{\color{gray}#1}}} % for comments in code
+
+% use \footnotesize identifier size in footnotes
+\let\origfootnote\footnote
+\let\origidentsize\identsize
+\renewcommand{\footnote}[1]{%
+   \renewcommand\identsize\footnotesize%
+   \origfootnote{#1}%
+   \renewcommand\identsize\origidentsize%
+}
 
 \newcommand{\lrule}[2]{%
   \noindent\hbox{{\vrule width #1}\hskip 0.5em\vbox{\noindent #2}}%
 }
 
-\newcommand{\myinset}[1]{\begin{wrapfigure}{r}{0.25\textwidth}%
-\vspace{-1em}%
-\parbox{0.228\textwidth}{%
-\lrule{0.5pt}{\raggedright\footnotesize\sloppy #1\fussy}%
-}\vspace{-1em}%
-\end{wrapfigure}%
-}
+%\newcommand{\myinset}[1]{\begin{wrapfigure}{r}{0.25\textwidth}%
+%\vspace{-1em}%
+%\parbox{0.228\textwidth}{%
+%\lrule{0.5pt}{\raggedright\footnotesize\sloppy #1\fussy}%
+%}\vspace{-1em}%
+%\end{wrapfigure}%
+%}
 
 % don't forget to comment \usepackage{a4wide} if you use this
-\newcommand{\marinset}[1]{\marginpar{\raisebox{-1.3\baselineskip}{%
-\begin{minipage}[t]{\marginparwidth}%
-\noindent \raggedright \footnotesize #1%
-\end{minipage}%
-}}}
+%\newcommand{\marinset}[1]{\marginpar{\raisebox{-1.3\baselineskip}{%
+%\begin{minipage}[t]{\marginparwidth}%
+%\noindent \raggedright \footnotesize #1%
+%\end{minipage}%
+%}}}
 
-\newcommand{\inset}[1]{\myinset{#1}}
+%\newcommand{\inset}[1]{\myinset{#1}}
 \newcommand{\mnote}[1]{\marginpar{\footnotesize \textit{#1}}}
 %\newcommand{\note}[1]{\marginpar{\lrule{0.5pt}{\footnotesize \textit{#1}}}}
 \newcommand{\todo}[1]{\textssc{Todo.} \textit{#1}}
 \newcommand{\note}[1]{\textsc{Note.}\, #1}
 
 \newcommand{\infixl}{\textbf{infixl}}
+\newcommand{\infixr}{\textbf{infixr}}
+\newcommand{\infix}{\textbf{infix}}
 
 % TODO:
 % - add \noindent after each \end{code}

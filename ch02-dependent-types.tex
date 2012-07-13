@@ -280,7 +280,7 @@ of stack shapes.
   Shape = List U
 \end{code}
 \label{sec:fixity} In the definition of the standard list data type above,
-we encountered a declaration of an infix constructor. While it is true that
+we encountered a declaration of an infix cons constructor. While it is true that
 an infix operator surrounded by underscores becomes an ordinary identifier,
 Agda goes much further and permits (almost) arbitrary prefix, infix, postfix
 and mixfix operators with an arbitrary number of underscores.
@@ -300,7 +300,7 @@ in \Fref{tab:mixfix}.
 \ident{x !}			& \ident{\_! x}					& postfix factorial \\
 \ident{$-$[ x +1]}	& \ident{$-$[\_+1] x}	& negative whole number constructor \\
 \ident{$\langle$ 2 * x $\rangle$} & \ident{$\langle\_\rangle$ (2 * x)}& non-trivial constructs work fine \\
-\ident{x * 1 + y}	& \ident{\_+\_ (\_*\_ x 1) y}	& fixity and precedence work as defined \\
+\ident{x + 1 * y}	& \ident{\_+\_ x (\_*\_ 1 y)}	& fixity and precedence work as defined \\
 \ident{if x then y else z} & \ident{if\_then\_else\_ x y z} & mixfix with non-symbols \\
 \ident{x $\lhd$ $\varepsilon$} & \ident{$\_\!\lhd\!\_$ x $\varepsilon$} & unicode \\
 \bottomrule
@@ -309,25 +309,39 @@ in \Fref{tab:mixfix}.
 \label{tab:mixfix}
 \end{table}
 
+The declaration \ident{\infixr\ 5 \_::\_} gives fixity and precedence for the operator.
+The higher the number, the stronger the operator binds. Associativity is then given
+by the variant of the declaration: \ident{\infixr} declares a right-associative operator,
+\ident{\infixl} declares a left-associative operator, \ident{\infix} declares a non-associative
+operator.
+
+Let us return to the compiler. Having defined the type of stack shapes, we can
+proceed to a definition of the type of stacks.
+
 \begin{code}
   infixr 5 _\scons\_
   data Stack : Shape -> Set where
     snil : Stack []
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (u :: s)
 \end{code}
-\noindent The literal \ident{snil} represents the empty stack; new values are
+The literal \ident{snil} represents the empty stack; new values are
 pushed onto it using the infix constructor \ident{\bin{\scons}}.
+
+Note that pushing a value on the stack changes the type of the stack: the shape
+index gets prefixed by the type of the value pushed. Given that the empty stack
+is indexed by the empty shape, we always know how many items there are on the
+stack and what types they have, as already mentioned above.
 
 \subsubsection{Instructions}
 
 At this stage, the machine supports only two instructions: \ident{PUSH}
-and \ident{ADD}.
+and \ident{ADD}. This gives rise to the following data type of instructions.
 \begin{code}
   data Instr : Shape -> Shape -> Set where
     PUSH : forall {u s} -> el u -> Instr s (u :: s)
-    ADD : forall s -> Instr (nat :: nat :: s) (nat :: s)
+    ADD : forall {s} -> Instr (nat :: nat :: s) (nat :: s)
 \end{code}
-The type of instructions is indexed by their action on stack. The first shape
+The type of instructions is indexed by their action on the stack. The first shape
 argument is the required stack shape so that the instruction can be executed;
 the second shape argument is the resulting shape of the stack after the
 instruction has been executed.
@@ -369,7 +383,7 @@ module \ident{Data.Star}.
 \end{code}
 
 \noindent The type of instruction sequences is indexed in exactly the same
-manner as the type of single instructions: the first index represents the
+manner as the type of separate instructions: the first index represents the
 acceptable shape of stack before execution of the piece of code; the second
 index represents the shape of stack after its execution.
 
@@ -394,8 +408,8 @@ memory.
 
 \subsubsection{Instructions}
 
-Let us describe the effects of single instructions on the state of the machine
-(that is, on the stack).
+First, we describe the effects of single instructions on the state of the machine,
+that is, on the stack, separately.
 
 \begin{code}
   execInstr : forall {s t} -> Instr s t -> Stack s -> Stack t
@@ -407,13 +421,13 @@ Let us describe the effects of single instructions on the state of the machine
 \begin{itemize}
   \item the effect of the instruction \ident{PUSH} is pushing the attached
     value onto the stack. This consistently extends the information contained
-    in the type of \ident{PUSH x}.\footnote{\ident{Instr s (u $::$ s)} -- for
-    some \ident{u} and \ident{s}. This type is interpreted as ,,\ident{PUSH x}
+    in the type of \ident{PUSH x}.\footnote{The type is \ident{Instr s (u $::$ s)}
+    -- for some \ident{u} and \ident{s} and is interpreted as ``\ident{PUSH x}
     pushes some value of type \ident{u} onto the stack''.}
     What the type does not say (and \ident{execInstr}
     does) is what this value exactly is.
-  \item the effect of the instruction \ident{ADD} pops two \ident{nat}s from
-    the top of the stack and pushes their sum back.
+  \item the effect of the instruction \ident{ADD} is popping two \ident{nat}s from
+    the top of the stack and pushing their sum back.
 \end{itemize}
 
 Note that in this definition of the execution function, we already reap some
@@ -453,6 +467,9 @@ accepting the initial and yielding the resulting state of the machine.
 contains instructions, then the first instruction is executed and on the
 resulting stack, the rest of code is executed.
 
+Note that the type signature of \ident{execCode} ensures that the code being
+run modifies (the shape of) the stack consistently with its type indices.
+
 \subsection{Compiler}
 
 Compiling our simple high-level language for a stack machine is easy. The
@@ -464,7 +481,7 @@ instruction, determined by the operator. This instruction pops the top
 two values from the stack as its operands and pushes the result back.
 
 \label{sec:simple-compiler}\begin{code}
-  -- Syntactic sugar, promote an Instr to singleton Code
+  -- Syntactic sugar, promote an &\cident{Instr}& to singleton &\cident{Code}&
   [[_\;]] : forall {s t} -> Instr s t -> Code s t
   [[i\;]] = i <| \nil
 
@@ -484,13 +501,22 @@ code compiled by this function will not make the stack machine fail.\footnote{
   function \ident{compile} via its return type.  However, it does constrain
 possible definitions of the function \ident{compile}.} For example, there is no
 way to have the function \ident{compile} output code where \ident{ADD} would
-not have two \ident{nat}s on the top of the stack.
+not get two \ident{nat}s on the top of the stack.
 
 \subsection{Correctness}
 
-This is the only place in this thesis where we will include the complete proof
+This is the only place in this thesis where we include the full proof
 of correctness. All proofs are of course contained in the attached Agda source
 code.
+
+\subsubsection{Agda as a proof assistant}
+
+Apart from being a total dependently typed functional \emph{programming} language,
+the ``total dependently typed'' part also makes Agda suitable for proving theorems.
+This means that type signatures can express theorems, and values of these
+types correspond to their proofs. Hence, type checking coincides with proof checking.
+
+\todo{Insert references to further explanation, Curry-Howard etc.}
 
 \subsubsection{Operator lemma}
 
