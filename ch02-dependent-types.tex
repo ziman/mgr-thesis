@@ -531,7 +531,7 @@ type family.
 
 \noindent The definition implies that all nonempty members (inhabited by \ident{refl}) of this
 family must have the index identical to the parameter.
-Therefore conversely, if we have a \ident{refl : a == b}, it must be the case that \ident{a}
+Therefore conversely, if we have a \ident{refl : a $\equiv$ b}, it must be the case that \ident{a}
 is identical to \ident{b}.
 
 This identity is taken into account by Agda when doing pattern matching on the constructor
@@ -594,7 +594,7 @@ it would if we did it with pen and paper.\footnote{This is achieved by clever
 mixfix hackery and Unicode usage.}
 
 \begin{code}
-  compile\-distr (i <| is) d = let open ==\-Reasoning in begin
+  compile\-distr {st} (i <| is) d = let open ==\-Reasoning in begin
     execCode (i <| is \app d) st
       ==< refl \>
     execCode (is \app d) (execInstr i st)

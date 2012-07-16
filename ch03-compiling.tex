@@ -842,8 +842,8 @@ Second, handling exceptions uses a different mechanism than actually executing
 every instruction. In the exception-handling mode, (non-interesting)
 instructions are skipped without much fuss: there is only one case per
 instruction, compared to $2^\mathrm{arity}$ in the placeholder
-case.\footnote{Theoretically, we could even do better and replace all trivial
-cases with the wildcard pattern \ident{\_}. However, if we do that, Agda will
+case.\footnote{Theoretically, we could do even better and replace all trivial
+cases with \ident{\_}, the wildcard pattern. However, if we do that, Agda will
 complain because it cannot check that the types involved are correct
 -- they are slightly different across different cases and they need to be
 checked separately.}

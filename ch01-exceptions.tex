@@ -1,6 +1,83 @@
 \chapter{Exceptions in programming languages}
 
+``Exceptions'' is a broader term referring to a strategy of handling erroneous
+states in computer programs by interrupting normal program execution, running special
+code called an \emph{exception handler} and then resuming execution in a known, different
+state.
+
+The usual terminology is not very strict: the word ``exception'' may mean sligtly
+different things -- or different sides of the same thing -- in different contexts.
+For example, programming languages are said to \emph{have exceptions} if they support
+this kind of error handling; exceptions are said to \emph{be compiled}, while it is the
+corresponding infrastructure and support code that is compiled; often the word ``exception''
+denotes a piece of information about the error being handled; et cetera.
+
+When an error occurs during normal execution of a program, \emph{an exception is thrown}%
+\footnote{Some programming languages, such as Python, use the term \emph{raised}.%
+\cite{python:reference}}.
+This starts the
+process of \emph{handling the exception}: looking for a suitable%
+\footnote{In most languages, there may be many handlers attached to a piece of code.}
+\emph{exception handler} that \emph{handles the exception}, either by \emph{catching} it
+to resume normal computation, or by \emph{re-throwing} it to find another handler
+able to deal with the error.
+
+Due to common names of the corresponding syntactic features of popular programming languages%
+\footnote{Most of them use the same keywords for this purpose.},
+a piece of code together with attached pieces of handler code is called a \emph{try-block},
+and a piece of handler code is called a \emph{catch-block}.
+
+\todo{Document \emph{finally} blocks.}
+
 \section{Purpose}
+
+As already mentioned, exceptions are mostly used to handle errors or other exceptional
+states. The advantage to using
+exceptions for this purpose is separation of concerns and hence cleaner resulting code.
+Especially when reading a program, the reader first reads the code related the expected
+execution path, uncluttered with error checks, which brings forward the main idea
+of the code.
+
+However, some languages, for example Python or OCaml, use exceptions also for control-flow
+purposes, not only in rare critical events. Python iterators raise an exception to
+indicate the end of stream \cite{python:reference}; also file-I/O functions in OCaml raise
+an exception to indicate the end of file. \cite{ocaml:reference} The implementation of
+exceptions in these languages is cheap enough to enable this approach.
+
+\begin{figure}[htp]
+\centering
+%
+\begin{subfigure}[b]{0.46\textwidth}\begin{codepy}
+try:
+	performWork()
+except IOError:
+	print "IO error caught"
+\end{codepy}\caption{Python}\end{subfigure}
+%
+\begin{subfigure}[b]{0.46\textwidth}\begin{codejava}
+try {
+	performWork();
+} catch (IOException e) {
+	System.out.println(
+	    "IO error caught");
+}
+\end{codejava}\caption{Java}\end{subfigure}
+
+\begin{subfigure}[b]{0.46\textwidth}\begin{codehs}
+performWork
+ `catch` \(e :: IOException) ->
+   putStrLn "IO error caught"
+\end{codehs}\caption{Haskell}\end{subfigure}
+%
+\begin{subfigure}[b]{0.46\textwidth}\begin{codeml}
+try performWork
+with IO_error ->
+  print_string "IO error caught"
+\end{codeml}\caption{OCaml}\end{subfigure}
+\caption{Try-blocks in different languages.}
+\end{figure}
+
+\todo{Illustrate finally-blocks in the figure.}
 
 \section{History}
 

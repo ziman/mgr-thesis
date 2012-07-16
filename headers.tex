@@ -7,13 +7,15 @@
 \usepackage{etex}
 
 %% Ostatní balíčky
+%\usepackage[natbib=false]{biblatex}
+%\bibliography{dotbibfile}
 \usepackage{graphicx}
 \usepackage{amsmath, amsthm}
 %\usepackage{amssymb, amsfonts} not compatible with Minion Pro
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-\usepackage[all,cmtip]{xy}
+%\usepackage[all,cmtip]{xy}
 \usepackage{textcomp}
 %\usepackage{subfloat}
 \usepackage{graphicx}
@@ -24,7 +26,7 @@
 %\usepackage{a4wide}
 \usepackage{comment}
 \usepackage{array}
-\usepackage[lofdepth,lotdepth]{subfig}
+\usepackage{subcaption}
 %\usepackage{natbib}
 %\usepackage{tgpagella}
 %\usepackage{tgcursor}
@@ -144,6 +146,18 @@
 	{\csname lst@SaveFirstLabel\endcsname}
 \lstnewenvironment{codei}
 	{\lstset{style=agda,columns=flexible}\csname lst@SetFirstLabel\endcsname}
+	{\csname lst@SaveFirstLabel\endcsname}
+\lstnewenvironment{codepy}
+	{\lstset{language=Python,columns=fullflexible}\csname lst@SetFirstLabel\endcsname}
+	{\csname lst@SaveFirstLabel\endcsname}
+\lstnewenvironment{codejava}
+	{\lstset{language=Java,columns=fullflexible}\csname lst@SetFirstLabel\endcsname}
+	{\csname lst@SaveFirstLabel\endcsname}
+\lstnewenvironment{codehs}
+	{\lstset{language=Haskell,columns=fullflexible}\csname lst@SetFirstLabel\endcsname}
+	{\csname lst@SaveFirstLabel\endcsname}
+\lstnewenvironment{codeml}
+	{\lstset{language=Caml,columns=fullflexible}\csname lst@SetFirstLabel\endcsname}
 	{\csname lst@SaveFirstLabel\endcsname}
    
 \newcommand{\bin}[1]{\_#1\!\!\_}
