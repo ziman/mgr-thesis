@@ -17,7 +17,6 @@ When an error occurs during normal execution of a program, \emph{an exception is
 \cite{python:reference}}.
 This starts the
 process of \emph{handling the exception}: looking for a suitable%
-\footnote{In most languages, there may be many handlers attached to a piece of code.}
 \emph{exception handler} that \emph{handles the exception}, either by \emph{catching} it
 to resume normal computation, or by \emph{re-throwing} it to find another handler
 able to deal with the error.
@@ -27,7 +26,76 @@ Due to common names of the corresponding syntactic features of popular programmi
 a piece of code together with attached pieces of handler code is called a \emph{try-block},
 and a piece of handler code is called a \emph{catch-block}.
 
-\todo{Document \emph{finally} blocks.}
+Most languages also provide \emph{finally-blocks}. These are pieces of code attached to a
+try-block that are guaranteed to be executed after the try-block, whether an exception
+has been thrown or not. Because of this property, finally-blocks are usually used to clean up
+resources.
+
+There may be multiple handlers attached to a piece of code.
+As already mentioned, the word ``exception'' also denotes a piece of information about
+the error or condition causing the exceptional state, modeled by a value of the programming
+language. In typed languages, these values have types, exception handlers declare what
+types of exceptions they can handle, and based on the type of the thrown exception,
+an appropriate handler is selected. The handler can then inspect the exception and
+behave appropriately.
+
+A try-block needn't have handlers for all exceptions that might arise within. If an exception
+is \emph{uncaught} within a try-block, it is \emph{propagated} to the containing try-block,
+which may not catch this exception as well, propagating it further.
+If an exception propagates all the way out of all nested try-blocks, the program usually
+aborts.
+
+To give a quick illustration how try-blocks look in the concrete syntax of some widely used
+languages, \Fref{fig:try-blocks} contains four examples.\footnote{Note that OCaml does not
+have syntax for finally-blocks; these are simulated by a function. Haskell does not have
+syntax for exceptions at all, both \emph{catch} and \emph{finally} are just functions.
+All code snippets are just symbolic and have been stripped of non-relevant context, such
+as library imports and the definitions of the functions \emph{perform\_work}
+and \emph{do\_cleanup}.}
+
+\begin{figure}[htp]
+\centering
+%
+\begin{subfigure}[b]{0.46\textwidth}\begin{codepy}
+try:
+	perform_work()
+except IOError:
+	print "IO error caught"
+finally:
+	do_cleanup()
+\end{codepy}\caption{Python}\end{subfigure}
+%
+\begin{subfigure}[b]{0.46\textwidth}\begin{codejava}
+try {
+	performWork();
+} catch (IOException e) {
+	System.out.println(
+	    "IO error caught");
+} finally {
+	doCleanup();
+}
+\end{codejava}\caption{Java}\end{subfigure}
+
+\begin{subfigure}[b]{0.46\textwidth}\begin{codehs}
+performWork
+ `catch` (\(e :: IOException) ->
+   putStrLn "IO error caught")
+ `finally` 
+   doCleanup
+\end{codehs}\caption{Haskell}\end{subfigure}
+%
+\begin{subfigure}[b]{0.46\textwidth}\begin{codeml}
+finally do_cleanup (fun () ->
+  try perform_work ()
+  with IO_error ->
+    print_string "IO error caught"
+) ()
+\end{codeml}\caption{OCaml}\end{subfigure}
+\caption{Try-blocks in different languages.}
+\label{fig:try-blocks}
+\end{figure}
+
+\todo{Really include ``finally''? Revise OCaml.}
 
 \section{Purpose}
 
@@ -41,45 +109,12 @@ of the code.
 However, some languages, for example Python or OCaml, use exceptions also for control-flow
 purposes, not only in rare critical events. Python iterators raise an exception to
 indicate the end of stream \cite{python:reference}; also file-I/O functions in OCaml raise
-an exception to indicate the end of file. \cite{ocaml:reference} The implementation of
+an exception to indicate the end of file \cite{ocaml:reference}. The implementation of
 exceptions in these languages is cheap enough to enable this approach.
 
-\begin{figure}[htp]
-\centering
-%
-\begin{subfigure}[b]{0.46\textwidth}\begin{codepy}
-try:
-	performWork()
-except IOError:
-	print "IO error caught"
-\end{codepy}\caption{Python}\end{subfigure}
-%
-\begin{subfigure}[b]{0.46\textwidth}\begin{codejava}
-try {
-	performWork();
-} catch (IOException e) {
-	System.out.println(
-	    "IO error caught");
-}
-\end{codejava}\caption{Java}\end{subfigure}
-
-\begin{subfigure}[b]{0.46\textwidth}\begin{codehs}
-performWork
- `catch` \(e :: IOException) ->
-   putStrLn "IO error caught"
-\end{codehs}\caption{Haskell}\end{subfigure}
-%
-\begin{subfigure}[b]{0.46\textwidth}\begin{codeml}
-try performWork
-with IO_error ->
-  print_string "IO error caught"
-\end{codeml}\caption{OCaml}\end{subfigure}
-\caption{Try-blocks in different languages.}
-\end{figure}
-
-\todo{Illustrate finally-blocks in the figure.}
-
 \section{History}
+
+
 
 \section{Theoretical consequences}
 
