@@ -112,10 +112,16 @@ indicate the end of stream \cite{python:reference}; also file-I/O functions in O
 an exception to indicate the end of file \cite{ocaml:reference}. The implementation of
 exceptions in these languages is cheap enough to enable this approach.
 
+\todo{Extend this section.}
+
 \section{History}
 
+Louden and Lambert describe the invention of exceptions in their book
+\emph{Programming Languages: Principles and Practice} as follows.
+
+\begin{quote}
 Exception handling was pioneered by the language PL/I in the 1960s and
-significantnly advanced by CLU in the 1970s, with the major design questions
+significantly advanced by CLU in the 1970s, with the major design questions
 eventually resolved in the 1980s and early 1990s. Today, virtually all major
 current languages, including C++, Java, Ada, Python, ML, and Common Lisp (but
 not C, Scheme or Smalltalk) have built-in exception handling mechanisms.
@@ -123,15 +129,153 @@ Exception handling has, in particular, been integrated very well into
 object-oriented mechanisms in Python, Java, and C++, and into functional
 mechanisms in ML and Common Lisp. Also, languages that do not have built-in
 mechanisms sometimes have libraries available that provide them, or have other
-built-in ways of simulating them.
+built-in ways of simulating them. \cite[p.~423]{louden:languages}
+\end{quote}
 
-\cite[p.~423]{louden:languages}
+% http://stackoverflow.com/questions/1449951/what-language-was-the-first-to-implement-exception-handling
 
-Kenneth C. Louden, Kenneth A. Lambert: Programming Languages, Principles and Practices, third edition
-(c) 2012 Course Technology, Cengage Learning
-
-ISBN-13:978-1-111-52941-3
-ISBN-10:1-111-52941-8
+\todo{Extend this section.}
 
 \section{Theoretical consequences}
+
+In order to discuss the appeal of exceptions in functional languages, we have to introduce
+the \emph{Curry-Howard correspondence}.
+
+\subsection{The Curry-Howard correspondence}
+
+The Curry-Howard correspondence establishes a relationship between typed programs and logic.
+According to this interpretation, types of programs correspond to logical propositions --
+and programs themselves correspond to proofs of logical propositions corresponding to their
+types.
+
+This correspondence goes all the way to relating whole $\lambda$-calculi to different
+kinds of logic. For example, the simply typed $\lambda$-calculus corresponds to the minimal
+logic; see \Fref{fig:stlc-ml}.
+
+\begin{figure}[htp]
+\centering
+\begin{subfigure}[b]{0.45\textwidth}
+\begin{minipage}{0.3\textwidth}\begin{prooftree}
+\bax{$x : \sigma \in \Gamma$}
+\bun{$\Gamma \vdash x : \sigma$}
+\end{prooftree}\end{minipage}
+%
+\begin{minipage}{0.3\textwidth}\begin{prooftree}
+\bax{$x : \sigma \in \Gamma$}
+\bun{$\Gamma \vdash x : \sigma$}
+\end{prooftree}\end{minipage}
+%
+\begin{minipage}{0.3\textwidth}\begin{prooftree}
+\bax{$x : \sigma \in \Gamma$}
+\bun{$\Gamma \vdash x : \sigma$}
+\end{prooftree}\end{minipage}
+\caption{$\lambda_\to$}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.45\textwidth}
+\begin{minipage}{0.3\textwidth}\begin{prooftree}
+\bax{$x : \sigma \in \Gamma$}
+\bun{$\Gamma \vdash x : \sigma$}
+\end{prooftree}\end{minipage}
+%
+\begin{minipage}{0.3\textwidth}\begin{prooftree}
+\bax{$x : \sigma \in \Gamma$}
+\bun{$\Gamma \vdash x : \sigma$}
+\end{prooftree}\end{minipage}
+%
+\begin{minipage}{0.3\textwidth}\begin{prooftree}
+\bax{$x : \sigma \in \Gamma$}
+\bun{$\Gamma \vdash x : \sigma$}
+\end{prooftree}\end{minipage}
+\caption{$ML$}
+\end{subfigure}
+
+\caption{Simply typed $\lambda$-calculus ($\lambda_\to$) compared to Minimal logic (ML).}
+\label{fig:stlc-ml}
+\end{figure}
+
+\subsection{Exceptions in functional languages}
+
+In functional languages, exceptions are closely related to the theory of
+\emph{control operators}\footnote{Such as \ident{call/cc} in Scheme.},
+for example the calculus $\lC$ introduced by Felleisen in \cite{felleisen87}
+as a way to reason about abortive programs.
+
+From the other direction, Parigot created the $\lambda_\mu$ calculus \cite{parigot92}
+as a way to assign computational content to classical natural deduction.
+
+Both approaches connected when Griffin \cite{griffin90}
+
+
+
+\cite{ariola-herbelin}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

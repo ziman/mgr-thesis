@@ -32,6 +32,7 @@
 %\usepackage{tgcursor}
 \usepackage{MinionPro}
 %\usepackage{wrapfig}
+\usepackage{bussproofs}
 \usepackage{titlesec}
 \usepackage{fancyref}
 \usepackage{tikz}
@@ -216,6 +217,15 @@
 \newcommand{\infixl}{\textbf{infixl}}
 \newcommand{\infixr}{\textbf{infixr}}
 \newcommand{\infix}{\textbf{infix}}
+
+\newcommand{\lC}{\lambda_\mathcal{C}}
+
+\newcommand{\bax}[1]{\AxiomC{#1}}
+\newcommand{\bun}[1]{\UnaryInfC{#1}}
+\newcommand{\bbin}[1]{\BinaryInfC{#1}}
+\newcommand{\btri}[1]{\TrinaryInfC{#1}}
+\newcommand{\bleft}[1]{\LeftLabel{#1}}
+\newcommand{\bright}[1]{\RightLabel{#1}}
 
 % TODO:
 % - add \noindent after each \end{code}
