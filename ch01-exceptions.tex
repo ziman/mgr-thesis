@@ -53,7 +53,7 @@ All code snippets are just symbolic and have been stripped of non-relevant conte
 as library imports and the definitions of the functions \emph{perform\_work}
 and \emph{do\_cleanup}.}
 
-\begin{figure}[htp]
+\begin{figure}
 \centering
 %
 \begin{subfigure}[b]{0.46\textwidth}\begin{codepy}
@@ -149,50 +149,176 @@ and programs themselves correspond to proofs of logical propositions correspondi
 types.
 
 This correspondence goes all the way to relating whole $\lambda$-calculi to different
-kinds of logic. For example, the simply typed $\lambda$-calculus corresponds to the minimal
-logic; see \Fref{fig:stlc-ml}.
+logical systems. For example, the simply typed $\lambda$-calculus corresponds to the minimal
+logic, see \Fref{fig:stlc-ml}.
 
-\begin{figure}[htp]
+\begin{figure}
 \centering
 \begin{subfigure}[b]{0.45\textwidth}
-\begin{minipage}{0.3\textwidth}\begin{prooftree}
+\begin{prooftree}
 \bax{$x : \sigma \in \Gamma$}
-\bun{$\Gamma \vdash x : \sigma$}
-\end{prooftree}\end{minipage}
-%
-\begin{minipage}{0.3\textwidth}\begin{prooftree}
-\bax{$x : \sigma \in \Gamma$}
-\bun{$\Gamma \vdash x : \sigma$}
-\end{prooftree}\end{minipage}
-%
-\begin{minipage}{0.3\textwidth}\begin{prooftree}
-\bax{$x : \sigma \in \Gamma$}
-\bun{$\Gamma \vdash x : \sigma$}
-\end{prooftree}\end{minipage}
+\bright{Ax}\bun{$\Gamma \vdash x : \sigma$}
+\end{prooftree}
+\begin{prooftree}
+\bax{$\Gamma, x : \sigma \vdash M : \tau$}
+\bright{Abstr}\bun{$\Gamma \vdash (\lambda x:\sigma. M) : \sigma \to \tau$}
+\end{prooftree}
+\begin{prooftree}
+\bax{$\Gamma \vdash f : \sigma \to \tau$}
+\bax{$\Gamma \vdash x : \sigma$}
+\bright{App}\bbin{$\Gamma \vdash f x : \tau$}
+\end{prooftree}
+
 \caption{$\lambda_\to$}
 \end{subfigure}
 %
 \begin{subfigure}[b]{0.45\textwidth}
-\begin{minipage}{0.3\textwidth}\begin{prooftree}
-\bax{$x : \sigma \in \Gamma$}
-\bun{$\Gamma \vdash x : \sigma$}
-\end{prooftree}\end{minipage}
-%
-\begin{minipage}{0.3\textwidth}\begin{prooftree}
-\bax{$x : \sigma \in \Gamma$}
-\bun{$\Gamma \vdash x : \sigma$}
-\end{prooftree}\end{minipage}
-%
-\begin{minipage}{0.3\textwidth}\begin{prooftree}
-\bax{$x : \sigma \in \Gamma$}
-\bun{$\Gamma \vdash x : \sigma$}
-\end{prooftree}\end{minipage}
+\begin{prooftree}
+\bax{$A \in \Gamma$}
+\bright{Ax}\bun{$\Gamma \vdash A$}
+\end{prooftree}
+\begin{prooftree}
+\bax{$\Gamma, A \vdash B$}
+\bright{$I_\to$}\bun{$\Gamma \vdash A \to B$}
+\end{prooftree}
+\begin{prooftree}
+\bax{$\Gamma \vdash A \to B$}
+\bax{$\Gamma \vdash A$}
+\bright{$E_\to$}\bbin{$\Gamma \vdash B$}
+\end{prooftree}
 \caption{$ML$}
 \end{subfigure}
 
-\caption{Simply typed $\lambda$-calculus ($\lambda_\to$) compared to Minimal logic (ML).}
+\caption{Simply typed $\lambda$-calculus ($\lambda_\to$), compared to minimal logic (ML).}
 \label{fig:stlc-ml}
 \end{figure}
+
+When put side-by-side, it can be seen that the typing rules for the simply typed
+$\lambda$-calculus become precisely the natural-deduction rules for minimal logic
+if terms are erased and only types are retained.
+
+In this interpretation, \emph{function application} on the computational side corresponds
+to \emph{modus ponens} (or implication elimination) on the logic side, and
+\emph{$\lambda$-abstraction} corresponds to the \emph{implication introduction}.
+
+The correspondence between different $\lambda$-calculi and logic systems was presented
+by Barendregt in \cite{barendregt91} in the form of the $\lambda$-cube, as seen in
+\Fref{fig:lambda-cube}. The names of the $\lambda$-calculi and the corresponding
+logic systems are listed in \Fref{tab:lambda-cube}.
+
+\begin{figure}
+\centering
+\begin{subfigure}{0.4\textwidth}
+\begin{tikzpicture}[x=9mm,y=9mm,
+        back line/.style={densely dotted,-},
+        normal line/.style={-stealth,-},
+        cross line/.style={normal line,-,
+           preaction={draw=white, -, 
+           line width=6pt}},
+    ]
+    \draw
+    	(0,0) node{$\lambda_\to$}
+    	(3,0) node{$\lambda{}P$}
+    	(0,3) node{$\lambda{}2$}
+    	(3,3) node{$\lambda{}P2$}
+    	(1,1) node{$\lambda\underline{\omega}$}
+    	(4,1) node{$\lambda{}P\underline{\omega}$}
+    	(1,4) node{$\lambda\omega$}
+    	(4,4) node{$\lambda{}C$}
+	    ;
+	\draw
+		(1,1)
+		+(0.5,0) edge[back line] +(2.5,0)
+		+(0,0.5) edge[back line] +(0,2.5)
+		+(0.5,3) edge[normal line] +(2.5,3)
+		+(3,0.5) edge[normal line] +(3,2.5)
+		;
+	\draw[normal line]
+		(0,0)
+		+(0.5,0) edge +(2.5,0)
+		+(0,0.5) edge +(0,2.5)
+		+(0.5,3) edge[cross line] +(2.5,3)
+		+(3,0.5) edge[cross line] +(3,2.5)
+		;
+	\draw
+		(0,3) +(0.25,0.25) edge[normal line] +(0.7,0.7)
+		(3,3) +(0.25,0.25) edge[normal line] +(0.7,0.7)
+		(3,0) +(0.25,0.25) edge[normal line] +(0.7,0.7)
+		(0,0) +(0.25,0.25) edge[back line] +(0.7,0.7)
+		;
+\end{tikzpicture}
+\caption{$\lambda$-cube}
+\end{subfigure}
+%
+\begin{subfigure}{0.4\textwidth}
+\begin{tikzpicture}[x=9mm,y=9mm,
+        back line/.style={densely dotted,-},
+        normal line/.style={-stealth,-},
+        cross line/.style={normal line,-,
+           preaction={draw=white, -, 
+           line width=6pt}},
+    ]
+    \draw[font=\footnotesize]
+    	(0,0) node{PROP}
+    	(3,0) node{PRED}
+    	(0,3) node{PROP2}
+    	(3,3) node{PRED2}
+    	(1,1) node{PROP$\underline{\omega}$}
+    	(4,1) node{PRED$\underline{\omega}$}
+    	(1,4) node{PROP$\omega$}
+    	(4,4) node{PRED$\omega$}
+	    ;
+	\draw
+		(1,1)
+		+(0.8,0) edge[back line] +(2.2,0)
+		+(0,0.3) edge[back line] +(0,2.7)
+		+(0.8,3) edge[normal line] +(2.2,3)
+		+(3,0.3) edge[normal line] +(3,2.7)
+		;
+	\draw[normal line]
+		(0,0)
+		+(0.8,0  ) edge +(2.2,0  )
+		+(0  ,0.3) edge +(0  ,2.7)
+		+(0.8,3  ) edge[cross line] +(2.2,3  )
+		+(3  ,0.3) edge[cross line] +(3  ,2.7)
+		;
+	\draw
+		(0,3) +(0.25,0.25) edge[normal line] +(0.7,0.7)
+		(3,3) +(0.25,0.25) edge[normal line] +(0.7,0.7)
+		(3,0) +(0.25,0.25) edge[normal line] +(0.7,0.7)
+		(0,0) +(0.25,0.25) edge[back line] +(0.7,0.7)
+		;
+\end{tikzpicture}
+\caption{Logic-cube}
+\end{subfigure}
+%
+\caption{The $\lambda$-cube and the corresponding logic-cube \cite{barendregt91}}
+\label{fig:lambda-cube}
+\end{figure}
+
+\begin{table}
+\centering
+\begin{tabular}{lll}
+\toprule
+\textit{$\lambda$-calculus} & \textit{logic} & \textit{description} \\
+\midrule
+$\lambda_\to$ & PROP & first-order propositional \\
+$\lambda{}P$ & PRED & first-order predicate \\
+$\lambda{}2$ & PROP2 & second-order propositional \\
+$\lambda{}P2$ & PRED2 & second-order predicate \\
+$\lambda\underline{\omega}$ & PROP$\underline{\omega}$ & weakly higher-order propositional \\
+$\lambda{}P\underline{\omega}$& PRED$\underline{\omega}$ & weakly higher-order predicate \\
+$\lambda\omega$ & PROP$\omega$ & higher-order propositional \\
+$\lambda{}C$ & PRED$\omega$ & higher-order predicate \\
+\bottomrule
+\end{tabular}
+
+\vspace{8pt}
+{\small The calculus $\lambda_\to$ is also called the \emph{simply typed $\lambda$-calculus} (STLC)
+and the calculus $\lambda{}C$ is also called the \emph{calculus of constructions} (CoC).}
+\caption{The $\lambda$-calculi and logic systems of the $\lambda$-cube \cite{barendregt91}}
+\label{tab:lambda-cube}
+\end{table}
 
 \subsection{Exceptions in functional languages}
 
@@ -204,11 +330,16 @@ as a way to reason about abortive programs.
 From the other direction, Parigot created the $\lambda_\mu$ calculus \cite{parigot92}
 as a way to assign computational content to classical natural deduction.
 
-Both approaches connected when Griffin \cite{griffin90}
+Both approaches connected when Griffin \cite{griffin90} I'm creating graphs in pgf/tikz. When I use these in my document they are scaled, several are in minipage/subfig like environments. When this happens the font sizes are scaled with the graphics making them very small or unreadable. I've been through the manual but have so far been unsuccessful in my attempts to control this.
+
+Is there a way to set the font size directly? What options are there?
+
+One aswer given below shows how to how to use the font option to specify the font size within the tikzpicture environment.
 
 
 
 \cite{ariola-herbelin}
+\label{chap:dependent-types}
 
 
 
