@@ -16,7 +16,7 @@ When an error occurs during normal execution of a program, \emph{an exception is
 \footnote{Some programming languages, such as Python, use the term \emph{raised}.%
 \cite{python:reference}}.
 This starts the
-process of \emph{handling the exception}: looking for a suitable%
+process of \emph{handling the exception}: looking for a suitable
 \emph{exception handler} that \emph{handles the exception}, either by \emph{catching} it
 to resume normal computation, or by \emph{re-throwing} it to find another handler
 able to deal with the error.
@@ -99,8 +99,8 @@ finally do_cleanup (fun () ->
 
 \section{Purpose}
 
-As already mentioned, exceptions are mostly used to handle errors or other exceptional
-states. The advantage to using
+As already mentioned, in practice, exceptions are mostly used to handle errors or
+other exceptional states. The advantage to using
 exceptions for this purpose is separation of concerns and hence cleaner resulting code.
 Especially when reading a program, the reader first reads the code related the expected
 execution path, uncluttered with error checks, which brings forward the main idea
@@ -110,7 +110,7 @@ However, some languages, for example Python or OCaml, use exceptions also for co
 purposes, not only in rare critical events. Python iterators raise an exception to
 indicate the end of stream \cite{python:reference}; also file-I/O functions in OCaml raise
 an exception to indicate the end of file \cite{ocaml:reference}. The implementation of
-exceptions in these languages is cheap enough to enable this approach.
+exceptions in these languages is efficient enough to make them cheap and enable this approach.
 
 \todo{Extend this section.}
 
@@ -136,10 +136,10 @@ built-in ways of simulating them. \cite[p.~423]{louden:languages}
 
 \todo{Extend this section.}
 
-\section{Theoretical consequences}
+\section{Theoretical appeal}
 
-In order to discuss the appeal of exceptions in functional languages, we have to introduce
-the \emph{Curry-Howard correspondence}.
+The theoretical appeal of exceptions in function languages is impossible to discuss
+without having introduced the \emph{Curry-Howard correspondence}.
 
 \subsection{The Curry-Howard correspondence}
 
@@ -320,25 +320,27 @@ and the calculus $\lambda{}C$ is also called the \emph{calculus of constructions
 \label{tab:lambda-cube}
 \end{table}
 
-\subsection{Exceptions in functional languages}
+\subsection{Control operators}
 
 In functional languages, exceptions are closely related to the theory of
 \emph{control operators}\footnote{Such as \ident{call/cc} in Scheme.},
 for example the calculus $\lC$ introduced by Felleisen in \cite{felleisen87}
 as a way to reason about abortive programs.
 
+In 1990, Griffin noticed \cite{griffin90} that the control operator $\mathcal{C}$
+used in $\lC$ can be given the type $\neg \neg A \to A$, yielding a \emph{computational
+interpretation} of classical logic. However, operationally, this calculus does not match
+classical natural deduction \cite{ariola-herbelin}.
+
 From the other direction, Parigot created the $\lambda_\mu$ calculus \cite{parigot92}
-as a way to assign computational content to classical natural deduction.
-
-Both approaches connected when Griffin \cite{griffin90} I'm creating graphs in pgf/tikz. When I use these in my document they are scaled, several are in minipage/subfig like environments. When this happens the font sizes are scaled with the graphics making them very small or unreadable. I've been through the manual but have so far been unsuccessful in my attempts to control this.
-
-Is there a way to set the font size directly? What options are there?
-
-One aswer given below shows how to how to use the font option to specify the font size within the tikzpicture environment.
+as a way to assign computational content to classical natural deduction. The calculus
+$\lambda_\mu$ Parigot presented does not readily correspond to classical logic --
+only to minimal classical logic -- but it
+can be extended to do so, finally yielding a calculus matching classical natural deduction
+\cite{ariola-herbelin}.
 
 
 
-\cite{ariola-herbelin}
 \label{chap:dependent-types}
 
 
