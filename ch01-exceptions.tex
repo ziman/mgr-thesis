@@ -363,8 +363,9 @@ $\bigA$ & yes & no & $\lambda M.\,\bigC(\lambda \_.\,M)$ \\
 \end{table}
 
 The behavior of these operators is best shown on an example. The simplest one is the abort
-operator $\bigA$. Let $E$ be some $\lambda$-context. Then the operator $\bigA$ reduces
-as follows.
+operator $\bigA$. Let $E$ be some $\lambda$-context\footnote{A formal treatise of what
+a $\lambda$-context is can be found in \cite{griffin90}, here we rely on intuition.}.
+Then the operator $\bigA$ reduces as follows.
 \begin{equation*}
 	E[\bigA(M)] \red M
 \end{equation*}
@@ -372,7 +373,9 @@ For example:
 \begin{equation*}
 	1 + (2 \cdot \bigA(3)) \red 3
 \end{equation*}
-No matter what the context is, all of it is replaced by the argument to $\bigA$. Hence,
+No matter what the context is\footnote{The careful reader may wonder what if $E[x] = \bigA(x)$.
+Such contexts are not valid by the nature of their definition.}, all of it is replaced by the
+argument to $\bigA$. Hence,
 the operator $\bigA$ provides ``escape'' to the top-level. Note that any computation commenced
 (here, adding the $1$ and multiplying by $2$) is discarded and evaluation starts anew
 with whatever $\bigA$ took as the argument.
@@ -390,27 +393,27 @@ with whatever $\bigA$ took as the argument.
 %
 \begin{subfigure}[t]{0.4\textwidth}
 \begin{eqnarray*}
-& 2 \cdot (3 + \underline{\bigK(\lambda k.\, 4 + k\, 5)}) \\
-& {} \red 2 \cdot (3 + \underline{5}) \\
-& {} \red 16
+&& 2 \cdot (3 + \underline{\bigK(\lambda k.\, 4 + k\, 5)}) \\
+&& {} \red 2 \cdot (3 + \underline{5}) \\
+&& {} \red 16
 \end{eqnarray*}
 \caption{Throwing to $\bigK$}\label{fig:CK-throwK}
 \end{subfigure}
 
 \begin{subfigure}[t]{0.4\textwidth}
 \begin{eqnarray*}
-& 2 \cdot (3 + \bigC(\lambda \_.\, \underline{4 + 5})) \\
-& {} \red \underline{4 + 5} \\
-& {} \red 9
+&& 2 \cdot (3 + \bigC(\lambda \_.\, \underline{4 + 5})) \\
+&& {} \red \underline{4 + 5} \\
+&& {} \red 9
 \end{eqnarray*}
 \caption{Not throwing to $\bigC$}\label{fig:CK-nothrowC}
 \end{subfigure}
 %
 \begin{subfigure}[t]{0.4\textwidth}
 \begin{eqnarray*}
-& 2 \cdot (3 + \bigK(\lambda \_.\, \underline{4 + 5})) \\
-& {} \red 2 \cdot (3 + \underline{9}) \\
-& {} \red 24
+&& 2 \cdot (3 + \bigK(\lambda \_.\, \underline{4 + 5})) \\
+&& {} \red 2 \cdot (3 + \underline{9}) \\
+&& {} \red 24
 \end{eqnarray*}
 \caption{Not throwing to $\bigK$}\label{fig:CK-nothrowK}
 \end{subfigure}
@@ -433,8 +436,8 @@ context by the context represented by $k$, having the hole filled with the value
 This happens in Figure \ref{fig:CK-throwC} and \Fref{fig:CK-throwK}.
 
 In other words, applying the continuation $k$ to a value makes seemingly the control operator
-``return'' that value immediately, much like a \ident{return} statement in functions in procedural
-languages.
+``return'' that value immediately, much like the \ident{return} statement returns from functions
+in procedural languages.
 
 Application of the continuation $k$ to an argument is usually described as
 \emph{throwing} to the continuation.
@@ -453,23 +456,105 @@ also in the call-by-value flavor, which is in fact the variant that fits Scheme.
 
 \subsubsection{Control operators and Curry-Howard}
 
+Traditionally, logic connected with computation has naturally been intuitionistic.
+However, control operators enable us to extend the Curry-Howard correspondence
+further.
+
 In 1990, Griffin showed \cite{griffin90} that the control operator $\mathcal{C}$
-used in $\lC$ can be given the type $\neg \neg A \to A$, yielding a \emph{computational
-interpretation} of classical logic. However, this calculus did not match
+used in $\lC$ can be given the type $\neg \neg A \to A$, yielding a computational
+interpretation of classical logic. However, this calculus did not match
 classical natural deduction operationally \cite{ariola-herbelin}.
 
-\todo{$\bigA$ is EFQ, $\bigC$ is DN, $\bigK$ is PL. DN implies everything ($\bigC$
-subsumes the other two) and EFQ+PL implies DN (as $\bigC$ is definable from $\bigA$
-and $\bigK$).}
+Going all the way to classical logic is not necessary, either. The operator $\bigA$
+corresponds to the Ex-falso-quodlibet rule (EFQ), and the \ident{call/cc} operator $\bigK$
+corresponds to Peirce's law (PL), and, for completeness, the operator $\bigC$
+corresponds to double negation elimination (DN) \cite[p.~877]{ariola-herbelin}.
+
+Ariola and Herbelin in the paper present \emph{minimal classical logic}, which is strictly
+weaker than classical logic but strictly stronger than minimal logic. Minimal classical
+logic proves PL but does not prove DN, neither does it prove EFQ \cite{ariola-herbelin}
+-- because EFQ together with PL
+is sufficient to prove DN, as demonstrated by expressing $\bigC$ in terms of $\bigA$ and
+$\bigK$ in \Fref{tab:control-operators}. And as DN implies both EFQ and PL, the operator
+$\bigC$ subsumes the other two, being able to redefine them both, which has also been
+demonstrated in Table \ref{tab:control-operators}.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[x=9mm,y=9mm,
+        back line/.style={densely dotted,-},
+        normal line/.style={-stealth,-},
+        cross line/.style={normal line,-,preaction={draw=white,-,line width=6pt}},
+        font=\small
+    ]
+	\draw
+		(1,1)
+		+(0.5,0) edge[back line] +(2.5,0)
+		+(3.5,0) edge[back line] +(5.5,0)
+		+(0,0.3) edge[back line] +(0,2.7)
+		+(0.5,3) edge[normal line] +(2.5,3)
+		+(3.5,3) edge[normal line] +(5.5,3)
+		+(3,0.3) edge[back line] +(3,2.7)
+		+(6,0.3) edge[normal line] +(6,2.7)
+		;
+	\draw[normal line]
+		(0,0)
+		+(0.5,0  ) edge +(2.5,0  )
+		+(3.5,0  ) edge +(5.5,0  )
+		+(0  ,0.3) edge +(0  ,2.7)
+		+(0.5,3  ) edge[cross line] +(2.5,3  )
+		+(3  ,0.3) edge[cross line] +(3  ,2.7)
+		+(3.5,3  ) edge[cross line] +(5.5,3  )
+		+(6  ,0.3) edge[cross line] +(6  ,2.7)
+		;
+	\draw
+		(0,3) +(0.25,0.25) edge[normal line] +(0.7,0.7)
+		(0,0) +(0.25,0.25) edge[back line] +(0.7,0.7)
+		(3,3) +(0.25,0.25) edge[back line] +(0.7,0.7)
+		(3,0) +(0.25,0.25) edge[back line] +(0.7,0.7)
+		(6,3) +(0.25,0.25) edge[normal line] +(0.7,0.7)
+		(6,0) +(0.25,0.25) edge[normal line] +(0.7,0.7)
+		;
+    \draw
+    	(0,0)
+    	+(0,0) node{ML}
+    	+(1,1) node{IL}
+    	+(1,4) node{CL}
+    	+(0,3) node{MCL}
+    	(3,0)
+    	+(0,0) node{$\lambda_\to$}
+    	+(1,1) node{$\lambda_{\bigA^-}$}
+    	+(1,4) node{$\lambda_{\bigC^-}^\mathrm{top}$}
+    	+(0,3) node{$\lambda_{\bigC^-}$}
+    	(6,0)
+    	+(0,0) node{$\lambda_\to$}
+    	+(1,1) node{$\lambda^\mathrm{top}$}
+    	+(1,4) node{$\lambda_\mu^\mathrm{top}$}
+    	+(0,3) node{$\lambda_\mu$}
+	    ;
+	\draw[dotted,->,font=\footnotesize]
+		(-1,0.5) -- (-1,2.5) node[left] {PL\,/\,$\bigK$};		
+	\draw[dotted,->,font=\footnotesize]
+		(7,0) -- (8,1) node[below right] {EFQ\,/\,$\bigA$};
+\end{tikzpicture}
+\caption{Logics of different ``classicality'', related to different $\lambda$-calculi}
+\label{fig:classical-cube}
+\end{figure}
 
 From the other direction, Parigot created the $\lambda_\mu$ calculus \cite{parigot92}
 as a way to assign computational content to classical natural deduction. The calculus
 $\lambda_\mu$ Parigot presented did not readily correspond to classical logic --
-only to minimal classical logic -- but it
-can be extended to do so, finally yielding a calculus matching classical natural deduction
+only to minimal classical logic -- but it can be extended to do so, finally yielding
+a calculus named $\lambda_\mu^\mathrm{top}$ that matches classical natural deduction
 \cite{ariola-herbelin}.
 
-\todo{Hence, control operators extend our logic up to classical logic!}
+Ariola and Herbelin studied all these calculi and proposed
+slightly modified ones that have good metatheoretic properties (confluence, strong
+normalization). They extended the $\lambda_\mu$ calculus to cover the whole classical
+logic by introducing the top-level continuation named \emph{top}, also using this constant
+in a weakened $\lC$ called $\lambda_{\bigC^-}$.
+Their paper provides a schematic overview of the resulting $\lambda$-calculi, again in the
+elegant form of a $\lambda$-cube, see \Fref{fig:classical-cube}.
 
 \subsection{Exceptions and control operators}
 
