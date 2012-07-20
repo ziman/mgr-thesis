@@ -54,7 +54,6 @@ as library imports and the definitions of the functions \emph{perform\_work}
 and \emph{do\_cleanup}.}
 
 \begin{figure}
-\centering
 %
 \begin{subfigure}[b]{0.46\textwidth}\begin{codepy}
 try:
@@ -91,7 +90,8 @@ finally do_cleanup (fun () ->
     print_string "IO error caught"
 ) ()
 \end{codeml}\caption{OCaml}\end{subfigure}
-\caption{Try-blocks in different languages.}
+
+\caption{Try-blocks in different languages}
 \label{fig:try-blocks}
 \end{figure}
 
@@ -199,7 +199,8 @@ if terms are erased and only types are retained.
 
 In this interpretation, \emph{function application} on the computational side corresponds
 to \emph{modus ponens} (or implication elimination) on the logic side, and
-\emph{$\lambda$-abstraction} corresponds to the \emph{implication introduction}.
+\emph{$\lambda$-abstraction} corresponds to the \emph{deduction theorem} (or implication
+introduction).
 
 The correspondence between different $\lambda$-calculi and logic systems was presented
 by Barendregt in \cite{barendregt91} in the form of the $\lambda$-cube, as seen in
@@ -327,19 +328,33 @@ In functional languages, exceptions are closely related to the theory of
 for example the calculus $\lC$ introduced by Felleisen in \cite{felleisen87}
 as a way to reason about abortive programs.
 
-In 1990, Griffin noticed \cite{griffin90} that the control operator $\mathcal{C}$
+\todo{Talk about control operators.}
+
+In 1990, Griffin showed \cite{griffin90} that the control operator $\mathcal{C}$
 used in $\lC$ can be given the type $\neg \neg A \to A$, yielding a \emph{computational
-interpretation} of classical logic. However, operationally, this calculus does not match
-classical natural deduction \cite{ariola-herbelin}.
+interpretation} of classical logic. However, this calculus did not match
+classical natural deduction operationally \cite{ariola-herbelin}.
 
 From the other direction, Parigot created the $\lambda_\mu$ calculus \cite{parigot92}
 as a way to assign computational content to classical natural deduction. The calculus
-$\lambda_\mu$ Parigot presented does not readily correspond to classical logic --
+$\lambda_\mu$ Parigot presented did not readily correspond to classical logic --
 only to minimal classical logic -- but it
 can be extended to do so, finally yielding a calculus matching classical natural deduction
 \cite{ariola-herbelin}.
 
+\todo{Hence, control operators extend our logic up to classical logic!}
 
+\subsection{Exceptions and control operators}
+
+\todo{Not the same, dynamic vs. static scoping \cite{thielecke:contrast, kameyama:dynamic}.}
+
+\todo{With fresh variables, Peirce can be done.}
+
+
+
+\section{Practical appeal}
+
+\todo{Appeal of certified compilers.}
 
 \label{chap:dependent-types}
 
