@@ -29,7 +29,8 @@ and a piece of handler code is called a \emph{catch-block}.
 Most languages also provide \emph{finally-blocks}. These are pieces of code attached to a
 try-block that are guaranteed to be executed after the try-block, whether an exception
 has been thrown or not. Because of this property, finally-blocks are usually used to clean up
-resources.
+resources. In this thesis, we will not model finally-blocks as these can be
+supplemented by an appropriate use of all-catching exception handlers.
 
 There may be multiple handlers attached to a piece of code.
 As already mentioned, the word ``exception'' also denotes a piece of information about
@@ -111,6 +112,8 @@ purposes, not only in rare critical events. Python iterators raise an exception 
 indicate the end of stream \cite{python:reference}; also file-I/O functions in OCaml raise
 an exception to indicate the end of file \cite{ocaml:reference}. The implementation of
 exceptions in these languages is efficient enough to make them cheap and enable this approach.
+
+\todo{Disadvantages. Multiple exit points, reasoning.}
 
 \todo{Extend this section.}
 
@@ -202,8 +205,8 @@ to \emph{modus ponens} (or implication elimination) on the logic side, and
 \emph{$\lambda$-abstraction} corresponds to the \emph{deduction theorem} (or implication
 introduction).
 
-The correspondence between different $\lambda$-calculi and logic systems was presented
-by Barendregt in \cite{barendregt91} in the form of the $\lambda$-cube, as seen in
+The correspondence between certain $\lambda$-calculi and logic systems was presented
+by Barendregt in \cite{barendregt91} in the elegant form of the $\lambda$-cube, as seen in
 \Fref{fig:lambda-cube}. The names of the $\lambda$-calculi and the corresponding
 logic systems are listed in \Fref{tab:lambda-cube}.
 
@@ -321,6 +324,8 @@ and the calculus $\lambda{}C$ is also called the \emph{calculus of constructions
 \label{tab:lambda-cube}
 \end{table}
 
+\todo{Talk about dependent types, Coq, proving, Type theory, \ldots ?}
+
 \subsection{Control operators}
 
 In functional languages, exceptions are closely related to the theory of
@@ -346,11 +351,11 @@ can be extended to do so, finally yielding a calculus matching classical natural
 
 \subsection{Exceptions and control operators}
 
+\todo{(Statically-bounded) exceptions can be implemented using control operators.}
+
 \todo{Not the same, dynamic vs. static scoping \cite{thielecke:contrast, kameyama:dynamic}.}
 
 \todo{With fresh variables, Peirce can be done.}
-
-
 
 \section{Practical appeal}
 
