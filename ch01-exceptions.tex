@@ -336,32 +336,120 @@ thereof can be found in \cite[p.~876, Section~3]{ariola-herbelin} or
 \cite{griffin90}; here we will restrict ourselves to an informal sketch.
 
 Felleisen introduced three control operators, $\bigC$ for ``control'', $\bigA$
-for ``abort'', and $\bigK$, representing \ident{call/cc}. The operator $\bigA$ \emph{aborts}:
+for ``abort'', and $\bigK$ for \ident{call/cc}. The operator $\bigA$
 takes a value and replaces the current context with it; the operator $\bigK$
 takes a function and applies it to the current context (reified as a continuation),
 and finally the operator $\bigC$ takes a function and replaces the current context
 with the function applied to the original context, thus being a combination of
 the former two; an overview can be seen in \Fref{tab:control-operators}.
 
-\begin{table}[htp]
+\begin{table}
 \centering
 \begin{tabular}{llll}
 \toprule
 \thead{Operator} & \thead{Replaces CC*} & \thead{Provides CC**} & \thead{In terms of the others} \\
 \midrule
 $\bigC$ & yes & yes & $\lambda M.\,\bigK(\lambda k.\,\bigA (M k))$\\
-$\bigK$ & no & yes & $\lambda M.\,\bigC(\lambda k.\,k (M k)) $ \\
+$\bigK$ & no***	& yes & $\lambda M.\,\bigC(\lambda k.\,k (M k)) $ \\
 $\bigA$ & yes & no & $\lambda M.\,\bigC(\lambda \_.\,M)$ \\
 \bottomrule
 \end{tabular}
 
 \vspace{2pt}
-{\small *Current context. **Applies its argument to the current continuation.}
+{\footnotesize *Current context. **Applies its argument to the current continuation.
+***Context replacement happens only when (if ever) the provided continuation is applied.}
 \caption{Overview of control operators}
 \label{tab:control-operators}
 \end{table}
 
-The behavior of these operators is best shown on an example.
+The behavior of these operators is best shown on an example. The simplest one is the abort
+operator $\bigA$. Let $E$ be some $\lambda$-context. Then the operator $\bigA$ reduces
+as follows.
+\begin{equation*}
+	E[\bigA(M)] \red M
+\end{equation*}
+For example:
+\begin{equation*}
+	1 + (2 \cdot \bigA(3)) \red 3
+\end{equation*}
+No matter what the context is, all of it is replaced by the argument to $\bigA$. Hence,
+the operator $\bigA$ provides ``escape'' to the top-level. Note that any computation commenced
+(here, adding the $1$ and multiplying by $2$) is discarded and evaluation starts anew
+with whatever $\bigA$ took as the argument.
+
+\begin{figure}
+\centering
+\begin{subfigure}[t]{0.4\textwidth}
+\begin{eqnarray*}
+&&2 \cdot (3 + \underline{\bigC(\lambda k.\, 4 + k\, 5)}) \\
+&&{} \red 2 \cdot (3 + \underline{5}) \\
+&&{} \red 16
+\end{eqnarray*}
+\caption{Throwing to $\bigC$}\label{fig:CK-throwC}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.4\textwidth}
+\begin{eqnarray*}
+& 2 \cdot (3 + \underline{\bigK(\lambda k.\, 4 + k\, 5)}) \\
+& {} \red 2 \cdot (3 + \underline{5}) \\
+& {} \red 16
+\end{eqnarray*}
+\caption{Throwing to $\bigK$}\label{fig:CK-throwK}
+\end{subfigure}
+
+\begin{subfigure}[t]{0.4\textwidth}
+\begin{eqnarray*}
+& 2 \cdot (3 + \bigC(\lambda \_.\, \underline{4 + 5})) \\
+& {} \red \underline{4 + 5} \\
+& {} \red 9
+\end{eqnarray*}
+\caption{Not throwing to $\bigC$}\label{fig:CK-nothrowC}
+\end{subfigure}
+%
+\begin{subfigure}[t]{0.4\textwidth}
+\begin{eqnarray*}
+& 2 \cdot (3 + \bigK(\lambda \_.\, \underline{4 + 5})) \\
+& {} \red 2 \cdot (3 + \underline{9}) \\
+& {} \red 24
+\end{eqnarray*}
+\caption{Not throwing to $\bigK$}\label{fig:CK-nothrowK}
+\end{subfigure}
+
+\caption{Examples of reduction with $\bigC$ and $\bigK$}
+\label{fig:CK}
+\end{figure}
+
+Now let us describe the operators $\bigC$ and $\bigK$ in \Fref{fig:CK}. Both of
+them are similar in that the function passed
+as the argument to either of the two operators takes one argument $k$, which represents
+the context at the point of application of the control operator. In the case described
+in Figure \ref{fig:CK}, the context
+looks like $2 \cdot (3 + \square)$, the $\square$ being a hole placed exactly where
+the control operator was located.
+
+The argument $k$ is a continuation and it can be applied like a function -- except that it
+is \emph{not} a function since applying it to an argument $x$ replaces the whole evaluation
+context by the context represented by $k$, having the hole filled with the value $x$.
+This happens in Figure \ref{fig:CK-throwC} and \Fref{fig:CK-throwK}.
+
+In other words, applying the continuation $k$ to a value makes seemingly the control operator
+``return'' that value immediately, much like a \ident{return} statement in functions in procedural
+languages.
+
+Application of the continuation $k$ to an argument is usually described as
+\emph{throwing} to the continuation.
+
+The difference between $\bigC$ and $\bigK$ shows when the function being their argument
+\emph{does not throw} to the continuation and instead returns a value normally. In that case,
+the operator $\bigC$ \emph{aborts} and replaces the whole evaluation context with the returned
+value -- unlike the operator $\bigK$, that simply returns the value without manipulating
+the context.
+
+This can be seen in Figure \ref{fig:CK-nothrowC} and \Fref{fig:CK-nothrowK}, where the
+computation $4 + 5$ either replaces the whole context ($\bigC$) or is simply returned
+($\bigK$).\footnote{Apparently, here we use the call-by-name evaluation strategy, which
+is arguably more suitable for demonstrational purposes. The $\lC$ calculus however comes
+also in the call-by-value flavor, which is in fact the variant that fits Scheme.}
 
 \subsubsection{Control operators and Curry-Howard}
 
