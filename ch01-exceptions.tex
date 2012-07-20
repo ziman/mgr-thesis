@@ -331,14 +331,48 @@ and the calculus $\lambda{}C$ is also called the \emph{calculus of constructions
 In functional languages, exceptions are closely related to the theory of
 \emph{control operators}\footnote{Such as \ident{call/cc} in Scheme.},
 for example the calculus $\lC$ introduced by Felleisen in \cite{felleisen87}
-as a way to reason about abortive programs.
+as a way to reason about abortive programs. An accessible formal description
+thereof can be found in \cite[p.~876, Section~3]{ariola-herbelin} or
+\cite{griffin90}; here we will restrict ourselves to an informal sketch.
 
-\todo{Talk about control operators.}
+Felleisen introduced three control operators, $\bigC$ for ``control'', $\bigA$
+for ``abort'', and $\bigK$, representing \ident{call/cc}. The operator $\bigA$ \emph{aborts}:
+takes a value and replaces the current context with it; the operator $\bigK$
+takes a function and applies it to the current context (reified as a continuation),
+and finally the operator $\bigC$ takes a function and replaces the current context
+with the function applied to the original context, thus being a combination of
+the former two; an overview can be seen in \Fref{tab:control-operators}.
+
+\begin{table}[htp]
+\centering
+\begin{tabular}{llll}
+\toprule
+\thead{Operator} & \thead{Replaces CC*} & \thead{Provides CC**} & \thead{In terms of the others} \\
+\midrule
+$\bigC$ & yes & yes & $\lambda M.\,\bigK(\lambda k.\,\bigA (M k))$\\
+$\bigK$ & no & yes & $\lambda M.\,\bigC(\lambda k.\,k (M k)) $ \\
+$\bigA$ & yes & no & $\lambda M.\,\bigC(\lambda \_.\,M)$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{2pt}
+{\small *Current context. **Applies its argument to the current continuation.}
+\caption{Overview of control operators}
+\label{tab:control-operators}
+\end{table}
+
+The behavior of these operators is best shown on an example.
+
+\subsubsection{Control operators and Curry-Howard}
 
 In 1990, Griffin showed \cite{griffin90} that the control operator $\mathcal{C}$
 used in $\lC$ can be given the type $\neg \neg A \to A$, yielding a \emph{computational
 interpretation} of classical logic. However, this calculus did not match
 classical natural deduction operationally \cite{ariola-herbelin}.
+
+\todo{$\bigA$ is EFQ, $\bigC$ is DN, $\bigK$ is PL. DN implies everything ($\bigC$
+subsumes the other two) and EFQ+PL implies DN (as $\bigC$ is definable from $\bigA$
+and $\bigK$).}
 
 From the other direction, Parigot created the $\lambda_\mu$ calculus \cite{parigot92}
 as a way to assign computational content to classical natural deduction. The calculus
