@@ -639,7 +639,7 @@ some can use both (Perl).
 \[ \big((\lam{t} t)\;\midt{catch}\;(\lam{e} 1 + e)\big)\, 1 \]
 \caption{$\lambda$-calculus}\label{fig:svd-lc}
 \end{subfigure}
-\caption{Example programs: static vs. dynamic binding}
+\caption{Example programs: lexical vs. dynamic binding}
 \end{figure}
 
 To illustrate the difference between these two approaches, consider the
@@ -651,7 +651,7 @@ program in \Fref{fig:svd-python}. Every Python programmer would expect it to pri
 The exception is thrown at the point of calling \ident{g(0)} so it is caught by the corresponding
 top-level handler.
 
-However, with static scoping, the value \ident{g} would carry also the continuation needed
+However, with lexical scoping, the value \ident{g} would carry also the continuation needed
 to reinstate execution at the point of the handler inside the function \ident{f}. In such cases,
 when the function \ident{g} is called, it throws an exception and execution jumps to the handler
 \emph{inside \ident{f}}, printing ``caught in \ident{f()}''. This contradicts the general
