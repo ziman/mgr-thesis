@@ -403,7 +403,7 @@ with whatever $\bigA$ took as the argument.
 
 \begin{subfigure}[t]{0.4\textwidth}
 \begin{eqnarray*}
-&& 2 \cdot (3 + \bigC(\lambda \_.\, \underline{4 + 5})) \\
+&& 2 \cdot (3 + \bigC(\lambda k.\, \underline{4 + 5})) \\
 && {} \red \underline{4 + 5} \\
 && {} \red 9
 \end{eqnarray*}
@@ -412,7 +412,7 @@ with whatever $\bigA$ took as the argument.
 %
 \begin{subfigure}[t]{0.4\textwidth}
 \begin{eqnarray*}
-&& 2 \cdot (3 + \bigK(\lambda \_.\, \underline{4 + 5})) \\
+&& 2 \cdot (3 + \bigK(\lambda k.\, \underline{4 + 5})) \\
 && {} \red 2 \cdot (3 + \underline{9}) \\
 && {} \red 24
 \end{eqnarray*}
@@ -552,7 +552,7 @@ a calculus named $\lambda_\mu^\mathrm{top}$ that matches classical natural deduc
 Ariola and Herbelin studied all these calculi and proposed
 slightly modified ones that have good metatheoretic properties (confluence, strong
 normalization). They extended the $\lambda_\mu$ calculus to cover the whole classical
-logic by introducing the top-level continuation named \emph{top}, also using this constant
+logic by introducing the top-level continuation constant named \emph{top}, also using this constant
 in a weakened $\lC$ called $\lambda_{\bigC^-}$.
 Their paper provides a schematic overview of the resulting $\lambda$-calculi, again in the
 elegant form of a $\lambda$-cube, see \Fref{fig:classical-cube}.
@@ -561,7 +561,7 @@ elegant form of a $\lambda$-cube, see \Fref{fig:classical-cube}.
 
 \todo{(Statically-bounded) exceptions can be implemented using control operators.}
 
-\todo{Not the same, dynamic vs. static scoping \cite{thielecke:contrast, kameyama:dynamic}.}
+\todo{Not the same, dynamic vs. static scoping \cite{thielecke:contrast, kameyama:dynamic, thielecke01}.}
 
 \todo{With fresh variables, Peirce can be done.}
 
