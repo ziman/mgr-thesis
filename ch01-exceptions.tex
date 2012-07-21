@@ -587,7 +587,7 @@ in a weakened $\lC$ called $\lambda_{\bigC^-}$.
 Their paper provides a schematic overview of the resulting $\lambda$-calculi, again in the
 elegant form of a $\lambda$-cube, see \Fref{fig:classical-cube}.
 
-\subsection{Exceptions and control operators}
+\subsection{Exceptions versus control operators}
 
 The similarity of behavior of control operators and exceptions hints at the possibility
 to implement each of them in terms of the other. However, it is not completely
@@ -613,8 +613,10 @@ means that a thrown exception is handled by the innermost handler at the site of
 not \emph{definition}.
 
 This is exactly the same difference as between dynamic and lexical \emph{variable} scoping. Some
-languages use only dynamic variable scope (Bash), some use only lexical variable scope (C),
-some can use both (Perl).
+languages use only dynamic variable scope (Bash), looking up the value of a variable by its name
+in a run-time dictionary whenever the variable is used; some use only lexical variable scope (C),
+where the memory cell of a variable can be determined syntactically at compile time; and some can
+use both (Perl).
 
 \begin{figure}
 \centering
