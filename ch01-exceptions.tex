@@ -463,18 +463,20 @@ further.
 
 In 1990, Griffin showed \cite{griffin90} that the control operator $\mathcal{C}$
 used in $\lC$ can be given the type $\neg \neg A \to A$, yielding a computational
-interpretation of classical logic. However, this calculus did not match
-classical natural deduction operationally \cite{ariola-herbelin}.
+interpretation of classical logic.
 
 Going all the way to classical logic is not necessary, either. The operator $\bigA$
-corresponds to the Ex-falso-quodlibet rule (EFQ), and the \ident{call/cc} operator $\bigK$
+corresponds to the Ex-falso-quodlibet rule (EFQ), the \ident{call/cc} operator $\bigK$
 corresponds to Peirce's law (PL), and, for completeness, the operator $\bigC$
 corresponds to double negation elimination (DN) \cite[p.~877]{ariola-herbelin}.
+Hence, a $\lambda$-calculus needn't feature the whole operator $\bigC$,
+while being strictly stronger than $\lambda_\to$.
 
 Ariola and Herbelin in the paper present \emph{minimal classical logic}, which is strictly
 weaker than classical logic but strictly stronger than minimal logic. Minimal classical
-logic proves PL but does not prove DN, neither does it prove EFQ \cite{ariola-herbelin}
--- because EFQ together with PL
+logic proves PL but does not prove DN, neither does it prove EFQ \cite{ariola-herbelin}.
+
+We have seen that EFQ together with PL
 is sufficient to prove DN, as demonstrated by expressing $\bigC$ in terms of $\bigA$ and
 $\bigK$ in \Fref{tab:control-operators}. And as DN implies both EFQ and PL, the operator
 $\bigC$ subsumes the other two, being able to redefine them both, which has also been
@@ -544,10 +546,38 @@ demonstrated in Table \ref{tab:control-operators}.
 
 From the other direction, Parigot created the $\lambda_\mu$ calculus \cite{parigot92}
 as a way to assign computational content to classical natural deduction. The calculus
-$\lambda_\mu$ Parigot presented did not readily correspond to classical logic --
-only to minimal classical logic -- but it can be extended to do so, finally yielding
-a calculus named $\lambda_\mu^\mathrm{top}$ that matches classical natural deduction
-\cite{ariola-herbelin}.
+Parigot presented did not readily correspond to classical logic --
+only to minimal classical logic -- but it can be extended to do so, yielding
+a calculus named $\lambda_\mu^\mathrm{top}$, that matches classical natural deduction
+operationally \cite{ariola-herbelin}.
+
+\begin{comment}
+\subsubsection{Parigot's $\lambda_\mu$ calculus}
+
+The $\lambda_\mu$ calculus does not have control operators; instead, it extends
+the $\lambda$-syntax by distinguishing between \emph{terms} and \emph{commands}
+and introducing variables for continuations. A brief overview of the syntax
+can be found in \Fref{fig:lambda-mu}; for proper definitions and a more thorough
+discussion, the interested reader is referred to \cite{parigot92} or \cite{ariola-herbelin}.
+
+The most interesting property for us is perhaps 
+
+\begin{figure}
+\centering
+\begin{minipage}{0.75\textwidth}
+Types:
+\[ \rho, \sigma ::= \alpha \sbar \sigma \to \rho \]
+Terms:
+\[ r, s, t ::= x \sbar \lambda x : \rho.\, r \sbar s t \sbar \mu \alpha : \rho.\, c \]
+Commands:
+\[ c, d ::= [\alpha] t \]
+Example terms:\\
+\ughcenter{$\lam{x:\sigma} x$,\;\; $\lmu{\alpha:\rho} [\beta] \lam{y:\sigma} y$}
+\end{minipage}
+\caption{Syntax of $\lambda_\mu$}
+\label{fig:lambda-mu}
+\end{figure}
+\end{comment}
 
 Ariola and Herbelin studied all these calculi and proposed
 slightly modified ones that have good metatheoretic properties (confluence, strong
@@ -558,6 +588,21 @@ Their paper provides a schematic overview of the resulting $\lambda$-calculi, ag
 elegant form of a $\lambda$-cube, see \Fref{fig:classical-cube}.
 
 \subsection{Exceptions and control operators}
+
+The similarity of behavior of control operators and exceptions hints at the possibility
+to implement each of them in terms of the other. However, it is not completely
+straightforward.
+
+Indeed, exceptions can be in some ways simulated by control operators (and vice versa).
+Consider the following definition of \ident{catch} operator, taking an expression
+and a handler.
+\[	e \;\midt{catch}\; h = \bigK(\lam{k} e (\lam{x} k(h x))) \]
+This operator can then be used as follows:
+\begin{align*}
+	&(\lam{\midt{throw}} 2 + 3) \;\midt{catch}\; (\lam{e} 4 \cdot e) \red 5 \\
+	&(\lam{\midt{throw}} 2 + \midt{throw}\,3) \;\midt{catch}\; (\lam{e} 4 \cdot e) \red 12
+\end{align*}
+
 
 \todo{(Statically-bounded) exceptions can be implemented using control operators.}
 
