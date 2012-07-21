@@ -593,7 +593,7 @@ The similarity of behavior of control operators and exceptions hints at the poss
 to implement each of them in terms of the other. However, it is not completely
 straightforward.
 
-Indeed, exceptions can be in some ways simulated by control operators (and vice versa).
+Indeed, exceptions can in some ways be simulated by control operators (and vice versa).
 Consider the following definition of \ident{catch} operator, taking an expression
 and a handler.
 \[	e \;\midt{catch}\; h = \bigK(\lam{k} e (\lam{x} k(h x))) \]
@@ -602,13 +602,73 @@ This operator can then be used as follows:
 	&(\lam{\midt{throw}} 2 + 3) \;\midt{catch}\; (\lam{e} 4 \cdot e) \red 5 \\
 	&(\lam{\midt{throw}} 2 + \midt{throw}\,3) \;\midt{catch}\; (\lam{e} 4 \cdot e) \red 12
 \end{align*}
+However, there is a major catch\footnote{Pun intended.}. These exceptions are \emph{statically
+(lexically) bound}: a throwing expression always refers to a very specific handler
+by using the continuation named \ident{throw} to throw the value. This continuation
+is tightly bound to the exact context of the catch-expression since it arose there
+and was passed to the inner expression via a lambda.
 
+In contrast, exceptions in standard programming languages are \emph{dynamically bound}, which
+means that a thrown exception is handled by the innermost handler at the site of \emph{execution},
+not \emph{definition}.
 
-\todo{(Statically-bounded) exceptions can be implemented using control operators.}
+This is exactly the same difference as between dynamic and lexical \emph{variable} scoping. Some
+languages use only dynamic variable scope (Bash), some use only lexical variable scope (C),
+some can use both (Perl).
 
-\todo{Not the same, dynamic vs. static scoping \cite{thielecke:contrast, kameyama:dynamic, thielecke01}.}
+\begin{figure}
+\centering
+\begin{subfigure}{0.45\textwidth}
+\begin{codepy}
+  def f():
+    try:
+      return lambda x: raise x
+    except:
+      print "caught in f()"
+      return lambda x: x
+      
+  g = f()
+  try:
+    g(0)
+  except:
+    print "caught at toplevel"
+\end{codepy}
+\caption{Python}\label{fig:svd-python}
+\end{subfigure}
+\begin{subfigure}{0.45\textwidth}
+\[ \big((\lam{t} t)\;\midt{catch}\;(\lam{e} 1 + e)\big)\, 1 \]
+\caption{$\lambda$-calculus}\label{fig:svd-lc}
+\end{subfigure}
+\caption{Example programs: static vs. dynamic binding}
+\end{figure}
+
+To illustrate the difference between these two approaches, consider the
+Python\footnote{Actually, almost-Python. In Python,
+\ident{raise} is a statement and as such it cannot be used in lambdas. However, defining
+a nested function would introduce unnecessary syntactic noise here so let us leave this as it is.}
+program in \Fref{fig:svd-python}. Every Python programmer would expect it to print
+``caught at toplevel'' -- and this is exactly what happens with dynamically bound exceptions.
+The exception is thrown at the point of calling \ident{g(0)} so it is caught by the corresponding
+top-level handler.
+
+However, with static scoping, the value \ident{g} would carry also the continuation needed
+to reinstate execution at the point of the handler inside the function \ident{f}. In such cases,
+when the function \ident{g} is called, it throws an exception and execution jumps to the handler
+\emph{inside \ident{f}}, printing ``caught in \ident{f()}''. This contradicts the general
+understanding of exceptions among programmers.
+
+This difference has been covered in multiple papers, most notably by Thielecke, who
+points out the contrast very explicitly \cite{thielecke:contrast} and then analyzes
+the nature of the relationship between control operators and exceptions \cite{thielecke01}.
+
+\todo{\cite{kameyama:dynamic}.}
 
 \todo{With fresh variables, Peirce can be done.}
+
+\subsection{Conclusion}
+
+\todo{The theoretical appeal of studying exceptions in functional languages is the ability
+to strengthen the logics corresponding under Curry-Howard.}
 
 \section{Practical appeal}
 
