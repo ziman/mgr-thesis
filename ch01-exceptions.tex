@@ -688,36 +688,80 @@ in lambdas have been omitted for brevity.}.
 
 An expression $\lmu{\alpha}[\beta]t$ can be viewed as a combined catch-throw, catching
 exceptions labeled $\alpha$ from $t$, or throwing the result of $t$ with the label $\beta$
-(depending on whether $t$ throws or not).
+(depending on whether $t$ throws or not). The expression $\lmu{\alpha}[\alpha]t$ catches
+from $t$ and throws only to itself so it is a natural \ident{catch}$_\alpha$. On the
+other hand, the expression $\lmu{\alpha}[\beta]t$, where $\alpha$ does not occur free in
+$t$, cannot catch anything, thus representing a \ident{throw}$_\beta$ expression.
 
 The above proof of Peirce's law can therefore be rewritten as:
-\[ \lam{t} \midt{catch}_\alpha (t (\lam{x : \rho} \midt{throw}_\alpha\, x)) \]
+\[ \bigP = \lam{t} \midt{catch}_\alpha \big(t (\lam{x : \rho} \midt{throw}_\alpha\, x)\big) \]
 In the second lambda, an explicit type annotation was added to emphasize the type of $x$.
 
 This form of the proof can be interpreted as follows. Suppose we have a value
-$t : (\rho \to \sigma) \to \rho$. Then we need to produce a value of type $\rho$. We clearly
-cannot do that outright because $\rho$ is arbitrary and may be even empty.
+$t : (\rho \to \sigma) \to \rho$. Then we need to produce a value of the type $\rho$.
+We clearly cannot do that outright because $\rho$ is arbitrary and may be even empty.
 
 However, the type of $t$ says that $t$ will supply such a value, given that we can provide
-$t$ with a function of the type $\rho \to \sigma$. We don't readily have such a function either;
+it with a function of the type $\rho \to \sigma$. We don't readily have such a function either;
 it would have to return a $\sigma$ and we don't have any $\sigma$ to construct the function with.
 
 Nevertheless, with exceptions, we \emph{can} produce a function of the type $\rho \to \sigma$
 because we can make the function throw an exception and never return, which enables us
-to give it an arbitrary return type, especially also $\sigma$. What's more, this function
-takes an argument of the type $\rho$ so the values it throws will have the type $\rho$.
+to give it an arbitrary return type, especially $\sigma$. What's more, this function
+takes an argument of the type $\rho$ so the values it throws can have the type $\rho$.
 
 So the final plan is as follows: within a catch$_\alpha$-block, apply the function $t$ to
 $\lam{x} \midt{throw}_\alpha x$. The function $t$ either uses its argument or not.
 
 If it does, since
-the only way to use the argument, being a function, is to apply it to a value of the
+the only way to use a functional argument is to apply it to a value of the
 appropriate type, in our case $\rho$, the value of the type $\rho$ gets thrown to the
 \ident{catch}$_\alpha$ and it is returned directly.
 
 If it does not, the returned value does not depend on the function we provided, the
 exception is never triggered and a value of the type $\rho$ is returned normally from
 the function $t$.
+
+Whichever the case, we have succesfully obtained a value of the type $\rho$, which
+makes our term a proof of Peirce's law.
+
+However, this only works with lexically bound exceptions, as already mentioned:
+consider the following usage of the proof\footnote{In this example, we write
+explicit type annotations wherever possible to help clarify the idea.}.
+\[ \midt{catch}_{\alpha : \rho \to \rho} \big(
+	  \lam{x : \rho} \bigP(\lam{f : \rho \to \rho} \midt{throw}_{\alpha: \rho\to\rho} \, f)
+   \big)
+\]
+In a lexical setting, the above term undergoes capture-avoiding substitution,
+first reducing to
+\[ \midt{catch}_{\alpha : \rho \to \rho} \Big[
+	  \lam{x}
+	  	\Big(\lam{t} \midt{catch}_{\alpha : \rho}
+	  		\big(t (\lam{x : \rho} \midt{throw}_{\alpha : \rho}\, x)\big)\Big)
+	  	(\lam{f : \rho \to \rho} \midt{throw}_{\alpha: \rho\to\rho} \, f)
+   \Big]\text{,}
+\]
+and then substituting to
+\[ \midt{catch}_{\alpha : \rho \to \rho} \Big[
+	  \lam{x}
+	  	\Big(\lam{t} \midt{catch}_{\beta : \rho}
+	  		\big((\lam{f : \rho \to \rho} \midt{throw}_{\alpha: \rho\to\rho} \, f) (\lam{x : \rho} \midt{throw}_{\beta : \rho}\, x)\big)\Big)
+   \Big]\text{,}
+\]
+finally reducing to
+\[ \midt{catch}_{\alpha : \rho \to \rho} \Big(
+	  \lam{x}\lam{t} \midt{catch}_{\beta : \rho}
+	  		\big(\midt{throw}_{\alpha: \rho\to\rho}\,
+	  		  (\lam{x : \rho} \midt{throw}_{\beta : \rho}\, x)
+	\big)\Big)\text{.}
+\]
+according to the corresponding reduction rules \cite{krebbers11, parigot92}, yielding
+a well-typed term. Note that the $\alpha$ labeling the inner \ident{catch} is distinct
+from the outer $\alpha$, which was exhibited by the need to rename the inner $\alpha$
+to $\beta$ in order to avoid name collisions.
+
+This however breaks when using dynamically bound exceptions. In that case, substitution
+of the labels is \emph{not} capture-avoiding.
 
 %\todo{\cite{kameyama:dynamic}.}
 
