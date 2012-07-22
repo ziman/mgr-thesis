@@ -848,7 +848,16 @@ it does not search dynamically for an exception handler, not finding it and abor
 Throwing this exception directly reinstates execution at the point of the exception handler,
 using the original execution context.
 
-%\todo{\cite{kameyama:dynamic}?}
+Part of the surprise of the OCaml program stems from the fact that
+there is no way to tell from the type of a function what exceptions this
+function might throw. This is addressed in a $\lambda$-calculus with dynamically bound
+exceptions presented by Kameyama \cite{kameyama:dynamic}. This calculus alters the notation
+of functional types: these are written $A \stackrel{\Delta}{\to} B$, where $\Delta$ denotes
+the set of the possible types for values thrown from the function.
+
+In our example, using such an annotation would reveal that the function \ident{i} might
+throw exceptions despite the fact that all \ident{throw} statements are lexically closed by
+their corresponding handlers.
 
 \subsection{Conclusion}
 
