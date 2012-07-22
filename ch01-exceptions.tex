@@ -676,11 +676,19 @@ together cannot express state.
 Therefore unfortunately, despite some resemblance, we cannot expect that adding exceptions
 to a language will strengthen the corresponding logical system, although it may well appear so.
 
-\subsubsection{Peirce's law and statically bound exceptions}
+\subsubsection{Peirce's law and $\lambda_\mu$}
 
-To illustrate where this resemblance breaks, let us take an example: Peirce's law, which is
+To illustrate where this resemblance breaks, let us take an example: Peirce's law, 
+proof of which is
 expressible in $\lambda_\mu$ \cite{krebbers11}\footnote{Church-style type annotations
-in lambdas have been omitted for brevity.}.
+in lambdas have been omitted for brevity.}. This proof is a good example because while
+it has a direct
+control-operator counterpart $\bigK$, it can also be expressed using just \ident{throw}
+and \ident{catch}. We will exploit this property to demonstrate the difference between
+statically and dynamically bound exceptions. For reference on $\lambda_\mu$ see
+\cite{parigot92} or \cite{ariola-herbelin}.
+
+Let us look at the proof term of Peirce's law in $\lambda_\mu$.
 \[ \Gamma; \Delta \vdash_\mu 
     \big(\lam{t} \lmu{\alpha} [\alpha] t (\lam{x} \lmu{\beta} [\alpha] x) \big)
       : ((\rho \to \sigma) \to \rho) \to \rho
@@ -723,11 +731,13 @@ exception is never triggered and a value of the type $\rho$ is returned normally
 the function $t$.
 
 Whichever the case, we have succesfully obtained a value of the type $\rho$ to return, which
-makes our term a proof of Peirce's law.
+makes our term a proof of Peirce's law -- and it is probably no surprise that it behaves
+exactly like the control operator $\bigK$, representing \ident{call/cc} from Scheme.
 
-\subsubsection{Peirce's law and dynamically bound exceptions}
+\subsubsection{Peirce's law and statically bound exceptions}
 
-However, this only works with lexically bound exceptions, as already mentioned:
+However, this only works because exceptions in $\lambda_\mu$ are statically bound,
+as already mentioned:
 consider the usage of the proof of Peirce's law in this -- rather elaborate --
 identity function\footnote{In this example, we write
 explicit type annotations wherever possible to help clarify the idea.}.
@@ -748,31 +758,96 @@ first reducing to
 	  	\Big(\lam{t} \midt{catch}_{\alpha : \rho}
 	  		\big(t (\lam{x : \rho} \midt{throw}_{\alpha : \rho}\, x)\big)\Big)
 	  	(\lam{f : \rho \to \rho} \midt{throw}_{\alpha: \rho\to\rho} \, f)
-   \Big]\text{,}
+   \Big]\,0\text{,}
 \]
 and then substituting to
 \[ \midt{catch}_{\alpha : \rho \to \rho} \Big[
 	  \lam{x}
-	  	\Big(\lam{t} \midt{catch}_{\beta : \rho}
-	  		\big((\lam{f : \rho \to \rho} \midt{throw}_{\alpha: \rho\to\rho} \, f) (\lam{x : \rho} \midt{throw}_{\beta : \rho}\, x)\big)\Big)
-   \Big]\text{,}
+	  	\midt{catch}_{\beta : \rho}
+	  		\big((\lam{f : \rho \to \rho} \midt{throw}_{\alpha: \rho\to\rho} \, f) (\lam{x : \rho} \midt{throw}_{\beta : \rho}\, x)\big)
+   \Big]\,0\text{,}
 \]
-finally reducing to
+reducing to
 \[ \midt{catch}_{\alpha : \rho \to \rho} \Big(
-	  \lam{x}\lam{t} \midt{catch}_{\beta : \rho}
+	  \lam{x} \midt{catch}_{\beta : \rho}
 	  		\big(\midt{throw}_{\alpha: \rho\to\rho}\,
 	  		  (\lam{x : \rho} \midt{throw}_{\beta : \rho}\, x)
-	\big)\Big)\text{.}
+	\big)\Big)\,0\text{,}
 \]
-according to the corresponding reduction rules \cite{krebbers11, parigot92}, yielding
-a well-typed term. Note that the $\alpha$ labeling the inner \ident{catch} is distinct
-from the outer $\alpha$, which was exhibited by the need to rename the inner $\alpha$
+and finally, after a chain of reductions, indeed reducing to
+\[
+	0 \text{,}
+\]
+according to the corresponding reduction rules \cite{ariola-herbelin, krebbers11, parigot92}.
+Note that the $\alpha$ labeling the inner \ident{catch} is distinct
+from the outer $\alpha$; this was exhibited by the need to rename the inner $\alpha$
 to $\beta$ in order to avoid name collisions.
 
-This however breaks when using dynamically bound exceptions. In that case, substitution
-of the labels is \emph{not} capture-avoiding.
+\subsubsection{Peirce's law and dynamically bound exceptions}
 
-%\todo{\cite{kameyama:dynamic}.}
+The above combinator $\bigP$ can be translated to a language with dynamically bound
+exceptions. The intended behavior of the combinator may be observed in many cases.
+It does nevertheless not hold in general since we lose the capture-avoiding substitution
+and statical context/continuation references
+from $\lambda_\mu$. As the calculus where we will test our $\bigP$ and $\bigI$ combinators,
+let us pick OCaml.
+
+The program containing the definitions of $\bigI$ and $\bigP$, along with its output,
+can be seen in \Fref{fig:ip-ocaml}. Note that the OCaml expression \ident{i 0} no longer
+reduces to $0$; instead, it throws an exception. What happens there?
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{0.55\textwidth}
+\begin{codeml}
+exception E1 of int
+exception E2 of (int -> int)
+
+let p : (('a -> 'b) -> 'a) -> 'a =
+  fun t ->
+    try t (fun x -> raise (E1 x))
+    with E1 x -> x
+
+let i : ('a -> 'a) =
+  try fun x -> p (fun f -> raise (E2 f))
+  with E2 f -> f
+
+let _ =
+  print_int (i 0)
+\end{codeml}
+\caption{The test program}
+\end{subfigure}
+%
+\begin{subfigure}[b]{0.35\textwidth}
+\begin{verbatim}
+$ ocaml example.ml
+Exception: E2 <fun>.
+$
+\end{verbatim}
+\caption{Output of the program}
+\end{subfigure}
+\caption{The combinators $\bigP$ and $\bigI$ in OCaml, along with the program output}
+\label{fig:ip-ocaml}
+\end{figure}
+
+It turns out that when the function \ident{i} is called with the parameter $0$, it reduces
+the lambda within the try-block. The lambda reduces to itself, throwing no exceptions,
+so it is simply returned and the handler for \ident{E2} is ignored.
+
+Hence we get a term that still contains ``\ident{raise (E2 f)}'' as a subterm \emph{outside}
+of the scope of the lexically superior exception handler. The remaining machinery
+with the combinator \ident{p} just causes that the exception gets indeed raised -- and since
+there is (dynamically) no handler left that could catch this exception, it propagates to the
+toplevel and aborts the program with an error message.
+
+In a language with statically bound exceptions, the subterm ``\ident{raise (E2 f)}'' would
+always refer to the lexically superior handler within the function \ident{i}, along
+with the corresponding execution context. Therefore, when the exception \ident{E2} gets thrown,
+it does not search dynamically for an exception handler, not finding it and aborting.
+Throwing this exception directly reinstates execution at the point of the exception handler,
+using the original execution context.
+
+%\todo{\cite{kameyama:dynamic}?}
 
 \subsection{Conclusion}
 
@@ -782,6 +857,8 @@ to strengthen the logics corresponding under Curry-Howard.}
 \section{Practical appeal}
 
 \todo{Appeal of certified compilers.}
+
+\todo{Better definition of $\lambda_\mu$?}
 
 \label{chap:dependent-types}
 

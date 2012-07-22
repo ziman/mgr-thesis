@@ -36,7 +36,7 @@ $}
 \Gamma,x:\rho,f:\rho\to\rho;\Delta,\alpha:\rho\to\rho \vdash 
 	\lmu{\gamma} [\alpha] f : \rho
 $}
-\bright{$\to_I$}\bun{$
+\bright{$I_\to$}\bun{$
 \Gamma,x:\rho;\Delta,\alpha:\rho\to\rho \vdash 
 	(\lam{f:\rho\to\rho} \lmu{\gamma} [\alpha] f) : (\rho \to \rho) \to \rho
 $}
@@ -44,7 +44,7 @@ $}
 \Gamma,x:\rho;\Delta,\alpha:\rho\to\rho \vdash 
 	\bigP(\lam{f:\rho\to\rho} \lmu{\gamma} [\alpha] f) : \rho
 $}
-\bright{$\to_I$}\bun{$
+\bright{$I_\to$}\bun{$
 \Gamma;\Delta,\alpha:\rho\to\rho \vdash 
 	\big(\lam{x:\rho} \bigP(\lam{f:\rho\to\rho} \lmu{\gamma} [\alpha] f)\big) : \rho\to\rho
 $}
@@ -57,7 +57,8 @@ $}
 	\big(\lam{x:\rho} \bigP(\lam{f:\rho\to\rho} \lmu{\gamma} [\alpha] f)\big)\Big)
 $}
 \end{prooftree}
-\caption{Derivation of the type of $\bigI$ in $\lambda_\mu$, from \Fref{sec:peirce-law-dynamic}.
+\caption{Derivation of the type of the combinator $\bigI$ in $\lambda_\mu$, from
+\Fref{sec:peirce-law-dynamic}.
 The rule PA is the combined Passivate+Activate rule \cite{krebbers11, parigot92}. The rule P
 corresponds to the proof that $\bigP$ has the type $((\rho\to\sigma)\to\rho)\to\rho$, as
 found in \cite{krebbers11}.}
