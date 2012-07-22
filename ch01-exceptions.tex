@@ -728,12 +728,19 @@ makes our term a proof of Peirce's law.
 \subsubsection{Peirce's law and dynamically bound exceptions}
 
 However, this only works with lexically bound exceptions, as already mentioned:
-consider the following usage of the proof\footnote{In this example, we write
+consider the usage of the proof of Peirce's law in this -- rather elaborate --
+identity function\footnote{In this example, we write
 explicit type annotations wherever possible to help clarify the idea.}.
-\[ \midt{catch}_{\alpha : \rho \to \rho} \big(
+\[ \bigI = \midt{catch}_{\alpha : \rho \to \rho} \big(
 	  \lam{x : \rho} \bigP(\lam{f : \rho \to \rho} \midt{throw}_{\alpha: \rho\to\rho} \, f)
    \big)
 \]
+It can be shown that in the $\lambda_\mu$ calculus, the above definition can be given
+the type $\rho \to \rho$ for any type $\rho$ (see the appendix, \Fref{fig:lambda-mu-identity}).
+\label{sec:peirce-law-dynamic}
+
+Let us fix $\rho = \bN$ and see how an application of $\bigI$ to $0$ reduces:
+\[ \bigI 0 \red ? \]
 In a lexical setting, the above term undergoes capture-avoiding substitution,
 first reducing to
 \[ \midt{catch}_{\alpha : \rho \to \rho} \Big[
