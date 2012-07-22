@@ -1,5 +1,7 @@
 \chapter{Exceptions in programming languages}
 
+\section{Exceptions}
+
 ``Exceptions'' is a broader term referring to a strategy of handling erroneous
 states in computer programs by interrupting normal program execution, running special
 code called an \emph{exception handler} and then resuming execution in a known, different
@@ -30,7 +32,8 @@ Most languages also provide \emph{finally-blocks}. These are pieces of code atta
 try-block that are guaranteed to be executed after the try-block, whether an exception
 has been thrown or not. Because of this property, finally-blocks are usually used to clean up
 resources. In this thesis, we will not model finally-blocks as these can be
-supplemented by an appropriate use of all-catching exception handlers.
+supplemented by an appropriate use of all-catching exception handlers and they are not
+too useful in a language without side effects, anyway.
 
 There may be multiple handlers attached to a piece of code.
 As already mentioned, the word ``exception'' also denotes a piece of information about
@@ -38,7 +41,7 @@ the error or condition causing the exceptional state, modeled by a value of the 
 language. In typed languages, these values have types, exception handlers declare what
 types of exceptions they can handle, and based on the type of the thrown exception,
 an appropriate handler is selected. The handler can then inspect the exception and
-behave appropriately.
+behave accordingly.
 
 A try-block needn't have handlers for all exceptions that might arise within. If an exception
 is \emph{uncaught} within a try-block, it is \emph{propagated} to the containing try-block,
@@ -53,9 +56,9 @@ syntax for exceptions at all, both \emph{catch} and \emph{finally} are just func
 All code snippets are just symbolic and have been stripped of non-relevant context, such
 as library imports and the definitions of the functions \emph{perform\_work}
 and \emph{do\_cleanup}.}
-
-\begin{figure}
 %
+\begin{figure}
+\centering
 \begin{subfigure}[b]{0.46\textwidth}\begin{codepy}
 try:
 	perform_work()
@@ -96,9 +99,9 @@ finally do_cleanup (fun () ->
 \label{fig:try-blocks}
 \end{figure}
 
-\todo{Really include ``finally''? Revise OCaml.}
+%\todo{Really include ``finally''? Revise OCaml.}
 
-\section{Purpose}
+\subsection{Purpose}
 
 As already mentioned, in practice, exceptions are mostly used to handle errors or
 other exceptional states. The advantage to using
@@ -113,12 +116,20 @@ indicate the end of stream \cite{python:reference}; also file-I/O functions in O
 an exception to indicate the end of file \cite{ocaml:reference}. The implementation of
 exceptions in these languages is efficient enough to make them cheap and enable this approach.
 
-\todo{Disadvantages. Multiple exit points, reasoning.}
+On the other hand, exceptions may also \emph{cause} subtle errors in programs. The code
+is less obvious to read since there are no clues at which points the control flow may be diverted
+because of an exception. Routines/functions have multiple exit points and these may
+be non-obvious since exceptions may emerge from other parts of the code called within
+the routine. In languages with manual memory management, resource leaks may occur.
+Hence correctness of such code is more difficult to assess and reason about
+by looking at the source code in isolation.
 
-\todo{Extend this section.}
+Still, the ubiquity of exceptions in practically all modern programming languages
+hints at their great usefulness as the standard way of dealing with error states.
 
-\section{History}
+\subsection{History}
 
+Exceptions have been present in programming languages for about half a century.
 Louden and Lambert describe the invention of exceptions in their book
 \emph{Programming Languages: Principles and Practice} as follows.
 
@@ -135,13 +146,20 @@ mechanisms sometimes have libraries available that provide them, or have other
 built-in ways of simulating them. \cite[p.~423]{louden:languages}
 \end{quote}
 
-% http://stackoverflow.com/questions/1449951/what-language-was-the-first-to-implement-exception-handling
+Over time, various flavors of exceptions and the corresponding infrastructure have evolved
+in programming languages. Checked exceptions\footnote{A language with checked exceptions
+requires its functions to specify in their types what exceptions they may throw.} (Java)
+versus unchecked exceptions (Python) versus optionally checked exceptions (C++); some
+languages restrict what kinds of values may be thrown as exceptions (Ruby), some do not (C++);
+some languages do not provide finally-clauses (OCaml), some do not have \emph{any}
+keywords designated for exceptions and use plain functions instead (Haskell), etc.
 
-\todo{Extend this section.}
+The variety is large but all of these languages share the main principles of exception handling,
+most importantly \emph{dynamic binding}, which we will discuss in the following sections.
 
 \section{Theoretical appeal}
 
-The theoretical appeal of exceptions in function languages is impossible to discuss
+The theoretical appeal of exceptions in functional languages is impossible to discuss
 without having introduced the \emph{Curry-Howard correspondence}.
 
 \subsection{The Curry-Howard correspondence}
@@ -659,6 +677,10 @@ when the function \ident{g} is called, it throws an exception and execution jump
 \emph{inside \ident{f}}, printing ``caught in \ident{f()}''. This contradicts the general
 understanding of exceptions among programmers.
 
+The same difference in binding is the reason why the $\lambda$-term in \Fref{fig:svd-lc}
+reduces to $2$ with lexically bound exceptions and throws an uncaught exception if exceptions
+are dynamically bound in the calculus.
+
 This difference has been covered in multiple papers, most notably by Thielecke, who
 points out the contrast between exceptions and control operators very explicitly
 \cite{thielecke:contrast}. Thielecke also analyzes the nature of the relationship between
@@ -890,13 +912,21 @@ about the programs themselves -- and implementations of these functions represen
 under the Curry-Howard correspondence that pervades computer science. These proofs
 are mechanically checked by typecheckers automatically.
 
-What's more, such programs needn't contain only theorems. They usually also exploit
+What's more, such programs needn't ensure their correctness only through theorems.
+They usually also exploit
 their type systems to assign far more strict types to their ordinary functions, blurring the line
 between a type signature and a fully specified contract. Programs created in this way
 can use the type system to enforce invariants in the program, providing a safety net
 to catch programmer errors, and are often \emph{correct by construction}\footnote{In the
 sense that types are set up to enforce the specification; an incorrect program would
 not typecheck and subsequently compile.}.
+
+Certification by a proof of correctness is fundamentally different from testing.
+A proof gives a \emph{guarantee}, based on the source code of the program in question,
+that the program follows its specification and never deviates. On the other hand, testing
+is a stochastic
+process that, although amenable to coverage improvements, is typically not exhaustible
+and provides just a good \emph{chance} that if no defects are found, the program is correct.
 
 A good specification of exceptions and a certified compiler adhering to it would help
 making programs more reliable wherever the gains of reliability outweigh the cost of
@@ -910,6 +940,7 @@ a semantics, create a compiler and examine how this all works together in a depe
 typed programming language.
 
 % \todo{A more complete definition of $\lambda_\mu$?}
+\label{chap:dependent-types}
 
 
 
