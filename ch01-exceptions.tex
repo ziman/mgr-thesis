@@ -746,8 +746,9 @@ explicit type annotations wherever possible to help clarify the idea.}.
    \big)
 \]
 It can be shown that in the $\lambda_\mu$ calculus, the above definition can be given
-the type $\rho \to \rho$ for any type $\rho$ (see the appendix, \Fref{fig:lambda-mu-identity}).
-\label{sec:peirce-law-dynamic}
+the type $\rho \to \rho$ for any type $\rho$ (see the appendix, \Fref{fig:lambda-mu-identity})
+\label{sec:peirce-law-dynamic}. Furthermore, due to parametricity, it must define the identity
+function \cite{wadler89}.
 
 Let us fix $\rho = \bN$ and see how an application of $\bigI$ to $0$ reduces:
 \[ \bigI 0 \red ? \]
@@ -851,8 +852,16 @@ using the original execution context.
 
 \subsection{Conclusion}
 
-\todo{The theoretical appeal of studying exceptions in functional languages is the ability
-to strengthen the logics corresponding under Curry-Howard.}
+Hence the theoretical appeal of studying exceptions in functional languages lies in the wonderful
+world of different logical systems related to control operators. Although exceptions,
+as usually presented, do not have the power of statically bound control operators,
+in certain contexts, they behave very similarly and parallels can definitely be drawn.
+
+This also means that when studying exceptions in practice, either semantics or implementation,
+looking at ``how the guys from Scheme do it with their control operators''
+may be beneficial because the principles are shared on many levels and despite their
+occasionally completely different behavior, they can still be described by a single construct
+with a trivial difference \cite{thielecke01}.
 
 \section{Practical appeal}
 
