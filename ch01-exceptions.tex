@@ -676,7 +676,7 @@ together cannot express state.
 Therefore unfortunately, despite some resemblance, we cannot expect that adding exceptions
 to a language will strengthen the corresponding logical system, although it may well appear so.
 
-\subsubsection{Peirce's law and exceptions}
+\subsubsection{Peirce's law and statically bound exceptions}
 
 To illustrate where this resemblance breaks, let us take an example: Peirce's law, which is
 expressible in $\lambda_\mu$ \cite{krebbers11}\footnote{Church-style type annotations
@@ -706,7 +706,7 @@ it with a function of the type $\rho \to \sigma$. We don't readily have such a f
 it would have to return a $\sigma$ and we don't have any $\sigma$ to construct the function with.
 
 Nevertheless, with exceptions, we \emph{can} produce a function of the type $\rho \to \sigma$
-because we can make the function throw an exception and never return, which enables us
+because we can make the function always throw an exception and never return, which enables us
 to give it an arbitrary return type, especially $\sigma$. What's more, this function
 takes an argument of the type $\rho$ so the values it throws can have the type $\rho$.
 
@@ -722,8 +722,10 @@ If it does not, the returned value does not depend on the function we provided, 
 exception is never triggered and a value of the type $\rho$ is returned normally from
 the function $t$.
 
-Whichever the case, we have succesfully obtained a value of the type $\rho$, which
+Whichever the case, we have succesfully obtained a value of the type $\rho$ to return, which
 makes our term a proof of Peirce's law.
+
+\subsubsection{Peirce's law and dynamically bound exceptions}
 
 However, this only works with lexically bound exceptions, as already mentioned:
 consider the following usage of the proof\footnote{In this example, we write
