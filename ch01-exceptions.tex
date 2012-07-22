@@ -869,16 +869,46 @@ in certain contexts, they behave very similarly and parallels can definitely be 
 This also means that when studying exceptions in practice, either semantics or implementation,
 looking at ``how the guys from Scheme do it with their control operators''
 may be beneficial because the principles are shared on many levels and despite their
-occasionally completely different behavior, they can still be described by a single construct
-with a trivial difference \cite{thielecke01}.
+occasionally completely different behavior, they can still be described by in a unified way
+with a trivial difference if needed, as shown by Thielecke \cite{thielecke01}.
 
 \section{Practical appeal}
 
-\todo{Appeal of certified compilers.}
+The title of this section reads ``Practical appeal'' for consistency but it does not really
+discuss the practical appeal of \emph{exceptions} themselves but rather study thereof.
 
-\todo{Better definition of $\lambda_\mu$?}
+Exceptions are ubiquitous in programming languages and understanding them will definitely help
+us write more efficient, elegant and correct implementations of this control device -- with
+this thesis putting the emphasis on \emph{correct}.
 
-\label{chap:dependent-types}
+\subsection{Certified programming}
+
+The rise of dependently typed programming languages brought the opportunity to write
+\emph{certified programs} in a quite convenient way. Such programs, written in languages
+with very expressive type systems, can include functions whose types represent theorems
+about the programs themselves -- and implementations of these functions represent proofs,
+under the Curry-Howard correspondence that pervades computer science. These proofs
+are mechanically checked by typecheckers automatically.
+
+What's more, such programs needn't contain only theorems. They usually also exploit
+their type systems to assign far more strict types to their ordinary functions, blurring the line
+between a type signature and a fully specified contract. Programs created in this way
+can use the type system to enforce invariants in the program, providing a safety net
+to catch programmer errors, and are often \emph{correct by construction}\footnote{In the
+sense that types are set up to enforce the specification; an incorrect program would
+not typecheck and subsequently compile.}.
+
+A good specification of exceptions and a certified compiler adhering to it would help
+making programs more reliable wherever the gains of reliability outweigh the cost of
+certification. As methods will improve, verification will get cheaper and cheaper; as
+verification will cover more and more domains, software, compilers, operating systems,
+hardware, etc., the guarantees and subsequently gains will grow.
+
+In this thesis, we study a specific domain involving specification, compilation and execution
+of programs with exceptions, for the reasons stated above.
+
+% \todo{A more complete definition of $\lambda_\mu$?}
+
 
 
 
