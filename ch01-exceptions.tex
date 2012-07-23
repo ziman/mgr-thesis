@@ -152,7 +152,7 @@ requires its functions to specify in their types what exceptions they may throw.
 versus unchecked exceptions (Python) versus optionally checked exceptions (C++); some
 languages restrict what kinds of values may be thrown as exceptions (Ruby), some do not (C++);
 some languages do not provide finally-clauses (OCaml), some do not have \emph{any}
-keywords designated for exceptions and use plain functions instead (Haskell), etc.
+keywords designated for exceptions at all and use plain functions instead (Haskell), etc.
 
 The variety is large but all of these languages share the main principles of exception handling,
 most importantly \emph{dynamic binding}, which we will discuss in the following sections.
@@ -170,8 +170,18 @@ and programs themselves correspond to proofs of logical propositions correspondi
 types.
 
 This correspondence goes all the way to relating whole $\lambda$-calculi to different
-logical systems. For example, the simply typed $\lambda$-calculus corresponds to the minimal
-logic, see \Fref{fig:stlc-ml}.
+logical systems. For example, the simply typed $\lambda$-calculus corresponds to minimal
+logic, in the sense that a proposition is provable in minimal logic if and only if
+there is a term that can be assigned the corresponding type in the simply typed
+lambda calculus.
+
+The reason why this works is a 1-to-1 correspondence
+between natural deduction rules of minimal logic and type derivation rules of the simply
+typed lambda calculus, as shown in \Fref{fig:stlc-ml}.
+When put side-by-side, it can be seen that the typing rules for the simply typed
+$\lambda$-calculus become precisely the natural-deduction rules for minimal logic
+if terms are erased and only types are retained.
+
 
 \begin{figure}
 \centering
@@ -213,10 +223,6 @@ logic, see \Fref{fig:stlc-ml}.
 \caption{Simply typed $\lambda$-calculus ($\lambda_\to$), compared to minimal logic (ML).}
 \label{fig:stlc-ml}
 \end{figure}
-
-When put side-by-side, it can be seen that the typing rules for the simply typed
-$\lambda$-calculus become precisely the natural-deduction rules for minimal logic
-if terms are erased and only types are retained.
 
 In this interpretation, \emph{function application} on the computational side corresponds
 to \emph{modus ponens} (or implication elimination) on the logic side, and
@@ -342,7 +348,18 @@ and the calculus $\lambda{}C$ is also called the \emph{calculus of constructions
 \label{tab:lambda-cube}
 \end{table}
 
-\todo{Talk about dependent types, Coq, proving, Type theory, \ldots ?}
+
+The reasons for choosing a cube lie in the nature of pure type systems \cite{barendregt91},
+where, by deciding which typing rules to include in a common framework, one may construct
+all $\lambda$-calculi found in the $\lambda$-cube. Extending $\lambda_\to$ with dependent
+types (horizontal edges of the cube) yields $\lambda{}P$, extending it with polymorphism
+(vertical edges of the cube) yields $\lambda{}2$, and finally, extending it with type operators
+(front-back edges of the cube) yields $\lambda\underline{\omega}$.
+
+These features may combine and if included all together, they result in $\lambda{}C$,
+also called Calculus of Constructions (CoC). This is a lambda calculus with a very
+powerful type system, whose derivative, Calculus of Inductive Constructions (CIC)
+is the calculus used in the Coq Proof Assistant \cite[Chapter~4]{coq:manual}.
 
 \subsection{Control operators}
 
@@ -490,7 +507,8 @@ corresponds to double negation elimination (DN) \cite[p.~877]{ariola-herbelin}.
 Hence, a $\lambda$-calculus needn't feature the whole operator $\bigC$,
 while being strictly stronger than $\lambda_\to$.
 
-Ariola and Herbelin in the paper present \emph{minimal classical logic}, which is strictly
+In \cite{ariola-herbelin}, Ariola and Herbelin present \emph{minimal classical logic},
+which is strictly
 weaker than classical logic but strictly stronger than minimal logic. Minimal classical
 logic proves PL but does not prove DN, neither does it prove EFQ \cite{ariola-herbelin}.
 
@@ -612,7 +630,7 @@ to implement each of them in terms of the other. However, it is not completely
 straightforward.
 
 Indeed, exceptions can in some ways be simulated by control operators (and vice versa).
-Consider the following definition of \ident{catch} operator, taking an expression
+Consider the following definition of the \ident{catch} operator, taking an expression
 and a handler.
 \[	e \;\midt{catch}\; h = \bigK(\lam{k} e (\lam{x} k(h x))) \]
 This operator can then be used as follows:
@@ -774,7 +792,7 @@ function \cite{wadler89}.
 
 Let us fix $\rho = \bN$ and see how an application of $\bigI$ to $0$ reduces:
 \[ \bigI 0 \red ? \]
-In a lexical setting, the above term undergoes capture-avoiding substitution,
+In a statical setting, the above term undergoes capture-avoiding substitution,
 first reducing to
 \[ \midt{catch}_{\alpha : \rho \to \rho} \Big[
 	  \lam{x}
@@ -802,7 +820,7 @@ and finally, after a chain of reductions, indeed reducing to
 	0 \text{,}
 \]
 according to the corresponding reduction rules \cite{ariola-herbelin, krebbers11, parigot92}.
-Note that the $\alpha$ labeling the inner \ident{catch} is distinct
+Note that the $\alpha$ labeling the inner \ident{catch} was distinct
 from the outer $\alpha$; this was exhibited by the need to rename the inner $\alpha$
 to $\beta$ in order to avoid name collisions.
 
@@ -891,8 +909,8 @@ in certain contexts, they behave very similarly and parallels can definitely be 
 This also means that when studying exceptions in practice, either semantics or implementation,
 looking at ``how the guys from Scheme do it with their control operators''
 may be beneficial because the principles are shared on many levels and despite their
-occasionally completely different behavior, they can still be described by in a unified way
-with a trivial difference if needed, as shown by Thielecke \cite{thielecke01}.
+occasionally completely different behavior, they can still be described in a unified way
+with just trivial differences, as shown by Thielecke \cite{thielecke01}.
 
 \section{Practical appeal}
 
@@ -910,7 +928,7 @@ The rise of dependently typed programming languages brought the opportunity to w
 with very expressive type systems, can include functions whose types represent theorems
 about the programs themselves -- and implementations of these functions represent proofs,
 under the Curry-Howard correspondence that pervades computer science. These proofs
-are mechanically checked by typecheckers automatically.
+are checked by typecheckers mechanically without human intervention.
 
 What's more, such programs needn't ensure their correctness only through theorems.
 They usually also exploit
@@ -936,8 +954,8 @@ hardware, etc., the scope of guarantees -- and subsequently gains -- will grow.
 
 In this thesis, we will study a specific domain involving specification, compilation
 and execution of programs with exceptions, for the reasons stated above. We will specify
-a semantics, create a compiler and examine how this all works together in a dependently
-typed programming language.
+a semantics, create a compiler, prove its adherence to the specification, and examine
+how this all works together practically in a dependently typed programming language.
 
 % \todo{A more complete definition of $\lambda_\mu$?}
 \label{chap:dependent-types}
