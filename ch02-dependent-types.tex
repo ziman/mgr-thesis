@@ -3,17 +3,20 @@
 
 We will create our development in a dependently typed pure functional language named Agda.
 This chapter provides a brief introduction to Agda, along with some commentary about
-related topics and also presents reasons why Agda was chosen as the implementation language.
+related topics.
 
-\todo{Does it present the reasons?}
+%\todo{...and also presents reasons why Agda was chosen as the implementation language. Does it present the reasons?}
 
 The aim is to provide the bare necessities for reading this thesis if the reader is not
 familiar with Agda or dependently typed programming -- mostly an overview of Agda syntax and some
 basic techniques used.
 
-\todo{Not only language but also logic. Per Martin-L\"{o}f's Type Theory? Dependent types. 
-The Curry-Howard correspondence. Total functional programming.
-Structural recursion and termination. Formal verification. The Agda proof assistant.}
+%\todo{Not only language but also logic. Per Martin-L\"{o}f's Type Theory? Dependent types. 
+%The Curry-Howard correspondence. Total functional programming.
+%Structural recursion and termination. Formal verification. The Agda proof assistant.}
+
+For a much more complete introduction to Agda and dependently typed programming, see the
+tutorial by Norell \cite{norell08} or any other tutorial from the Agda wiki \cite{agda-wiki}.
 
 \section{A simple exceptionless language}
 \label{sec:simple-language}
@@ -39,7 +42,7 @@ throughout the thesis.
 
 \subsection{Type universe}
 
-It is probably a reasonable requirement that our language should be able to represent
+It is probably reasonable to expect a programming language to be able to represent
 expressions of different types (e.g. numeric or Boolean).
 
 Hence the first thing we will introduce is the type universe representing the set of
@@ -49,7 +52,9 @@ indicate what the type of the expression is.
 
 While we could use Agda
 types directly for indexing, with an explicit universe, we get decidable
-equality of types and all datatypes conveniently in \ident{Set}.%
+equality of expression types\footnote{We do not use this property but we would
+if we had to implement type-driven handler selection.} and all datatypes conveniently
+in \ident{Set}.%
 \footnote{To avoid cardinality trouble, reified in Agda as Hurkens's
 simplification\cite{hurkens} of Girard's Paradox\cite{girard:dissertation},
 Agda features stratified type universes with universe polymorphism.
@@ -71,7 +76,7 @@ would sacrifice comprehensibility.}
 
 Here we arrive at Agda \emph{type declarations}. These resemble GADTs from
 Haskell or type declarations from other dependently typed languages, like Coq.
-The first line contains the name of the data type and the universe we want to
+The first line contains the name of the data type and the Agda universe we want to
 put the type in. The following lines contain data constructor declarations,
 including an explicit type for each data constructor.
 
@@ -135,13 +140,18 @@ programming language, performs two special checks on every function definition.
 		given function is structural and hence this function is obviously terminating.
 \end{itemize}
 This ensures that every function terminates on every input, which is important for soundness
-of proofs. This will be discussed later.
-
-\todo{Don't forget to discuss it and insert a reference here.}
+of proofs. If functions were allowed to not terminate, the following circular argument would
+typecheck as a proof of the apparently false proposition:
+\begin{code}
+  falsum : forall {a : Set} -> a
+  falsum = falsum
+\end{code}
+Put another way, if a function never returns, it can ``promise'' to return anything, making
+its type signature meaningless.
 
 \subsection{Expressions}
 
-The core of the language we are going to model consists of its expressions, of
+The core of the high-level language we are going to model consists of its expressions, of
 course. For now, we will support nothing more than (numeric) literals and addition.
 However, for further extensibility, we separate the type of binary operators.
 
@@ -472,8 +482,8 @@ while compilers of non-dependently typed languages, like OCaml or Haskell,
 would complain about non-exhaustive patterns here --- there is no way to tell them
 that, for example, we needn't deal with empty stacks when executing \ident{ADD}.
 
-\todo{There's a paper saying that non-exhaustive matches are inevitable; insert
-a reference.}
+%\todo{There's a paper saying that non-exhaustive matches are inevitable; insert
+%a reference.}
 
 \subsubsection{Code}
 
@@ -536,10 +546,13 @@ code.
 
 Apart from being a total dependently typed functional \emph{programming} language,
 the ``total dependently typed'' part also makes Agda suitable for proving theorems.
-This means that type signatures can express theorems, and values of these
-types correspond to their proofs. Hence, type checking coincides with proof checking.
+This means that type signatures can express theorems, values of these
+types correspond to their proofs, and type checking coincides with proof checking,
+as already mentioned in \Fref{sec:intro-certified-programming}.
 
-\todo{Insert references to further explanation, Curry-Howard etc.}
+Agda ships with an interactive Emacs editor mode, which extends Agda to a~proof
+assistant and greatly helps writing both proofs and Agda code in general. A~(very) brief guide
+can be found on the Agda wiki \cite{agda-mode}.
 
 \subsubsection{Propositional equality}
 
@@ -754,6 +767,63 @@ Finally, we use the lemma \ident{op-correct} to show that executing the
 leftover instruction is exactly what is left to do to get the desired value
 on top of the stack.
 
+\subsubsection{``With'' patterns}
+
+There is one syntactic feature of Agda left that we have not used yet but that will
+occur in the following chapter: the \emph{with-patterns} \cite[Section~2.6]{norell08}.
+
+Suppose we wanted to write a function named ``\ident{first}'' that,
+given a (decidable) predicate and a list, returns
+the first element in the list satisfying the given predicate. One way to do it is
+to use the library function \ident{filter} that, given a predicate and
+a list, returns the list of \emph{all} elements satisfying the given predicate.
+
+One way is to define an auxiliary function and compose it with the function
+\ident{filter}:
+\begin{code}
+  safeHead : {a : Set} -> List a -> Maybe a
+  safeHead [] = nothing
+  safeHead (x :: _) = just x
+  
+  first : {a : Set} -> (a -> Bool) -> List a -> Maybe a
+  first p = safeHead \o filter p
+\end{code}
+Sometimes however, especially with long and complicated type signatures,
+defining auxiliary functions gets quite inconvenient and these functions,
+unlike \ident{safeHead} are most probably very specific for one purpose only
+and not reusable. After all, a Haskell programmer might write:
+\begin{code}
+  first :: (a -> Bool) -> [a] -> Maybe a
+  first p xs = case filter p xs of
+    [] -> Nothing
+    y:ys -> Just y
+\end{code}
+Agda does not have case-expressions because pattern matching in Agda may yield
+information and that information would have to be discarded. Instead, Agda provides special
+with-patterns than effectively add an argument to the function being defined. The
+usage should be obvious from an example.
+\begin{code}
+  first : {a : Set} -> (a -> Bool) -> List a -> Maybe a
+  first p xs with filter p xs
+  first p xs | [] = nothing
+  first p xs | y :: _ = just y
+\end{code}
+A function can have multiple with-patterns, separated with vertical bars in both the
+with-clause and pattern-matching clauses themselves.
+
+Finally, notice that we had to write ``\ident{first p xs}'' three times redundantly.
+This is not always the case (sometimes the patterns are more specific in different
+clauses) but when it is, the part before the vertical bar can be replaced by an ellipsis:
+\begin{code}
+  first : {a : Set} -> (a -> Bool) -> List a -> Maybe a
+  first p xs with filter p xs
+  \... | [] = nothing
+  \... | y :: _ = just y
+\end{code}
+The ellipses are replaced by the patterns that precede the keyword \ident{with} in the first
+clause. Of course, the right sides of the equations can use all variables bound
+there.
+
 \subsection{Remarks}
 
 Totality of Agda functions gives us a proof of termination of this algorithm and
@@ -776,5 +846,4 @@ accompanying Agda code and these modules define the overall structure of our
 development. In the following chapter, we will develop
 the code further by extending and improving particular modules.
 
-\todo{Document the \ident{\textbf{with}} keyword?}
 
