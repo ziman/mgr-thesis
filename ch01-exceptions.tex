@@ -1,6 +1,6 @@
-\chapter{Exceptions in programming languages}
+\chapter{Exceptions and certified programming}
 
-\section{Exceptions}
+\section{Exceptions in programming languages}
 
 ``Exceptions'' is a rather broad term referring to a strategy of handling erroneous
 states in computer programs by interrupting normal program execution, running special
@@ -184,6 +184,12 @@ to catch programmer errors, and are often \emph{correct by construction}\footnot
 sense that types are set up to enforce the specification; an incorrect program would
 not typecheck and subsequently compile.}.
 
+The programming languages used for these purposes are usually \emph{total} functional
+languages, meaning that all functions defined must be total. A total function terminates
+on every possible input, always yielding a well-formed value. The trouble with non-termination
+is that it makes the corresponding logic inconsistent -- and this is why totality is necessary
+(not sufficient) for languages to be used in trustworthy developments.
+
 Certification by a proof of correctness is fundamentally different from testing.
 A proof gives a \emph{guarantee}, based on the source code of the program in question,
 that the program follows its specification and never deviates. On the other hand, testing
@@ -191,7 +197,27 @@ is a stochastic
 process that, although amenable to coverage improvements, is typically not exhaustible
 and provides just a good \emph{chance} that if no defects are found, the program is correct.
 
-A good specification of exceptions and a certified compiler provably adhering to it would help
+\subsection{Certified compilers}
+
+However, even when a program is certified, it does not exist in a vacuum. Leroy \cite{leroy09}
+emphasizes that the program
+itself is just a text -- but correctness of the program is assessed according to some specification,
+the program needs to be turned into some low-level representation by a compiler and then it
+needs to be executed on a machine in order to produce results. Hence, if the specification,
+the compiler, the operating system, the machine, or any other component along the way
+is incorrect, the actual result can no longer be guaranteed to be correct.
+
+In fact, the impact of bugs in compilers and machines is much greater than that in ordinary
+applications since all other software depends on them. Yet both compilers and processors
+are very complex systems performing many non-transparent and complicated tasks.
+
+One way of coping with these issues
+is using compilers that are certified themselves.
+For example, a practical compiler for quite
+a broad subset of the C programming language, called CompCert \cite{leroy09} was developed
+by Leroy et al. in the Coq proof assistant.
+
+Hence, good specifications and certified compilers provably adhering to them would help
 making programs more reliable wherever the gains of reliability outweigh the cost of
 certification. As methods will improve, verification will get cheaper and cheaper; as
 verification will cover more and more domains, software, compilers, operating systems,
@@ -202,7 +228,6 @@ and execution of programs with exceptions. We will specify
 a semantics, create a compiler, prove its adherence to the specification, and examine
 how this all works together practically in a dependently typed programming language.
 
-% \todo{A more complete definition of $\lambda_\mu$?}
 
 
 
