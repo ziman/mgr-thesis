@@ -84,7 +84,8 @@ visually clean code.
     nat : U
 \end{code}
 
-\noindent This universe could not be much simpler. While we aim to support more
+\noindent Hence, the above declaration introduces a single constant named \ident{nat},
+that has the type \ident{U}. This universe could not be much simpler. While we aim to support more
 types at a later stage, now we restrict the language to express only natural
 numbers, for the sake of simplicity. As long as we build the program to
 distinguish different types, this is just a quantitative difference.
@@ -118,6 +119,10 @@ home here; the difference to ML-style languages here is that instead of a big ma
 on the right side of a single equation, there are multiple equations where pattern
 matching takes place on the left side of each equation.\footnote{Seen for example in
 the definition of the function \ident{denExp} in \Fref{sec:simple-denExp}.}
+
+Also note that in Agda, it is possible for a function to return a \emph{type}, in contrast
+with languages like Haskell or OCaml. This is possible because in dependently typed languages,
+types, kinds, sorts etc. are all first-class values.
 
 Furthermore, beyond standard type checking etc., Agda, being a \emph{total} functional
 programming language, performs two special checks on every function definition.
@@ -157,6 +162,24 @@ and whose result has the type \ident{w}. Hence, the value \ident{Plus}
 represents an operator that takes two \ident{nat}s and returns a \ident{nat}.%
 \footnote{We will add more operators later. How the constructors representing
 different operators are typed can be seen in \Fref{sec:more-operators}.}
+
+\subsubsection{Inductive type families}
+
+Dependently typed languages with inductive types, like Agda, generally support inductive
+type families. An inductive type family is a collection of inductive types given by
+a common (generally $n$-ary) type constructor. Specific types from this family are then obtained
+by saturating the type constructor with arguments of the appropriate types.
+
+For example, the above type family given by the type constructor \ident{Op} is indexed
+by three values of the type \ident{U}. By providing such specific values \ident{u}, \ident{v},
+and \ident{w}, we instantiate the concrete type \ident{Op u v w} belonging to this type family.
+
+Some non-dependently typed languages, like Haskell, also provide a limited form of
+type families, indexed only by types, not arbitrary values. For example, in Haskell,
+``\ident{Expression Int}'' may represent a valid type (and it often does) but
+``\ident{VectorOfLength 3}'' may not.%
+\footnote{In Haskell, suitable type declarations allow expressions like \ident{S (S (S Z))}
+to appear in type signatures. However, these expressions are proper \emph{types}, not values.}
 
 \subsubsection{Expressions}
 

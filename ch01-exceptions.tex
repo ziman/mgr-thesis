@@ -42,9 +42,9 @@ resources. In this thesis, we will not model finally-blocks as these can be
 supplemented by an appropriate use of all-catching exception handlers and they are not
 too useful in a language without side effects, anyway.
 
-Often, there may be multiple handlers attached to a piece of code, each serving a different
-purpose. The appropriate handler
-may be selected by the type of the exception being handled (in typed languages), with
+Often, there may be multiple handlers attached to a piece of code, each dealing with a different
+kind of error. The appropriate handler
+may be selected by the type of the exception being handled if the language is typed, with
 most mainstream languages providing support for this approach, or by other means, for example
 manual inspection of the value thrown.
 
@@ -161,33 +161,23 @@ languages restrict what kinds of values may be thrown as exceptions (Ruby), some
 some languages do not provide finally-clauses (OCaml), some do not have \emph{any}
 keywords designated for exceptions at all and use plain functions instead (Haskell), etc.
 
-The variety is large but all these languages share the main principles of exception handling,
-most importantly \emph{dynamic binding}, which we will discuss in the following sections.
+\todo{The variety is large but all these languages share the main principles of exception handling,
+most importantly \emph{dynamic binding}, which we will discuss in the following sections.}
 
-\section{Theoretical appeal}
-
-
-\section{Practical appeal}
-
-The title of this section reads ``Practical appeal'' for consistency but it does not really
-discuss the practical appeal of \emph{exceptions} themselves but rather study thereof.
-
-Exceptions are ubiquitous in programming languages and understanding them will definitely help
-us write more efficient, elegant and correct implementations of this control device -- with
-this thesis putting the emphasis on \emph{correct}.
-
-\subsection{Certified programming}
+\section{Certified programming}
 
 The rise of dependently typed programming languages brought the opportunity to write
 \emph{certified programs} in a quite convenient way. Such programs, written in languages
-with very expressive type systems, can include functions whose types represent theorems
-about the programs themselves -- and implementations of these functions represent proofs,
-under the Curry-Howard correspondence that pervades computer science. These proofs
-are checked by typecheckers mechanically without human intervention.
+with very expressive type systems\footnote{Such as Agda, Coq or Epigram.}, can include
+functions whose types represent theorems
+about the programs themselves, usually about their adherence to specifications.
+Then, under the Curry-Howard correspondence, implementations of these functions
+represent proofs \cite{howard80}. These proofs are checked by typecheckers mechanically
+without human intervention.
 
-What's more, such programs needn't ensure their correctness only through theorems.
+What's more, such programs needn't ensure their correctness only through pure theorems.
 They usually also exploit
-their type systems to assign far more strict types to their ordinary functions, blurring the line
+their type systems to assign far stricter types to their ordinary functions, blurring the line
 between a type signature and a fully specified contract. Programs created in this way
 can use the type system to enforce invariants in the program, providing a safety net
 to catch programmer errors, and are often \emph{correct by construction}\footnote{In the
@@ -201,19 +191,18 @@ is a stochastic
 process that, although amenable to coverage improvements, is typically not exhaustible
 and provides just a good \emph{chance} that if no defects are found, the program is correct.
 
-A good specification of exceptions and a certified compiler adhering to it would help
+A good specification of exceptions and a certified compiler provably adhering to it would help
 making programs more reliable wherever the gains of reliability outweigh the cost of
 certification. As methods will improve, verification will get cheaper and cheaper; as
 verification will cover more and more domains, software, compilers, operating systems,
 hardware, etc., the scope of guarantees -- and subsequently gains -- will grow.
 
 In this thesis, we will study a specific domain involving specification, compilation
-and execution of programs with exceptions, for the reasons stated above. We will specify
+and execution of programs with exceptions. We will specify
 a semantics, create a compiler, prove its adherence to the specification, and examine
 how this all works together practically in a dependently typed programming language.
 
 % \todo{A more complete definition of $\lambda_\mu$?}
-\label{chap:dependent-types}
 
 
 
