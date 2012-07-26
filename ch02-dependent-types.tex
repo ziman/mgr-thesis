@@ -2,7 +2,7 @@
 \label{chap:dependent-types}
 
 We will create our development in a dependently typed pure functional language named Agda.
-This chapter provides a brief introduction to Agda, along with some commentary about
+This chapter provides a (very) brief introduction to Agda, along with some commentary about
 related topics.
 
 %\todo{...and also presents reasons why Agda was chosen as the implementation language. Does it present the reasons?}
@@ -26,8 +26,7 @@ language of arithmetical expressions to instructions for a stack machine.
 
 Being a simple and instructive task, this has been done many times in a variety
 of programming languages in other papers, publications, blog posts, et cetera;
-for example in \cite{epigram-compiler} (in Epigram) or in \cite{chlipala:compiler}
-(in Coq).
+for example in Epigram \cite{epigram-compiler} or in Coq \cite{chlipala:compiler}.
 
 All high-level languages in this thesis will be languages of simple, typed
 expressions and our first language will feature only natural numbers, addition,
@@ -104,7 +103,7 @@ We will also need an interpretation function that maps
 types of our simple language to Agda types so that we can use Agda values in
 the modelled language, talk about its denotational semantics etc.
 
-Function declarations in Agda consist of a type declaration and a (possibly multiple)
+Function declarations in Agda consist of a type declaration and a
 number of clauses describing the outcomes of the function depending on
 its arguments.
 
@@ -119,9 +118,10 @@ would contain another clause in the form:
 \begin{code}
   el bool = Bool
 \end{code}
-Users of languages belonging (syntactically) to the Miranda family will feel safely at
-home here; the difference to ML-style languages here is that instead of a big match expression
-on the right side of a single equation, there are multiple equations where pattern
+Users of languages belonging (syntactically) to the Miranda family or even the SML branch
+of the ML family will feel safely at
+home here; the difference to the other ML-style languages here is that instead of a big match
+expression on the right side of a single equation, there are multiple equations where pattern
 matching takes place on the left side of each equation.\footnote{Seen for example in
 the definition of the function \ident{denExp} in \Fref{sec:simple-denExp}.}
 
@@ -166,7 +166,7 @@ the result of application of the operator on the two values.
     Plus : Op nat nat nat
 \end{code}
 
-\noindent Put another way, a value of the type \ident{Op u v w} represents
+\noindent This means that a value of the type \ident{Op u v w} represents
 a binary operator whose operands have the types \ident{u} and \ident{w},
 and whose result has the type \ident{w}. Hence, the value \ident{Plus}
 represents an operator that takes two \ident{nat}s and returns a \ident{nat}.%
@@ -210,10 +210,10 @@ the expression in the modelled language.
 \begin{itemize}
 	\item Agda supports \emph{Unicode} in its source files and is very liberal about what
 		characters may occur in tokens. This enables Agda source code to get much closer
-		to standard math notation. Hence the $\forall$ and $\to$ characters
-		are contained literally in it.
+		to the standard math notation. Hence the $\forall$ and $\to$ characters
+		are contained in it literally.
 		
-		What's more, Agda does not distinguish tokens as operators or identifiers
+		What's more, Agda does not classify tokens as operators or identifiers
 		on a lexical basis; (almost) anything may be an infix or mixfix operator,
 		if properly declared\footnote{Discussed in \Fref{sec:fixity}.} and ordinary
 		identifiers may consist purely of special characters.
@@ -384,14 +384,14 @@ and pushes it onto a stack having any shape \ident{s}, creating a new
 stack of the shape \ident{u :: s}.
 
 The instruction \ident{ADD} represents popping two natural numbers from the
-stack of any shape with two \ident{nat}s on top of it, (hence
-\ident{nat :: nat :: s})
+stack of any shape with two \ident{nat}s on top of it, hence
+\ident{nat :: nat :: s},
 and subsequently pushing their sum onto it, resulting in the shape
 \ident{nat :: s}.
 
 \subsubsection{Code}
 
-Finally, code for the stack machine is a sequence of instructions, where
+Finally, code for the stack machine is a sequence of instructions where
 type indices of subsequent instructions match. For example, if one instruction
 in the sequence produces a stack of the shape \ident{nat :: nat :: s},
 we want the next instruction in the code sequence to accept this shape.
@@ -474,11 +474,11 @@ a stack of the desired shape.
 Second, in the case for \ident{ADD}, the types ensure that there are always two
 \ident{nat}s on top of the stack and we can safely pattern-match with the
 pattern \ident{x} \scons \ident{y} \scons \ident{st} -- because this match
-will always succeed (and no other patterns for the \ident{ADD} case are needed). 
+will always succeed and no other patterns for the \ident{ADD} case are needed. 
 
-Thus the above definition complies to the type signatures involved (relatively
-solid hints of correctness) and it is \emph{total} (esp. no pattern match failures),
-while compilers of non-dependently typed languages, like OCaml or Haskell,
+Thus the above definition complies to the type signatures involved, which is a relatively
+solid hint of correctness, and it is \emph{total}, especially no pattern match failures
+can occur. Despite this, compilers of non-dependently typed languages, like OCaml or Haskell,
 would complain about non-exhaustive patterns here --- there is no way to tell them
 that, for example, we needn't deal with empty stacks when executing \ident{ADD}.
 
@@ -551,8 +551,8 @@ types correspond to their proofs, and type checking coincides with proof checkin
 as already mentioned in \Fref{sec:intro-certified-programming}.
 
 Agda ships with an interactive Emacs editor mode, which extends Agda to a~proof
-assistant and greatly helps writing both proofs and Agda code in general. A~(very) brief guide
-can be found on the Agda wiki \cite{agda-mode}.
+assistant and greatly helps writing both proofs and Agda code in general. A~(rather brief) guide
+to the Emacs \ident{agda-mode} can be found on the Agda wiki \cite{agda-mode}.
 
 \subsubsection{Propositional equality}
 
@@ -602,7 +602,7 @@ identity of normal forms, which is indicated by \ident{refl}.
 
 \subsubsection{Distributivity lemma}
 
-The other lemma that we will need says that execution of code distributes over
+The other lemma we will need says that execution of code distributes over
 concatenation of code. In other words, executing the code \ident{c $\lhd\!\lhd$
 d} has the same effect as first executing \ident{c} and then executing
 \ident{d} on the resulting stack.
@@ -649,10 +649,10 @@ gradually rewrite the left-hand term to the right-hand term of the desired
 equality.
 
 The first proof is just comparison of normal forms, as indicated by
-\ident{refl}. In this step we just unfold the definition of \ident{execCode},
+\ident{refl}. In this step, we just unfold the definition of \ident{execCode},
 immediately obtaining the next term.
 
-The second proof uses \ident{compile-distr} recursively as an induction
+The second proof uses \ident{compile-distr} recursively as the induction
 hypothesis to break the execution of concatenated code into two stages: first
 executing \ident{is}, then executing \ident{d}.
 
@@ -679,7 +679,7 @@ to the single proof itself.}
 \end{code}
 
 \noindent However, often human readability is more desirable than terseness of
-the code and the equational proof may be more appropriate.
+the code and in such cases, the equational proof may be more appropriate.
 
 \subsubsection{Main correctness theorem}
 
