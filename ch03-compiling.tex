@@ -1,16 +1,29 @@
 \chapter{Compiling exceptions totally correctly}
 \label{chap:execution}
 
-\todo{Blah blah about differences between FP and total FP, substantiate the
-title of the chapter}
+This chapter discusses how the simple language introduced in Chapter \ref{chap:dependent-types}
+can be extended with exceptions.
 
-The basic approach to compiling exceptions was shown in \cite{gmh:exceptions}.
-This article provides excellent insight and inspiration how such code can be written
-in a language such as Haskell.
-However, peculiarities of programming with dependent types will make us
-diverge a bit, in details at first, in parts of the design later.
+The title of the chapter correctly suggests that this chapter is loosely based on the paper by
+Hutton and Wright \cite{gmh:exceptions}, where the basic approach to compiling exceptions
+was shown.
+The paper provides excellent insight and inspiration how such code can be written
+in a language such as Haskell. However, specialties of programming with dependent types,
+especially termination concerns, will make us diverge in design a bit.
 
-\todo{Reword the above more accurately.}
+Furthermore, besides the code performing the actual compilation, we also
+provide its specification like we did in Chapter \ref{chap:dependent-types},
+including formal semantics of the high-level and low-level languages, and a statement of what
+it means for an implementation to be correct. We then provide a machine-checkable proof that our
+implementation is correct and follows this specification.
+
+Finally, being implemented in Agda, the specification is both formal and total%
+\footnote{A total specification covers all possible cases that may occur, that is,
+all type-correct cases. Note that this does not necessarily mean that the specification
+is broad; the same can be achieved by using strict type signatures to rule out the cases
+not sensible enough to be described by the specification, which is what
+we prefer in this work.}, which explains the
+``totally'' part of the title of this chapter.
 
 \section{Compiling exceptions, after Hutton \& Wright}
 
