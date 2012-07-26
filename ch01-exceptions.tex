@@ -40,7 +40,9 @@ try-block that are guaranteed to be executed after the try-block, whether an exc
 has been thrown or not. Because of this property, finally-blocks are usually used to clean up
 resources. In this thesis, we will not model finally-blocks as these can be
 supplemented by an appropriate use of all-catching exception handlers and they are not
-too useful in a language without side effects, anyway.
+too useful in a language without side effects, anyway.\footnote{Finally-blocks
+may however quickly become useful and considerably non-trivial if combined with mutable state,
+interrupts, concurrency or other effects.}
 
 Often, there may be multiple handlers attached to a piece of code, each dealing with a different
 kind of error. The appropriate handler
@@ -185,10 +187,10 @@ sense that types are set up to enforce the specification; an incorrect program w
 not typecheck and subsequently compile.}.
 
 The programming languages used for these purposes are usually \emph{total} functional
-languages, meaning that all functions defined must be total. A total function terminates
+languages, meaning that all functions defined in them must be total. A total function terminates
 on every possible input, always yielding a well-formed value. The trouble with non-termination
-is that it makes the corresponding logic inconsistent -- and this is why totality is necessary
-(not sufficient) for languages to be used in trustworthy developments.
+is that it makes the corresponding logic inconsistent -- and this is why totality is a necessary
+(not sufficient) feature of languages to be used in trustworthy developments.
 
 Certification by a proof of correctness is fundamentally different from testing.
 A proof gives a \emph{guarantee}, based on the source code of the program in question,
@@ -200,7 +202,7 @@ and provides just a good \emph{chance} that if no defects are found, the program
 \subsection{Certified compilers}
 
 However, even when a program is certified, it does not exist in a vacuum. Leroy \cite{leroy09}
-emphasizes that the program
+emphasizes that a program
 itself is just a text -- but correctness of the program is assessed according to some specification,
 the program needs to be turned into some low-level representation by a compiler and then it
 needs to be executed on a machine in order to produce results. Hence, if the specification,
