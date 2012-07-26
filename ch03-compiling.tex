@@ -934,8 +934,8 @@ of code, indicating that a~handler can be found at the appropriate
 \ident{UNMARK}.
 
 \begin{code}
-  infixr 50 _\scons\_
-  infixr 50 \void\sconsh\_
+  infixr 5 _\scons\_
+  infixr 5 \void\sconsh\_
   data Stack : Shape -> Set where
     snil : Stack []
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
@@ -1181,7 +1181,7 @@ the stack, which leads to addition of another item constructor:
 purpose is to keep the stack well-typed during skipping. The resulting stack type
 now changes to:
 \begin{code}
-  infixr 50 _\scons\_ han\scons\_ skp\scons\_
+  infixr 5 _\scons\_ han\scons\_ skp\scons\_
   data Stack : Set where
     snil : Stack []
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
