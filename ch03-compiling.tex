@@ -541,9 +541,6 @@ returns the new state. Since we don't include the ``instruction pointer'' in
 the state, there is no way for the instructions to cause jumps in the code in
 this setup without adding the special states or changing how execInstr works.
 
-\todo{Not worse than GMH because they don't jump to addresses when looking for
-the handler either; they even use implicit stacks.}
-
 \subsection{Implementation}
 
 The normal mode of operation contains simply the stack. However, the exceptional state
@@ -813,13 +810,12 @@ surprises, it is tedious and inelegant.
 Second, we could exploit a deeper insight in how our high-level and low-level
 languages are connected and define an intermediate data structure that would
 facilitate showing correspondence between the two.%
-\footnote{In combination with this approach, the Bove-Capretta method can be used to
-extract termination proof obligations from the code, in order to separate the
-informative part and the termination proof, neither cluttering code with
+\footnote{In combination with this approach, the Bove-Capretta method
+\cite{bove-capretta} can be used to
+extract termination proof obligations from the code. This way, the
+termination proof can be separated from the informative part, neither cluttering code with
 proofs, nor proofs with too much information.} Such a connection would probably
 be useful in proving correctness of the compiler, too.
-
-\todo{Insert a reference to the Bove-Capretta paper wherever it appears.}
 
 For example, note that any \emph{guarded expression} is
 ``transactional'', in the sense that if it fails, all traces of its execution
@@ -833,8 +829,6 @@ However, while it looks promising and the transformation of code to the
 ``forking'' data structure is not too complicated, the author has not been able
 to prove termination using this approach. This might be an interesting direction
 for further research.
-
-\todo{Generalized handler frames, maybe?}
 
 Third, we can try hard and make the recursion structural. As already hinted,
 this is the approach we prefer to take in this thesis and we will develop it
@@ -880,8 +874,6 @@ Fifth, we still keep pushing blobs of code on the stack so we haven't improved
 this aspect yet -- but we are going to as well, in Section \ref{sec:linearized-code}.
 
 \subsection{Remarks}
-
-\todo{Move this to the high-level language definition?}
 
 It is worth noting that the expression \ident{Throw} is indexed as an expression
 that yields a value of \emph{any} type, and the instruction \ident{THROW} is indexed
@@ -1369,7 +1361,7 @@ case analysis get several new clauses dealing with the new handler-skipping
 machine state -- and that's all.
 
 The detailed proof can be found in the accompanying code.\\
-\todo{Add a reference to the Agda development.}
+\todo{Add a reference to the source code.}
 
 \section{Adding types and binary operators}
 
