@@ -11,11 +11,23 @@ The paper provides excellent insight and inspiration how such code can be writte
 in a language such as Haskell. However, specialties of programming with dependent types,
 especially termination concerns, will make us diverge in design a bit.
 
+\section{Compiling exceptions, after Hutton \& Wright}
+
+The approach by Hutton and Wright was
+later formalized by Tobias Nipkow \cite{nipkow} in Isabelle, an interactive
+theorem prover/proof assistant, strictly adhering to the paper by Hutton and Wright;
+even using the same numbering of lemmas.
+
+In contrast with the original paper and Tobias Nipkow's formalization thereof,
+our aim is to create a dependently typed program, which means we don't want to
+\emph{copy} the Haskell code as is and prove it correct; instead, we will
+\emph{adapt} it for the dependently typed setting and see how it works out.
+
 Furthermore, besides the code performing the actual compilation, we also
 provide its specification like we did in Chapter \ref{chap:dependent-types},
 including formal semantics of the high-level and low-level languages, and a statement of what
-it means for an implementation to be correct. We then provide a machine-checkable proof that our
-implementation is correct and follows this specification.
+it means for an implementation to be correct. We then also provide a machine-checkable proof
+of correctness for our implementation.
 
 Finally, being implemented in Agda, the specification is both formal and total%
 \footnote{A total specification covers all possible cases that may occur, that is,
@@ -24,21 +36,6 @@ is broad; the same can be achieved by using strict type signatures to rule out t
 not sensible enough to be described by the specification, which is what
 we prefer in this work.}, which explains the
 ``totally'' part of the title of this chapter.
-
-\section{Compiling exceptions, after Hutton \& Wright}
-
-We will build upon our introductory example of the simple exceptionless
-language introduced in \Fref{sec:simple-language}.  Code in this section will
-be modeled after the paper \cite{gmh:exceptions} by Graham Hutton and Joel
-Wright.  The authors used Haskell in their development.  This approach was
-later formalized by Tobias Nipkow in \cite{nipkow} in Isabelle, an interactive
-theorem prover/proof assistant, in exactly the same way; the development even
-uses the same lemmas and their numbering as the paper.
-
-In contrast with the original paper and Tobias Nipkow's formalization thereof,
-our aim is to create a dependently typed program, which means we don't want to
-\emph{copy} the Haskell code as is and prove it correct; instead, we will
-\emph{adapt} it for the dependently typed setting and see how it works out.
 
 \subsection{High-level language}
 
@@ -117,8 +114,9 @@ never yields a value and always throws; and also case for catch-expressions: if
 no exception gets thrown in the value, the whole catch-expression is equivalent
 to the regular value.  Otherwise, it is equivalent to the handler
 value.\footnote{Especially, if both values throw exceptions, the
-catch-expression propagates the exception thrown in the handler.}
-\footnote{Hence, this constructor is similar to the combinator \ident{mplus} in
+catch-expression propagates the exception thrown in the handler.
+
+Hence, this constructor is similar to the combinator \ident{mplus} in
 Haskell, which combines two possibly failing computations in exactly the same
 way.}
 
@@ -147,8 +145,8 @@ What about our virtual stack machine and its low-level language of
 instructions? What features and instructions do we need to add to make the
 machine capable of computing with exceptions?
 
-In \cite{gmh:exceptions}, Hutton and Wright give a description of how this can
-be done. Let us extend the machine along the lines drawn by this paper and see
+Hutton and Wright give a description of how this can be done \cite{gmh:exceptions}.
+Let us extend the machine along the lines drawn by this paper and see
 how we can adapt their solution to total functional programming with dependent
 types, having the goals from the Introduction (page~\pageref{objectives}) in
 mind.
@@ -480,11 +478,8 @@ be nested arbitrarily.
 Hence, handler frames is what corresponds to catch-expressions on the operational
 side of the matter.
 
-\todo{Extended handler frames. Generalize for any expression. Exploitable for proving?
-Is there some yet undiscovered direct 1:1 correspondence that would trivialize proofs?
-C++ has a superhandler that aborts if an uncaught exception occurs.}
-
 \subsubsection{Stack unwinding}
+
 Now that handler frames are defined, we can describe exception handling
 by stack unwinding quite concisely: abandon the innermost handler frame\footnote{%
 Note that this involves discarding stack items but also skipping all instructions
