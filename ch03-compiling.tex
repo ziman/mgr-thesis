@@ -32,7 +32,7 @@ of correctness for our implementation.
 Finally, being implemented in Agda, the specification is both formal and total%
 \footnote{A total specification covers all possible cases that may occur, that is,
 all type-correct cases. Note that this does not necessarily mean that the specification
-is broad; the same can be achieved by using strict type signatures to rule out the cases
+is broad; the same can be achieved by using tight type signatures to rule out the cases
 not sensible enough to be described by the specification, which is what
 we prefer in this work.}, which explains the
 ``totally'' part of the title of this chapter.
@@ -127,6 +127,19 @@ unlike its counterparts in most programming languages. In this thesis, we will
 worry only about whether an exception has been thrown or not, not about its
 particular value.
 
+It is worth noting that the expression \ident{Throw} is indexed as an expression
+that yields a value of \emph{any} type, and the instruction \ident{THROW} is indexed
+as if it pushed a value of any type on the stack -- without actually having a value
+of that type (which would be of course impossible if it was the empty type).
+
+This resembles exceptions in typed functional languages; for example the function
+\ident{throw} in Haskell:
+\begin{code}
+  throw :: Exception e => e -> a
+\end{code}
+The function \ident{throw} can ``promise'' to yield a value of any type because,
+in fact, it never returns. In a way, it behaves as \emph{bottom}.
+
 Also, in most programming languages, exception handlers can inspect the
 exceptions being handled and return different values depending on some
 attributes of the exception. In our language, it would be pointless to do that
@@ -199,7 +212,7 @@ code must be executable on a simple stack machine (Introduction, page~\pageref{o
 
 Next, Hutton and Wright introduce three new instructions of the virtual machine:
 \ident{MARK}, \ident{UNMARK}, and \ident{THROW}. In our code, this change
-reflects in extending the \ident{Instr} type, which must now reside in a
+is reflected in extending the \ident{Instr} type, which must now reside in a
 \ident{mutual} block with \ident{Code}:
 
 \label{sec:gmh-ham-instr}\begin{code}
@@ -266,7 +279,7 @@ the following components:
 Then, execution is fully specified if for each instruction, we define the
 effect of that instruction on the machine state.
 
-For now, we will leave the position in the code implicit and we will not count
+We will leave the position in the code implicit and we will not count
 it as a component of the state. The motivation for doing so is the ability to
 recurse structurally over code, which we would lose if we permitted any
 manipulation with code (beyond un-consing done by the execution function).
@@ -276,7 +289,7 @@ manipulation with code (beyond un-consing done by the execution function).
 One approach\footnote{This approach is not considered by Hutton and Wright at all;
 we include it for illustration as the most na\"{i}ve strategy, whose disadvantages
 will be gradually solved as we will be switching to better and better approaches.}
-to execution not requiring any additional flags and variables
+to execution, not requiring any additional flags and variables,
 would be extending the stack type with a new constructor; let us call it
 \ident{\void\scons\!\!\_}.
 \begin{code}
@@ -343,9 +356,6 @@ Third, this approach is also inefficient. Defining how single instructions
 handle exceptions means that these instructions are going to be executed.
 However, we can do better: simply skip the appropriate number of instructions
 -- and real machines are good at skipping efficiently.
-
-\todo{We won't do jumps but we will use execution modes that can be obviously
-(tm) replaced by jumps.}
 
 Fourth, the Agda termination checker rejects the exception-handling case for
 \ident{UNMARK} in the function \ident{execInstr}. Recursion isn't structural
@@ -475,7 +485,7 @@ the denotation of the guarded expression.
 
 Of course, handler frames may be nested since catch-expressions may also
 be nested arbitrarily.
-Hence, handler frames is what corresponds to catch-expressions on the operational
+Hence, handler frames are what corresponds to catch-expressions on the operational
 side of the matter.
 
 \subsubsection{Stack unwinding}
@@ -559,7 +569,11 @@ it has. The shape of the stack is sufficient to determine this.
   unwindHnd []           _       = nothing
 \end{code}
 
-\noindent We also need to know what shape the unwound stack will have.
+\noindent We also need to know what shape the unwound stack will have.%
+\footnote{The argument order in these functions might be a bit unusual. The reason
+why the first argument is a \ident{Shape}, not the number, is that we need to
+pattern-match on the shape first so that applications of thes functions reduce
+smoothly in our type signatures.}
 \begin{code}
   -- Unwind the shape up to just below the &\cident{n}&\-th top\-most handler.
   -- Return the empty shape if there is no such handler.
@@ -609,12 +623,10 @@ two (explicit) parameters.
 		handler frame, we might enter additional handler frames nested within. Hence
 		we need to keep track of the depth of nesting.
 		
-		By the way, this is the point where Hutton \& Wright
-		\cite[pg.~7]{gmh:exceptions} use an implicit stack.  In their
+		For this purpose, Hutton \& Wright
+		\cite[pg.~7]{gmh:exceptions} use an implicit stack:  in their
 		function \ident{skip}, the implicit call stack is used to count
-		the nesting levels; and this is perfectly okay when the
-		skipping function is mostly symbolic, isolated, and obvious.
-		
+		the nesting levels.
 		However, our machine does not have a call stack usable for this
 		purpose and we perform instruction skipping by switching to a
 		different machine state so we need to make this counter
@@ -817,10 +829,11 @@ termination proof can be separated from the informative part, neither cluttering
 proofs, nor proofs with too much information.} Such a connection would probably
 be useful in proving correctness of the compiler, too.
 
-For example, note that any \emph{guarded expression} is
-``transactional'', in the sense that if it fails, all traces of its execution
+For example, note that since our high-level language is pure,
+\emph{guarded expressions} are
+``transactional'', in the sense that if execution of any one fails, all traces
 are cleared up and the handler code is run instead. When considering just
-effects of the code, it appears that in every handler frame, either the regular
+effect of the code, it appears that in every handler frame, either the regular
 code is (completely) executed or the handler code is (completely) executed,
 which creates a ''fork'' of possible execution scenarios at the entrypoint of
 each handler frame -- and this can be modeled using a suitable data structure.
@@ -868,27 +881,14 @@ stop skipping.
 Fourth, unfortunately, our recursion is still not structural and the
 termination checker rejects the recursive call to \ident{execCode} in the
 handler-running clause of \ident{execInstr}. However, we are going to address
-this shortcoming soon in the Section \ref{sec:handlers-at-unmark}.
+this shortcoming soon in Section~\ref{sec:handlers-at-unmark}.
 
 Fifth, we still keep pushing blobs of code on the stack so we haven't improved
 this aspect yet -- but we are going to as well, in Section \ref{sec:linearized-code}.
 
-\subsection{Remarks}
+\subsection{Correctness}
 
-It is worth noting that the expression \ident{Throw} is indexed as an expression
-that yields a value of \emph{any} type, and the instruction \ident{THROW} is indexed
-as if it pushed a value of any type on the stack -- without actually having a value
-of that type (which would be of course impossible if it was the empty type).
-
-This resembles exceptions in typed functional languages; for example the function
-\ident{throw} in Haskell:
-\begin{code}
-  throw :: Exception e => e -> a
-\end{code}
-The function \ident{throw} can ``promise'' to yield a value of any type because,
-in fact, it never returns. In a way, it behaves as \emph{bottom}.
-
-Finally, we don't prove correctness of this implementation because we don't
+We don't prove correctness of this implementation because we don't
 have a proof of termination and since we are going to fix that soon, let us
 leave it that way.
 
@@ -967,14 +967,6 @@ with a nesting counter in the exception-handling case).
     \x[_,_] : (n : Nat&\!&) -> Stack (unwindShape s n) -> State s
 \end{code}
 
-\todo{blah}
-
-\todo{blah}
-
-\todo{blah}
-
-\todo{blah}
-
 \subsection{Execution}
 
 Execution is simplified as well. Suddenly, recursion is naturally completely
@@ -1028,7 +1020,9 @@ correctness. We do this by induction on the given expression, in a way
 very similar to how the proof was done in \Fref{sec:cor-correctness}, using
 equational reasoning.
 
-\todo{Insert a reference to the source code.} The complete proof can be found
+\todo{Insert a reference to the source code.}
+
+The complete proof can be found
 in the attached code; here we will just outline the main theorem and the
 accompanying lemmas.
 
@@ -1061,7 +1055,7 @@ of handling an exception.
 \noindent The use of this operator makes our theorems quite neat and concise.
 
 As already mentioned, we prove this correctness theorem by induction on the
-expression \ident{e}
+expression \ident{e}, using the following three lemmas.
 
 The first lemma we use is the distributivity lemma; again, practically
 identical to that in \Fref{sec:cor-compile-distr}.
@@ -1146,7 +1140,7 @@ the \emph{result} is more logical and intuitive:
 	& \textit{expression code}
 	& \ident{UNMARK} + \textit{handler}
 	& \ldots \\
-    \hline
+    \midrule
     \ldots
     	& \ident{MARK}
 	& \textit{expression code}
@@ -1366,7 +1360,8 @@ The detailed proof can be found in the accompanying code.\\
 \section{Adding types and binary operators}
 
 To demonstrate that having done all this work, adding new types and operators
-is trivial, we extend our high-level language with the Boolean type, along with
+is easy and straightforward, we extend our high-level language with the Boolean type,
+along with
 two new binary operators: the \ident{Leq} operator that compares natural
 numbers, and the \ident{And} operator calculating conjunction of two Boolean
 values.
@@ -1403,7 +1398,7 @@ covering the case for the newly introduced \ident{bool} constructor.
   el : U -> Set
   el nat = Nat
   el bool = Bool
-\end{code}
+\end{code}\label{sec:lin-el}
 
 \subsubsection{Expressions}
 
@@ -1431,20 +1426,20 @@ First, we add two auxiliary functions operating on Agda types, implementing
 the action of the two new operators.
 
 \begin{code}
-  infixl 50 _\and\_
+  infixl 5 _\and\_
   _\and\_ : Bool -> Bool -> Bool
   false \and b = false
   true \and b = b
 \end{code}
 \begin{code}
-  infix 50 _\leq\_
+  infix 5 _\leq\_
   _\leq\_ : Nat -> Nat -> Bool
   zero \leq n = true
   suc m \leq suc n = m \leq n
   _ \leq _ = false
 \end{code}
 
-\noindent Now we can use these functions as denotation of the new operators.
+\noindent Now we can use these functions as the denotation of the new operators.
 
 \begin{code}
   denOp : forall {u v w} -> Op u v w -> el u -> el v -> el w
