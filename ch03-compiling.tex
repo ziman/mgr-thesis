@@ -129,8 +129,8 @@ particular value.
 
 It is worth noting that the expression \ident{Throw} is indexed as an expression
 that yields a value of \emph{any} type, and the instruction \ident{THROW} is indexed
-as if it pushed a value of any type on the stack -- without actually having a value
-of that type (which would be of course impossible if it was the empty type).
+as if it pushed a~value of any type on the stack -- without actually having a value
+of that type (which would of course be impossible if it was the empty type).
 
 This resembles exceptions in typed functional languages; for example the function
 \ident{throw} in Haskell:
@@ -930,7 +930,7 @@ preserve the overall principle of execution so we have to push \emph{something}
 to keep the stack well-typed.  Hence, we will push a placeholder\footnote{ Note
 that this placeholder is different from the one used in the placeholder
 execution method, where we pushed bogus \emph{values}, not handlers.} instead
-of code, indicating that a handler can be found at the appropriate
+of code, indicating that a~handler can be found at the appropriate
 \ident{UNMARK}.
 
 \begin{code}

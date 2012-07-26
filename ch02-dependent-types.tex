@@ -21,8 +21,8 @@ tutorial by Norell \cite{norell08} or any other tutorial from the Agda wiki \cit
 \section{A simple exceptionless language}
 \label{sec:simple-language}
 
-As a brief Agda crash-course, we will implement a very simple compiler for a
-language of arithmetical expressions to instructions for a stack machine.
+As a brief Agda crash-course, we will implement a very simple compiler for
+a~language of arithmetical expressions to instructions for a stack machine.
 
 Being a simple and instructive task, this has been done many times in a variety
 of programming languages in other papers, publications, blog posts, et cetera;
@@ -215,7 +215,7 @@ the expression in the modelled language.
 		are contained in it literally.
 		
 		What's more, Agda does not classify tokens as operators or identifiers
-		on a lexical basis; (almost) anything may be an infix or mixfix operator,
+		on a~lexical basis; (almost) anything may be an infix or mixfix operator,
 		if properly declared\footnote{Discussed in \Fref{sec:fixity}.} and ordinary
 		identifiers may consist purely of special characters.
 		This also means that operators must be surrounded by whitespace: for example,
@@ -477,7 +477,7 @@ Second, in the case for \ident{ADD}, the types ensure that there are always two
 pattern \ident{x} \scons \ident{y} \scons \ident{st} -- because this match
 will always succeed and no other patterns for the \ident{ADD} case are needed. 
 
-Thus the above definition complies to the type signatures involved, which is a relatively
+Thus the above definition complies to the type signatures involved, which is a~relatively
 solid hint of correctness, and it is \emph{total}, especially no pattern match failures
 can occur. Despite this, compilers of non-dependently typed languages, like OCaml or Haskell,
 would complain about non-exhaustive patterns here --- there is no way to tell them
@@ -568,7 +568,7 @@ type family.
 
 \noindent The definition implies that all nonempty members (inhabited by \ident{refl}) of this
 family must have the index identical to the parameter.
-Therefore conversely, if we have a \ident{refl : a $\equiv$ b}, it must be the case that \ident{a}
+Therefore conversely, if we have a~\ident{refl : a $\equiv$ b}, it must be the case that \ident{a}
 is identical to \ident{b}.
 
 This identity is taken into account by Agda when doing pattern matching on the constructor
@@ -793,7 +793,7 @@ One way to do it is to define an auxiliary function and compose it with the func
 Sometimes however, especially with long and complicated type signatures,
 defining auxiliary functions gets quite inconvenient and these functions,
 unlike \ident{safeHead} are most probably very specific for one purpose only
-and not reusable. After all, a Haskell programmer might write:
+and not reusable. After all,~a Haskell programmer might write:
 \begin{code}
   first :: (a -> Bool) -> [a] -> Maybe a
   first p xs = case filter p xs of
