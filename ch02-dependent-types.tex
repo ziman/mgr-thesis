@@ -769,16 +769,17 @@ on top of the stack.
 
 \subsubsection{``With'' patterns}
 
-There is one syntactic feature of Agda left that we have not used yet but that will
+There is one syntactic feature of Agda left that we have not covered yet but that will
 occur in the following chapter: the \emph{with-patterns} \cite[Section~2.6]{norell08}.
 
 Suppose we wanted to write a function named ``\ident{first}'' that,
 given a (decidable) predicate and a list, returns
-the first element in the list satisfying the given predicate. One way to do it is
-to use the library function \ident{filter} that, given a predicate and
+the first element in the list satisfying the given predicate. We don't want to
+do it manually; instead, we will use the library function \ident{filter} that,
+given a predicate and
 a list, returns the list of \emph{all} elements satisfying the given predicate.
 
-One way is to define an auxiliary function and compose it with the function
+One way to do it is to define an auxiliary function and compose it with the function
 \ident{filter}:
 \begin{code}
   safeHead : {a : Set} -> List a -> Maybe a
