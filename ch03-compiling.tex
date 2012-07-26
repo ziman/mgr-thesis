@@ -1,4 +1,5 @@
 \chapter{Compiling exceptions totally correctly}
+\label{chap:execution}
 
 \todo{Blah blah about differences between FP and total FP, substantiate the
 title of the chapter}
@@ -62,6 +63,7 @@ add the \ident{Throw} expression and the \ident{Catch} construct.
 \end{itemize}
 
 \subsubsection{Semantics of expressions}
+\label{sec:expression-semantics}
 
 The expression type has just been extended with two new constructors and we
 need to formalize what the meaning of the two expression variants actually is.
@@ -126,6 +128,7 @@ This concludes the definition of our high-level language and the rest of this th
 will be mostly devoted to how to make it work operationally.
 
 \subsection{Virtual machine}
+\label{sec:own-execution-gmh}
 
 What about our virtual stack machine and its low-level language of
 instructions? What features and instructions do we need to add to make the
@@ -1299,6 +1302,7 @@ differing only in how the resulting stack shape is calculated from the current
 one.
 
 \subsubsection{State transitions}
+\label{sec:lin-instr-semantics}
 
 The core of execution is given by the function \ident{execInstr} that describes
 effects of single instructions on the state of the machine.
@@ -1532,6 +1536,7 @@ two new instructions. The remaining two pairs are just obligatory no-ops,
 consistent with the skipping interpretation of these two modes of execution.
 
 \subsection{Correctness}
+\label{sec:lin-correctness}
 
 The largest chunk of code gets added to the proof of correctness, namely the
 operator lemma called \ident{lemma-op}. In this function, 12 cases per binary
