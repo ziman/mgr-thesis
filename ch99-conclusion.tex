@@ -69,7 +69,17 @@ Their compiler does not have exceptions but it features numeric and Boolean type
 conditions from the beginning. Their development also makes heavy use of dependent typing,
 which makes their approach very close to ours in this respect.
 
-\todo{Discuss the paper by Chlipala.}
+Chlipala presents a ``verified compiler for an impure functional language'' \cite{chlipala10},
+implemented in Coq, trying to assess what ways might be viable to write a real-world certified
+compiler. Besides other features, the impure functional language also includes
+exceptions. The compiler is quite elaborate and consists of multiple stages, including
+an optimization stage. The development makes extensive use of the Coq
+tactic language to automate proofs, and PHOAS%
+\footnote{Parametric higher-order abstract syntax \cite{chlipala08}.} to deal with binders,
+in the effort to save as much work as possible when both implementing and extending
+the compiler. The paper does not discuss execution
+of the resulting code on a virtual machine and does not deal with termination of the
+execution function.
 
 \todo{CompCert and the Leroy's paper.}
 
