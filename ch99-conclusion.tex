@@ -60,9 +60,9 @@ of our algorithm to real-world implementations easier and more obvious.
 \section{Related work}
 
 Besides the paper about \emph{verification} of a compiler of exceptions
-\cite{gmh:exceptions}, Hutton and Wright also published a paper that \emph{calculates}
-a virtual machine from the same high-level language with exceptions via defunctionalization
-\cite{gmh:exceptional-machine}.
+\cite{gmh:exceptions}, later formalized by Nipkow \cite{nipkow}, Hutton and Wright also published a
+paper that \emph{calculates} a virtual machine from the same high-level language with exceptions
+via defunctionalization \cite{gmh:exceptional-machine}.
 
 McKinna and Wright created a certified compiler of expressions \cite{epigram-compiler} in Epigram.
 Their compiler does not have exceptions but it features numeric and Boolean types and
@@ -77,11 +77,14 @@ an optimization stage. The development makes extensive use of the Coq
 tactic language to automate proofs, and PHOAS%
 \footnote{Parametric higher-order abstract syntax \cite{chlipala08}.} to deal with binders,
 in the effort to save as much work as possible when both implementing and extending
-the compiler. The paper does not discuss execution
-of the resulting code on a virtual machine and does not deal with termination of the
-execution function.
+the compiler. The paper does not discuss execution of the resulting code on a virtual machine
+and does not deal with termination of the execution function.
 
-\todo{CompCert and the Leroy's paper.}
+Leroy presents a verified realistic compiler of (a substantial subset of) the C programming language,
+named CompCert \cite{leroy09}, also written and verified in Coq. This is a full-featured real-world
+compiler of a mainstream procedural language to PowerPC machine code, dealing with advanced topics
+like optimizations and register allocation in a completely certified way, while keeping
+the performance of the emitted code on par with that of the mainstream C compilers.
 
 \begin{comment}
 
