@@ -1,16 +1,11 @@
 \chapter{Discussion}
 
-Finally, we converged to a solution that meets our objectives. While we have diverged from the
+Finally, we converged to a solution that meets our objectives: a certified compiler for a
+language with exceptions, along with a tail-recursive executable interpreter of simple
+low-level code. While we have diverged from the
 paper by Hutton and Wright \cite{gmh:exceptions} in low-level execution-related matters
 by using different machine modes for instruction skipping instead of jumping, the overall
-direction of our development roughly matches that of the paper.
-
-\todo{Add real-world counterparts, like saying "here the machine would use a label and then just jump to it".}
-
-\todo{Post-hoc: in ``Further work'', describe how mode switches can be replaced by jumps.}
-
-\todo{Goal: execution should be tail-recursive}
-
+direction of our development happens to match that of the paper.
 
 \section{Further work}
 
@@ -33,15 +28,16 @@ yielding \emph{expression frames}: any expression, not only instances of the con
 A suitable model of expression frames could be another intermediate structure that may
 be useful in proving termination and correctness.
 
-Structural recursion on the code sequence could be abandoned. Instead, a~decreasing measure
-could be used, which would enable arbitrary jumping within the code and execution on
+Instead of structural recursion on the code sequence, a~decreasing measure
+could be used. This would enable arbitrary jumping within the code and execution on
 the virtual machine could be modeled very closely to how real machines work.
 
 The high-level language could be extended by functions or lambdas. Besides higher expressivity
 of regular code, this would enable exception handlers to inspect exceptions and behave differently
 in different cases. This also means that it would make sense to throw values and the syntax
 of the throw-expressions would be extended to include the value to be thrown.
-Finally, once values are thrown, type-based selection of handlers could be implemented.
+Finally, once values are added to \ident{throw}, type-based selection of handlers could be
+implemented.
 
 On the other hand, the high-level language could be made to support just one type: numbers.
 This would bring some simplification to the Agda code -- stack shapes would be replaced by
@@ -54,10 +50,11 @@ In \Fref{sec:lin-correctness} we mention that the operator lemma in the proof of
 must contain as much as 12 (trivial) clauses per operator. A suitable factorization of the
 lemma into smaller functions might reduce this constant.
 
-The paper by Hutton and Wright \cite{gmh:exceptions} uses labels to mark locations in code
-that may be jumped to. In our structurally recursive model, we have no use for such labels since
-we cannot jump. Nevertheless,  it might be useful to add them and prove that jumping to them is
-equivalent with our mode-switching execution strategy since it would make translation
+Unfortunately, our structurally recursive model of execution cannot include jumps, which are an
+important part of functionality of real-world machines. The paper by Hutton and Wright
+\cite{gmh:exceptions} uses labels to mark locations in code that may be jumped to. Although
+we cannot jump, it might be useful to add labels and prove that jumping to them is
+equivalent with our mode-switching execution strategy. This would make translation
 of our algorithm to real-world implementations easier and more obvious.
 
 \section{Related work}
