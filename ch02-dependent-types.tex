@@ -101,7 +101,7 @@ declaration. A bit more elaborate example follows shortly in \Fref{sec:simple-ex
 
 We will also need an interpretation function that maps
 types of our simple language to Agda types so that we can use Agda values in
-the modeled language, talk about its denotational semantics etc.
+the modelled language, talk about its denotational semantics etc.
 
 Function declarations in Agda consist of a type declaration and a
 number of clauses describing the outcomes of the function depending on
@@ -197,7 +197,7 @@ to appear in type signatures. However, these expressions are proper \emph{types}
 Now we can define the expressions: literals and binary operators.
 Note that also this type family is indexed with elements of the type universe
 \ident{U} so that the Agda type of an expression also incorporates the type of
-the expression in the modeled language.
+the expression in the modelled language.
 
 \begin{code}
   data Exp : U -> Set where
@@ -531,7 +531,7 @@ two values from the stack as its operands and pushes the result back.
 
 \noindent Again, behind the scenes, Agda ensures that all types match and the
 code compiled by this function will not make the stack machine fail.\footnote{
-  To be fair, this is already a property of \ident{Code}, ,,inherited'' by the
+  To be fair, this is already a property of \ident{Code}, ``inherited'' by the
   function \ident{compile} via its return type.  However, it does constrain
 possible definitions of the function \ident{compile}.} For example, there is no
 way to have the function \ident{compile} output code where \ident{ADD} would
@@ -664,7 +664,7 @@ subterm to its definitional equivalent \ident{execCode c st}.
 \subsubsection{A shorter proof of distributivity}
 
 Since \ident{refl} is a certificate of identity of normal forms, by rewriting
-a term to a different form using \ident{refl} as the proof, the normal form of
+a term to a diferent form using \ident{refl} as the proof, the normal form of
 that term remains the same. As normal forms is what Agda compares when typechecking,
 we can omit the intermediate \ident{refl}-based rewrites, which leaves us
 with just one proof in the chain.\footnote{Since a chain consists of equality
@@ -759,7 +759,7 @@ to the form \ident{denExp operand \scons state}, which is equivalent. These
 two recursive applications are actually inductive hypotheses.
 
 \note{In a way, the two steps using \ident{exec-distr} and \ident{correctness}
-for each operand actually correspond to ,,accelerated execution'' of these
+for each operand actually correspond to ``accelerated execution'' of these
 pieces of code -- we do not execute the instructions; instead, we rely on the
 induction hypothesis to simultaneously remove the code corresponding to the
 operand and push its denotation onto the stack.}
