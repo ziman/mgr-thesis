@@ -5,6 +5,13 @@ paper by Hutton and Wright \cite{gmh:exceptions} in low-level execution-related 
 by using different machine modes for instruction skipping instead of jumping, the overall
 direction of our development roughly matches that of the paper.
 
+\todo{Add real-world counterparts, like saying "here the machine would use a label and then just jump to it".}
+
+\todo{Post-hoc: in ``Further work'', describe how mode switches can be replaced by jumps.}
+
+\todo{Goal: execution should be tail-recursive}
+
+
 \section{Further work}
 
 There are \emph{lots} of things in this development that could be improved and many alternatives
@@ -14,75 +21,88 @@ In \Fref{sec:forks}, we mentioned the transactionality of exceptions in pure cod
 linear code to this form of ``forks'' is not too hard -- although not trivial -- and this
 intermediate representation could provide a reasoning bridge between tree-structured expressions
 and linear code. The compiler could even emit this intermediate structure first,
-linearizing it later, which might facilitate proving the correspondence between ``forks''
+linearizing it later, which might facilitate proving the part of correspondence between ``forks''
 and linear code. Such an intermediate structure might then be useful in proving termination and
 correctness of the program.
 
+There are other models that could help proving the desired properties. In
+\Fref{sec:handler-frames}, we introduced the notion of handler frames that correspond to
+catch-expressions. However, this notion can be generalized to all other types of expressions,
+yielding \emph{expression frames}: any expression, not only instances of the constructor
+\ident{Catch} corresponds to a frame similar to the one in \Fref{fig:stack-frames}.
+A suitable model of expression frames could be another intermediate structure that may
+be useful in proving termination and correctness.
+
+Structural recursion on the code sequence could be abandoned. Instead, a~decreasing measure
+could be used, which would enable arbitrary jumping within the code and execution on
+the virtual machine could be modeled very closely to how real machines work.
+
+The high-level language could be extended by functions or lambdas. Besides higher expressivity
+of regular code, this would enable exception handlers to inspect exceptions and behave differently
+in different cases. This also means that it would make sense to throw values and the syntax
+of the throw-expressions would be extended to include the value to be thrown.
+Finally, once values are thrown, type-based selection of handlers could be implemented.
+
+On the other hand, the high-level language could be made to support just one type: numbers.
+This would bring some simplification to the Agda code -- stack shapes would be replaced by
+simple stack sizes -- and perhaps help resolve termination
+in the cases where we were unable to prove it. Usability of this approach depends on the
+requirements; if all that is needed are numbers, generalization to other data types makes
+the code unnecessarily complicated and this simplification would pay off.
+
+In \Fref{sec:lin-correctness} we mention that the operator lemma in the proof of correctness
+must contain as much as 12 (trivial) clauses per operator. A suitable factorization of the
+lemma into smaller functions might reduce this constant.
+
+The paper by Hutton and Wright \cite{gmh:exceptions} uses labels to mark locations in code
+that may be jumped to. In our structurally recursive model, we have no use for such labels since
+we cannot jump. Nevertheless,  it might be useful to add them and prove that jumping to them is
+equivalent with our mode-switching execution strategy since it would make translation
+of our algorithm to real-world implementations easier and more obvious.
+
 \section{Related work}
+
+\todo{GMH}
+
+\todo{NAD}
+
+\todo{Discuss the compiler written in Epigram (paper received by mail).}
+
+\todo{Discuss the paper by Chlipala.}
+
+\todo{CompCert and the Leroy's paper.}
+
+\section{Conclusions}
+
+\todo{It can be done blah blah}
+
+\begin{comment}
 
 Some further work.
 
 \todo{What we have achieved, how the objectives have been met.}
 
-\todo{Forks}
+%\todo{Hyperdependent code}
 
-\todo{Measure + GMH approach}
-
-\todo{Hyperdependent code}
-
-\todo{Lambdas}
-
-\todo{Labels}
-
-\todo{Statically typed exceptions}
-
-\todo{Peirce (statically \emph{bound} exceptions)}
-
-\todo{Well-founded recursion, completely machine-like code}
-
-\todo{Scrap types, use stack sizes}
+%\todo{Peirce (statically \emph{bound} exceptions)}
 
 \todo{How should the attached code be structured and referenced from the thesis? Insert references in all appropriate places.}
 
-\todo{Extended handler frames. Generalize for any expression. Exploitable for proving?
-Is there some yet undiscovered direct 1:1 correspondence that would trivialize proofs?
-C++ has a superhandler that aborts if an uncaught exception occurs.}
+%\todo{C++ has a superhandler that aborts if an uncaught exception occurs.}
 
 \todo{Mention Type Theory?}
-
-\todo{Insert a reference to the Bove-Capretta paper wherever it appears.}
 
 \todo{Add references to the source code.}
 
 \todo{Change ! to $\times$ and vice versa.}
 
-\todo{Snoc-code is not tail-recursive}
-
-\todo{$12$ clauses per binop in correctness lemma: factorize?}
-
 \todo{Add non-breaking spaces}
 
-\todo{Add real-world counterparts, like saying "here the machine would use a label and then just jump to it".}
-
-\todo{Post-hoc: in ``Further work'', describe how mode switches can be replaced by jumps.}
-
-\todo{Goal: execution should be tail-recursive}
-
-\todo{Finally, we converge to the solution by GMH, just from a different direction.}
-
 \todo{Spell-check}
-
-\todo{List prerequisites? haskell familiarity? in the introduction?}
-
-\todo{add extensibility as a goal?}
 
 \todo{Search for \texttt{\textbackslash def \textbackslash @textbottom\{\textbackslash vskip
 \textbackslash z@ \textbackslash@plus 14pt\}} in the headers and decrease those 14 pts to
 something sane when everything is done.}
-
-\todo{Operator precedence is $0$--$10$, not $0$--$100$.}
-
-\todo{Check quote ``consistency'' vs. ,,consistency''.}
 
 \todo{Consider wording: data type vs. type family. Simple or precise?}
 
@@ -90,12 +110,4 @@ something sane when everything is done.}
 
 \todo{Proper typography, capitalization, grammar in bibliography.}
 
-\todo{When will the new bridge be built? (Search for ``can be''.)}
-
-\todo{Discuss the compiler written in Epigram (paper received by mail).}
-
-\todo{Discuss the paper by Chlipala and compcert, perhaps.}
-
-\todo{Mention CompCert and the Leroy's paper.}
-
-\section{Conclusions}
+\end{comment}
