@@ -837,6 +837,7 @@ effect of the code, it appears that in every handler frame, either the regular
 code is (completely) executed or the handler code is (completely) executed,
 which creates a ''fork'' of possible execution scenarios at the entrypoint of
 each handler frame -- and this can be modeled using a suitable data structure.
+\label{sec:forks}
 
 However, while it looks promising and the transformation of code to the
 ``forking'' data structure is not too complicated, the author has not been able

@@ -1,13 +1,28 @@
 \chapter{Discussion}
-%\addcontentsline{toc}{chapter}{Conclusion}
 
-\todo{What we have achieved, how the objectives have been met.}
-
-\section{Related work}
+Finally, we converged to a solution that meets our objectives. While we have diverged from the
+paper by Hutton and Wright \cite{gmh:exceptions} in low-level execution-related matters
+by using different machine modes for instruction skipping instead of jumping, the overall
+direction of our development roughly matches that of the paper.
 
 \section{Further work}
 
+There are \emph{lots} of things in this development that could be improved and many alternatives
+to the design choices of ours that could be interesting to explore further.
+
+In \Fref{sec:forks}, we mentioned the transactionality of exceptions in pure code. Transforming
+linear code to this form of ``forks'' is not too hard -- although not trivial -- and this
+intermediate representation could provide a reasoning bridge between tree-structured expressions
+and linear code. The compiler could even emit this intermediate structure first,
+linearizing it later, which might facilitate proving the correspondence between ``forks''
+and linear code. Such an intermediate structure might then be useful in proving termination and
+correctness of the program.
+
+\section{Related work}
+
 Some further work.
+
+\todo{What we have achieved, how the objectives have been met.}
 
 \todo{Forks}
 
@@ -16,6 +31,8 @@ Some further work.
 \todo{Hyperdependent code}
 
 \todo{Lambdas}
+
+\todo{Labels}
 
 \todo{Statically typed exceptions}
 
