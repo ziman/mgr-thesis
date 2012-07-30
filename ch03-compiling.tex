@@ -196,7 +196,7 @@ that, when run, leaves a value of the type \ident{u} on the top of the stack.
 This naturally leads to the new type of stacks,
 \label{sec:gmh-ham-stack}\begin{code}
   data Stack : Shape -> Set where
-    snil : Stack []
+    snil : Stack \NIL
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
     _\sconsh\_ : forall {u s} -> Code s (Val u :: s) -> Stack s -> Stack (Han u :: s)
 \end{code}
@@ -294,7 +294,7 @@ would be extending the stack type with a new constructor; let us call it
 \ident{\void\scons\!\!\_}.
 \begin{code}
   data Stack : Shape -> Set where
-    snil : Stack []
+    snil : Stack \NIL
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
     _\sconsh\_ : forall {u s} -> Code s (Val u :: s) -> Stack s -> Stack (Han u :: s)
     \void\scons\_ : forall {u s} -> Stack s -> Stack (Val u :: s)
@@ -567,7 +567,7 @@ it has. The shape of the stack is sufficient to determine this.
   unwindHnd (Han u :: xs) zero    = just u
   unwindHnd (Han _ :: xs) (suc n) = unwindHnd xs n
   unwindHnd (Val _ :: xs) n       = unwindHnd xs n
-  unwindHnd []           _       = nothing
+  unwindHnd \NIL           _       = nothing
 \end{code}
 
 \noindent We also need to know what shape the unwound stack will have.%
@@ -582,7 +582,7 @@ smoothly in our type signatures.}
   unwindShape (Han _ :: xs) zero    = xs
   unwindShape (Han _ :: xs) (suc n) = unwindShape xs n
   unwindShape (Val _ :: xs) n       = unwindShape xs n
-  unwindShape []           _       = []
+  unwindShape \NIL           _       = \NIL
 \end{code}\label{sec:ham-unwindShape}
 
 \noindent Now we can define the data types. First, the resumption point, which
@@ -939,7 +939,7 @@ of code, indicating that a~handler can be found at the appropriate
   infixr 5 _\scons\_
   infixr 5 \void\sconsh\_
   data Stack : Shape -> Set where
-    snil : Stack []
+    snil : Stack \NIL
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
     \void\sconsh\_ : forall {u s} -> Stack s -> Stack (Han u :: s)
 \end{code}
@@ -1185,7 +1185,7 @@ now changes to:
 \begin{code}
   infixr 5 _\scons\_ han\scons\_ skp\scons\_
   data Stack : Set where
-    snil : Stack []
+    snil : Stack \NIL
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
     han\scons\_ : forall {s} -> {u : U} -> Stack s -> Stack (Han u :: s)
     skp\scons\_ : forall {s} -> {u : U} -> Stack s -> Stack (Skp u :: s)
@@ -1261,7 +1261,7 @@ on top of which the top-most handler would be run if an exception occurred now.
   unwindShape (Han _ :: xs) (suc n) = unwindShape xs n
   unwindShape (Skp _ :: xs)  n      = unwindShape xs n
   unwindShape (Val _ :: xs)  n      = unwindShape xs n
-  unwindShape []            _      = []
+  unwindShape \NIL            _      = \NIL
 \end{code}
 
 \noindent In addition, we also define the function \ident{skipShape} that calculates
@@ -1274,7 +1274,7 @@ the top-most handler, if no exception occurs.
   skipShape (Skp u :: xs)  zero   = Val u :: xs
   skipShape (Skp _ :: xs) (suc n) = skipShape xs n
   skipShape (Val _ :: xs)  n      = skipShape xs n
-  skipShape []            _      = []
+  skipShape \NIL            _      = \NIL
 \end{code}
 
 \noindent Simply put, the function \ident{unwindShape} unwinds the shape just

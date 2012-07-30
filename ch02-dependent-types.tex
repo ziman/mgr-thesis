@@ -306,7 +306,7 @@ of stack shapes.
   -- open import Data.List
   infixr 5 _::_
   data List (a : Set) : Set where
-    [] : List a
+    \NIL : List a
     _::_ : a -> List a -> List a
 \end{code}
 \begin{code}
@@ -355,7 +355,7 @@ proceed to a definition of the type of stacks.
 \begin{code}
   infixr 5 _\scons\_
   data Stack : Shape -> Set where
-    snil : Stack []
+    snil : Stack \NIL
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (u :: s)
 \end{code}
 The literal \ident{snil} represents the empty stack; new values are
@@ -784,7 +784,7 @@ One way to do it is to define an auxiliary function and compose it with the func
 \ident{filter}:
 \begin{code}
   safeHead : {a : Set} -> List a -> Maybe a
-  safeHead [] = nothing
+  safeHead \NIL = nothing
   safeHead (x :: _) = just x
   
   first : {a : Set} -> (a -> Bool) -> List a -> Maybe a
@@ -797,7 +797,7 @@ and not reusable. After all,~a Haskell programmer might write:
 \begin{code}
   first :: (a -> Bool) -> [a] -> Maybe a
   first p xs = case filter p xs of
-    [] -> Nothing
+    \NIL -> Nothing
     y:ys -> Just y
 \end{code}
 Agda does not have case-expressions because pattern matching in Agda may yield
@@ -807,7 +807,7 @@ usage should be obvious from an example.
 \begin{code}
   first : {a : Set} -> (a -> Bool) -> List a -> Maybe a
   first p xs with filter p xs
-  first p xs | [] = nothing
+  first p xs | \NIL = nothing
   first p xs | y :: _ = just y
 \end{code}
 A function can have multiple with-patterns, separated with vertical bars in both the
@@ -819,7 +819,7 @@ clauses) but when it is, the part before the vertical bar can be replaced by an 
 \begin{code}
   first : {a : Set} -> (a -> Bool) -> List a -> Maybe a
   first p xs with filter p xs
-  \... | [] = nothing
+  \... | \NIL = nothing
   \... | y :: _ = just y
 \end{code}
 The ellipses are replaced by the patterns that precede the keyword \ident{with} in the first
