@@ -66,16 +66,16 @@ and \emph{do\_cleanup}.}
 %
 \begin{figure}
 \centering
-\begin{subfigure}[b]{0.46\textwidth}\begin{codepy}
+\begin{subfigure}[t]{0.46\textwidth}\begin{codepy}
 try:
 	perform_work()
 except IOError:
 	print "IO error caught"
 finally:
 	do_cleanup()
-\end{codepy}\caption{Python}\end{subfigure}
+\end{codepy}\vspace{2\baselineskip}\caption{Python}\end{subfigure}
 %
-\begin{subfigure}[b]{0.46\textwidth}\begin{codejava}
+\begin{subfigure}[t]{0.46\textwidth}\begin{codejava}
 try {
 	performWork();
 } catch (IOException e) {
@@ -86,7 +86,7 @@ try {
 }
 \end{codejava}\caption{Java}\end{subfigure}
 
-\begin{subfigure}[b]{0.46\textwidth}\begin{codehs}
+\begin{subfigure}[t]{0.46\textwidth}\begin{codehs}
 performWork
  `catch` (\(e :: IOException) ->
    putStrLn "IO error caught")
@@ -94,7 +94,7 @@ performWork
    doCleanup
 \end{codehs}\caption{Haskell}\end{subfigure}
 %
-\begin{subfigure}[b]{0.46\textwidth}\begin{codeml}
+\begin{subfigure}[t]{0.46\textwidth}\begin{codeml}
 finally do_cleanup (fun () ->
   try perform_work ()
   with IO_error ->
