@@ -177,6 +177,108 @@ different operators are typed can be seen in \Fref{sec:more-operators}.}
 
 \subsubsection{Inductive type families}
 
+To put the above type declaration in context from the theoretical point of view,
+we should briefly discuss various ways how types may be declared in Agda.
+One of the most elementary kind of a type declaration follows.
+\begin{code}
+  data Color : Set where
+    Red : Color
+    Orange : Color
+    Green : Color
+\end{code}
+This declaration declares a finite type inhabited by three values represented by 
+the three data constructors \ident{Red}, \ident{Orange}, and \ident{Green}. Such declarations
+are usually possible even in non-functional mainstream languages, often called \emph{enums}.
+
+In Agda however, data constructors may take arguments, as shown in the following snippet.
+\begin{code}
+  data Observation : Set where
+    LightsOn : Bool -> Measurement
+    PersonsPresent : \bN -> Measurement
+\end{code}
+Hence we get a type containing values like \ident{LightsOn false} or \ident{PersonsPresent 3},
+representing some observations a program might need to model.
+
+What's more, data types can be \emph{recursive}. Instead of the simplest recursive type,
+the natural numbers, let us declare the type of lists (of natural numbers).
+\begin{code}
+  data NList : Set where
+    \NIL : NList
+    _::_ : \bN -> NList -> NList
+\end{code}
+The above declaration says that a list of natural numbers is either the empty list \ident{[\,]}
+or a \emph{cons} (i.e. \ident{\_::\_}) of a natural number and a list of natural numbers.
+
+In Agda, the term \emph{inductive types} is used instead of the term \emph{recursive types}
+for the above kind of declarations\footnote{Agda also provides means to declare and use
+\emph{coinductive} data types.}. This refers to the totality of the language
+and finiteness of such data structures, which allows for simple inductive reasoning
+\cite[Sec.~3.1, Remark]{bove-dybjer}.
+
+In practice, the declaration of \ident{NList} is too restrictive because it allows to store
+only natural numbers in lists. We can lift this restriction by adding a \emph{parameter} to
+the data type.
+\begin{code}
+  data List (A : Set) : Set where
+    \NIL : List A
+    _::_ : A -> List A -> List A
+\end{code}
+The first line of the declaration says that if the type constructor \ident{List} is applied
+to some parameter \ident{A} being a type, the resulting expression \ident{List A} is itself
+a type. This resulting type represents the lists whose elements have the type \ident{A},
+so our original type of natural-number lists is written as \ident{List $\bN$}.
+
+Such types are called \emph{parameterized types} because they abstract out parts of the
+declaration as parameters that may be chosen arbitrarily. As already mentioned, in the case
+of lists, the single parameter \ident{A} denotes the type of the elements contained in a list.
+
+Now suppose we want to write a function \ident{head : $\forall$ \{A\} $\to$ List A $\to$ A}.
+We cannot do that, because the list might be empty and there is nothing to return in that case,
+and Agda does not allow partial functions. We should probably make the function accept only
+non-empty lists.
+
+For that purpose, we need to extend our parameterized type of lists further into
+a~\emph{type family} by adding another argument to the type constructor \ident{List}.
+The newly added argument will denote the length of the list.
+\begin{code}
+  data Vec (A : Set) : Nat -> Set where
+    \NIL : Vec A zero
+    _::_ : forall {n} -> A -> Vec A n -> Vec A (1 + n)
+\end{code}
+The above code says that the constructor \ident{[\,]} constructs a list of any given type
+with zero length; the constructor \ident{\_::\_}, for any (implicit) length \ident{n},
+takes an element of the type \ident{A} and an appropriately typed list of length \ident{n},
+yielding a list whose length is \ident{1 + n}.
+
+Note several important differences of the newly added \emph{index} to the \emph{parameter}
+\ident{A}:
+\begin{itemize}
+
+	\item Parameters appear to the left of the semicolon in the declaration head
+		and they are named because their names stay in scope throughout the whole declaration.
+		Indices appear to the right of the semicolon and they are usually not named.
+		Even if they are, these names are not accessible in the body of the type declaration.
+
+	\item The parameter \ident{A} is bound in the declaration head and it is used
+		uniformly within the body of the declaration, whereas the index \ident{n}
+		in the constructor \ident{\_::\_} is defined locally only for that particular
+		constructor.
+		
+	\item In the above example, all data constructors must result in the type \ident{Vec A n}
+		for some value of \ident{n}. The way the declaration is written, there is no way to have
+		a~constructor construct a~value of the type \ident{Vec (Maybe A) n}.
+		
+	\item Recursive occurrences of a data type must use the same parameters.%
+		\footnote{In Agda, this is a bit complicated. Indices are \emph{usually} written
+			to the right of the semicolon in the declaration head. However, Agda allows
+			using different parameters in recursive occurrences of a data type in its
+			constructors.}
+		
+	\item given by user vs. given by constructors
+		
+\end{itemize}
+
+\begin{comment}
 Dependently typed languages with inductive types, like Agda, generally support inductive
 type families. An inductive type family is a collection of inductive types given by
 a common (generally $n$-ary) type constructor. Specific types from this family are then obtained
@@ -186,7 +288,11 @@ For example, the above type family given by the type constructor \ident{Op} is i
 by three values of the type \ident{U}. By providing such specific values \ident{u}, \ident{v},
 and \ident{w}, we instantiate the concrete type \ident{Op u v w} belonging to this type family.
 
-\todo{Wouter Swierstra July 31, 2012 10:52 AM: This paragraph is a little vague. Inductive type families are very different from parameterized types (such as lists or trees). This isn't clear from the text as it stands. Perhaps explain a bit about how pattern matching works, or the difference between GADTs and regular data types. I'm sure some of the Agda tutorials have some text you can use to word this a bit more precisely.}
+Superficially, type families might resemble parameterized types, as found in other functional
+languages such as Haskell or OCaml: in both cases, types are constructed by saturating a type
+constructor.
+
+\todo{Wouter Swierstra July 31, 2012 10:52 AM: This paragraph is a little vague. Inductive type families are very different from parameterized types (such as lists or trees). This isn't clear from the text as it stands. Perhaps explain a bit about how pattern matching works, or the difference between GADTs and regular data types. I'm sure some of the Agda tutorials have some text you can use to word this a bit more precisely. \cite[Sec.~2.6 and 3.1]{bove-dybjer}}
 
 Some non-dependently typed languages, like Haskell, also provide a limited form of
 type families, indexed only by types, not arbitrary values. For example, in Haskell,
@@ -194,6 +300,7 @@ type families, indexed only by types, not arbitrary values. For example, in Hask
 ``\ident{VectorOfLength 3}'' may not.%
 \footnote{In Haskell, suitable type declarations allow expressions like \ident{S (S (S Z))}
 to appear in type signatures. However, these expressions are proper \emph{types}, not values.}
+\end{comment}
 
 \subsubsection{Expressions}
 
