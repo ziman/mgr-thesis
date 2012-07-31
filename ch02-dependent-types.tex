@@ -8,8 +8,8 @@ related topics.
 %\todo{...and also presents reasons why Agda was chosen as the implementation language. Does it present the reasons?}
 
 The aim is to provide the bare necessities for reading this thesis if the reader is not
-familiar with Agda or dependently typed programming -- mostly an overview of Agda syntax and some
-basic techniques used.
+familiar with Agda or dependently typed programming -- it is mostly an overview of Agda syntax
+and some basic techniques used.
 
 %\todo{Not only language but also logic. Per Martin-L\"{o}f's Type Theory? Dependent types. 
 %The Curry-Howard correspondence. Total functional programming.
@@ -31,7 +31,7 @@ for example in Epigram \cite{epigram-compiler} or in Coq \cite{chlipala:compiler
 All high-level languages in this thesis will be languages of simple, typed
 expressions and our first language will feature only natural numbers, addition,
 and no exceptions. Besides demonstrating how dependent programming in Agda
-looks like, we will also implement it to build the auxiliary ecosystem of the
+looks like, we will also implement the auxiliary ecosystem of the
 compiler and the skeleton of our development, upon which we will build later
 throughout the thesis.
 
@@ -42,7 +42,7 @@ throughout the thesis.
 \subsection{Type universe}
 
 It is probably reasonable to expect a programming language to be able to represent
-expressions of different types (e.g. numeric or Boolean).
+expressions of different types (e.g. Integer or Boolean).
 
 Hence the first thing we will introduce is the type universe representing the set of
 types of expressions of our high-level language. We will \emph{index} our types with
@@ -54,8 +54,8 @@ types directly for indexing, with an explicit universe, we get decidable
 equality of expression types\footnote{We do not use this property but we would
 if we had to implement type-driven handler selection.} and all datatypes conveniently
 in \ident{Set}.%
-\footnote{To avoid cardinality trouble, reified in Agda as Hurkens's
-simplification\cite{hurkens} of Girard's Paradox\cite{girard:dissertation},
+\footnote{To avoid size issues, appearing in Agda in the form of Girard's Paradox
+\cite{girard:dissertation} (or a simplification thereof by Hurkens \cite{hurkens}),
 Agda features stratified type universes with universe polymorphism.
 
 Our approach, modeling the types of our expression language as values
@@ -101,7 +101,7 @@ declaration. A bit more elaborate example follows shortly in \Fref{sec:simple-ex
 
 We will also need an interpretation function that maps
 types of our simple language to Agda types so that we can use Agda values in
-the modelled language, talk about its denotational semantics etc.
+the modeled language, talk about its denotational semantics, etc.
 
 Function declarations in Agda consist of a type declaration and a
 number of clauses describing the outcomes of the function depending on
@@ -119,9 +119,10 @@ in the form:
 \begin{code}
   el bool = Bool
 \end{code}
-Users of languages belonging (syntactically) to the Miranda family or even the SML branch
-of the ML family will feel safely at
-home here; the difference to the other ML-style languages here is that instead of a big match
+Users of languages belonging (syntactically) to the Miranda family, for example Haskell, Clean
+or Idris, or even the SML branch of the ML family, will feel safely at
+home here. The difference here to the other ML-style languages, like OCaml, F\# or Coq, is that
+instead of a big match
 expression on the right side of a single equation, there are multiple equations where pattern
 matching takes place on the left side of each equation.\footnote{Seen for example in
 the definition of the function \ident{denExp} in \Fref{sec:simple-denExp}.}
@@ -130,7 +131,7 @@ Also note that in Agda, it is possible for a function to return a \emph{type}, i
 with languages like Haskell or OCaml. This is possible because in dependently typed languages,
 types, kinds, sorts etc. are all first-class values.
 
-Furthermore, beyond standard type checking etc., Agda, being a \emph{total} functional
+Furthermore, beyond standard type checking, Agda, being a \emph{total} functional
 programming language, performs two special checks on every function definition.
 \begin{itemize}
 	\item The \emph{coverage checker} checks that pattern coverage of every
@@ -184,6 +185,8 @@ by saturating the type constructor with arguments of the appropriate types.
 For example, the above type family given by the type constructor \ident{Op} is indexed
 by three values of the type \ident{U}. By providing such specific values \ident{u}, \ident{v},
 and \ident{w}, we instantiate the concrete type \ident{Op u v w} belonging to this type family.
+
+\todo{Wouter Swierstra July 31, 2012 10:52 AM: This paragraph is a little vague. Inductive type families are very different from parameterized types (such as lists or trees). This isn't clear from the text as it stands. Perhaps explain a bit about how pattern matching works, or the difference between GADTs and regular data types. I'm sure some of the Agda tutorials have some text you can use to word this a bit more precisely.}
 
 Some non-dependently typed languages, like Haskell, also provide a limited form of
 type families, indexed only by types, not arbitrary values. For example, in Haskell,
@@ -271,12 +274,12 @@ function of the type \ident{(el u $\to$ el v $\to$ el w)}.
 The function returned for the operator \ident{Plus} is the ordinary addition function
 from the standard library. Surrounded with underscores, the infix operator \ident{+} becomes
 a standard function identifier.\footnote{See \Fref{sec:fixity} for more information on
-\textvisiblespace\hspace{0.8pt}fix operators in Agda.}
+infix operators in Agda.}
 
 \subsubsection{Expression semantics}
 
-Expressions are then turned into Agda values as follows; literals in a trivial
-way, binary-operator expressions using the denotation of the corresponding
+Expressions are then turned into Agda values as follows. Literals are evaluated trivially,
+binary-operator expressions are evaluated using the denotation of the corresponding
 operator and recursively obtained denotations of the operands.
 
 \begin{code}
@@ -344,7 +347,7 @@ in \Fref{tab:mixfix}.
 \end{table}
 
 The declaration \ident{\infixr\ 5 \_::\_} gives fixity and precedence for the operator.
-The higher the number, the stronger the operator binds. Associativity is then given
+The higher the number, the tighter the operator binds. Associativity is then given
 by the variant of the declaration: \ident{\infixr} declares a right-associative operator,
 \ident{\infixl} declares a left-associative operator, \ident{\infix} declares a non-associative
 operator.
@@ -568,10 +571,12 @@ type family.
 
 \noindent The definition implies that all nonempty members (inhabited by \ident{refl}) of this
 family must have the index identical to the parameter.
-Therefore conversely, if we have a~\ident{refl : a $\equiv$ b}, it must be the case that \ident{a}
-is identical to \ident{b}.
+Therefore conversely, if we have a~\ident{refl : a $\equiv$ b}, it must be the case that
+\ident{a} is definitionally equal to \ident{b}.
 
-This identity is taken into account by Agda when doing pattern matching on the constructor
+\todo{Wouter Swierstra July 31, 2012 11:33 AM: tread carefully here. Is 1+1 identical to 2? Agda is allowed to do some beta reduction. Perhaps 'definitionally equal' is better than identical.}
+
+This is taken into account by Agda when doing pattern matching on the constructor
 \ident{refl} and causes unification of the corresponding type variables. This is not special
 to propositional equality at all -- after all, propositional equality is expressed by
 an ordinary type family -- it is just a consequence of a more general unification mechanism,
@@ -664,7 +669,7 @@ subterm to its definitional equivalent \ident{execCode c st}.
 \subsubsection{A shorter proof of distributivity}
 
 Since \ident{refl} is a certificate of identity of normal forms, by rewriting
-a term to a diferent form using \ident{refl} as the proof, the normal form of
+a term to a different form using \ident{refl} as the proof, the normal form of
 that term remains the same. As normal forms is what Agda compares when typechecking,
 we can omit the intermediate \ident{refl}-based rewrites, which leaves us
 with just one proof in the chain.\footnote{Since a chain consists of equality
@@ -734,6 +739,8 @@ using equational reasoning, again.
 for the \ident{Binop} case so that human readers can see what's going on more
 easily.
 
+\todo{Wouter Swierstra July 31, 2012 11:42 AM Should you mention what the underscores are doing?}
+
 Then we make two appeals to the lemma \ident{compile-distr}. Each usage of this
 lemma removes a part of the code sequence (exactly corresponding to an operand
 of the binary operator being compiled) and transforms it to the effect that this
@@ -792,17 +799,23 @@ One way to do it is to define an auxiliary function and compose it with the func
 \end{code}
 Sometimes however, especially with long and complicated type signatures,
 defining auxiliary functions gets quite inconvenient and these functions,
-unlike \ident{safeHead} are most probably very specific for one purpose only
-and not reusable. After all,~a Haskell programmer might write:
+unlike \ident{safeHead}, are most probably very specific for one purpose only
+and not reusable. After all, a~Haskell programmer might write:
 \begin{code}
   first :: (a -> Bool) -> [a] -> Maybe a
   first p xs = case filter p xs of
     \NIL -> Nothing
     y:ys -> Just y
 \end{code}
-Agda does not have case-expressions because pattern matching in Agda may yield
-information and that information would have to be discarded. Instead, Agda provides special
-with-patterns than effectively add an argument to the function being defined. The
+Agda does not have case-expressions because in a dependent setting, pattern matching may yield
+information. For example, when matching on a proof of equality of variables \ident{x} and \ident{y},
+the information learned is that these variables should get unified.
+The core concern is that if such pattern matches occur in case-expressions within a function,
+the information learned from the case-match would have to influence pattern matching
+in the arguments of the function.
+
+To deal with this issue, Agda provides
+\emph{with-patterns}, that effectively add arguments to the function being defined. The
 usage should be obvious from an example.
 \begin{code}
   first : {a : Set} -> (a -> Bool) -> List a -> Maybe a
@@ -814,16 +827,17 @@ A function can have multiple with-patterns, separated with vertical bars in both
 with-clause and pattern-matching clauses themselves.
 
 Finally, notice that we had to write ``\ident{first p xs}'' three times redundantly.
-This is not always the case (sometimes the patterns are more specific in different
-clauses) but when it is, the part before the vertical bar can be replaced by an ellipsis:
+This is not always the case --~sometimes the patterns are more specific in different
+clauses~-- but whenever all patterns to the left of the vertical bar are the same,
+they can be replaced by ellipses:
 \begin{code}
   first : {a : Set} -> (a -> Bool) -> List a -> Maybe a
   first p xs with filter p xs
   \... | \NIL = nothing
   \... | y :: _ = just y
 \end{code}
-The ellipses are replaced by the patterns that precede the keyword \ident{with} in the first
-clause. Of course, the right sides of the equations can use all variables bound
+The ellipses are understood to stand for the patterns that precede the keyword \ident{with}
+in the first clause. Of course, the right sides of the equations can use all variables bound
 there.
 
 \subsection{Remarks}
