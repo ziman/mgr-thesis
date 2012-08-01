@@ -464,6 +464,8 @@ of types (elements of the universe \ident{U}) of the values pushed on the stack.
 This means that just by looking at the type of the stack, we can tell how many
 elements it contains and what types they have. Let us first define the type
 of stack shapes.
+
+\noindent \begin{minipage}{\textwidth}
 \begin{code}
   -- open import Data.List
   infixr 5 _::_
@@ -471,6 +473,8 @@ of stack shapes.
     \NIL : List a
     _::_ : a -> List a -> List a
 \end{code}
+\end{minipage}
+
 \begin{code}
   Shape : Set
   Shape = List U
@@ -950,6 +954,7 @@ a list, returns the list of \emph{all} elements satisfying the given predicate.
 
 One way to do it is to define an auxiliary function and compose it with the function
 \ident{filter}:
+\\ \begin{minipage}{\textwidth}
 \begin{code}
   safeHead : {a : Set} -> List a -> Maybe a
   safeHead \NIL = nothing
@@ -957,7 +962,7 @@ One way to do it is to define an auxiliary function and compose it with the func
   
   first : {a : Set} -> (a -> Bool) -> List a -> Maybe a
   first p = safeHead \o filter p
-\end{code}
+\end{code}\end{minipage}\\
 Sometimes however, especially with long and complicated type signatures,
 defining auxiliary functions gets quite inconvenient and these functions,
 unlike \ident{safeHead}, are most probably very specific for one purpose only

@@ -577,6 +577,7 @@ it has. The shape of the stack is sufficient to determine this.
 why the first argument is a \ident{Shape}, not the number, is that we need to
 pattern-match on the shape first so that applications of thes functions reduce
 smoothly in our type signatures.}
+\\ \begin{minipage}{\textwidth}
 \begin{code}
   -- Unwind the shape up to just below the &\cident{n}&\-th top\-most handler.
   -- Return the empty shape if there is no such handler.
@@ -585,7 +586,7 @@ smoothly in our type signatures.}
   unwindShape (Han _ :: xs) (suc n) = unwindShape xs n
   unwindShape (Val _ :: xs) n       = unwindShape xs n
   unwindShape \NIL           _       = \NIL
-\end{code}\label{sec:ham-unwindShape}
+\end{code}\label{sec:ham-unwindShape}\end{minipage}
 
 \noindent Now we can define the data types. We start by defining the type of resumption points,
 which represent information needed to resume computation after skipping the instructions
@@ -937,6 +938,7 @@ execution method, where we pushed bogus \emph{values}, not handlers.} instead
 of code, indicating that a~handler can be found at the appropriate
 \ident{UNMARK}.
 
+\noindent \begin{minipage}{\textwidth}
 \begin{code}
   infixr 5 _\scons\_
   infixr 5 \void\sconsh\_
@@ -945,6 +947,7 @@ of code, indicating that a~handler can be found at the appropriate
     _\scons\_ : forall {u s} -> el u -> Stack s -> Stack (Val u :: s)
     \void\sconsh\_ : forall {u s} -> Stack s -> Stack (Han u :: s)
 \end{code}
+\end{minipage}
 
 \subsection{Compiler}
 
@@ -974,11 +977,12 @@ with a nesting counter in the exception-handling case).
 \subsection{Execution}
 
 Execution is simplified as well. Suddenly, recursion is naturally completely
-structural. In the following code, we will use the auxiliary functions
+structural. In the code, seen in \Fref{fig:hau-execInstr}, we will use the auxiliary functions
 \ident{unwindShape} (\Fref{sec:ham-unwindShape}) and \ident{unwindStack}
 (\Fref{sec:ham-unwindStack}), trivially modified to work with the stack type we
 are using here.
 
+\begin{figure}
 \begin{codei}
   mutual
     execInstr : forall {s t} -> Instr s t -> State s -> State t
@@ -1004,8 +1008,11 @@ are using here.
     execCode \nil st = st
     execCode (i <| is) st = execCode is (execInstr i st)
 \end{code}
+\caption{Handlers at \ident{UNMARK}: execution functions}
+\label{fig:hau-execInstr}
+\end{figure}
 
-\noindent Note that:
+Note that:
 \begin{itemize}
 	\item the $\times[\_]$ constructor now takes only the (unwound) stack, nothing more;
 	\item in the third and fourth clause of the function \ident{execInstr},
@@ -1173,12 +1180,15 @@ This code layout leads to changes in the shape of stacks and the stack itself.
 
 Besides handler placeholders, we will push yet another kind of placeholders on
 the stack, which leads to addition of another item constructor:
+\\ \begin{minipage}{\textwidth}
 \begin{code}
   data Item : Set where
     Val : U -> Item
     Han : U -> Item
     Skp : U -> Item
+\end{code} \end{minipage}
 
+\begin{code}
   Shape : Set
   Shape = List Item
 \end{code}
@@ -1270,6 +1280,7 @@ on top of which the top-most handler would be run if an exception occurred now.
 \noindent In addition, we also define the function \ident{skipShape} that calculates
 the shape of the stack with which execution will continue after skipping
 the top-most handler, if no exception occurs.
+\\ \begin{minipage}{\textwidth}
 \begin{code}
   -- Shape of the stack after skipping the n\-th skip\-mark from the top.
   skipShape : Shape -> Nat -> Shape
@@ -1278,7 +1289,7 @@ the top-most handler, if no exception occurs.
   skipShape (Skp _ :: xs) (suc n) = skipShape xs n
   skipShape (Val _ :: xs)  n      = skipShape xs n
   skipShape \NIL            _      = \NIL
-\end{code}
+\end{code}\end{minipage}
 
 \noindent Simply put, the function \ident{unwindShape} unwinds the shape just
 below the \ident{n}-th ``handler placeholder''; the function \ident{skipShape}
@@ -1303,13 +1314,15 @@ one.
 \subsubsection{State transitions}
 \label{sec:lin-instr-semantics}
 
-The core of execution is given by the function \ident{execInstr} that describes
-effects of single instructions on the state of the machine.
+The core of execution is given by the function \ident{execInstr} (\Fref{fig:lin-execInstr}),
+that describes effects of single instructions on the state of the machine.
 
 Note that, like the instruction/code type declarations in \Fref{sec:lin-code},
 the functions \ident{execCode} and \ident{execInstr} are no longer mutually
-recursive.
+recursive, and, as always, the function \ident{execCode} is a simple left fold over
+instructions.
 
+\begin{figure}
 \begin{codei}
   execInstr : forall {s t} -> Instr s t -> State s -> State t
   -- Normal operation
@@ -1338,17 +1351,16 @@ recursive.
   -- Exception handling: no exception, skip the handler, keep the stack
   execInstr  HANDLE		\tick[ x \scons han\scons skp\scons st ] = ![ zero , x \scons st ]
 \end{codei}
-
-\noindent And, as always, the function \ident{execCode} is a simple left fold over
-instructions.
-
 \begin{code}
     execCode : forall {s t} -> Code s t -> State s -> State t
     execCode \nil st = st
     execCode (i <| is) st = execCode is (execInstr i st)
 \end{code}
+\caption{Linearized code: execution functions}
+\label{fig:lin-execInstr}
+\end{figure}
 
-\noindent This concludes the operational semantics of instructions of the low-level
+This concludes the operational semantics of instructions of the low-level
 virtual machine.
 
 \subsection{Correctness}
@@ -1411,12 +1423,14 @@ The type of expressions \ident{Exp} remains unchanged; we just need to add the t
 binary operators to the data type \ident{Op} as new, appropriately typed,
 constructors.
 
+\noindent \begin{minipage}{\textwidth}
 \begin{code}
   data Op : U -> U -> U -> Set where
     Plus : Op nat nat nat
     Leq : Op nat nat bool
     And : Op bool bool bool
 \end{code}\label{sec:more-operators}
+\end{minipage}
 
 \noindent Recall that a constructor of the type \ident{Op p q r} represents a
 binary operator taking two values of the types \ident{p} and \ident{q},
@@ -1493,8 +1507,10 @@ Finally, we need to extend the instruction interpreter to include the two new
 instructions.
 
 We add a pair of clauses into every section of the function: \emph{normal
-operation}, \emph{trivial exception handling}, \emph{trivial forward jump}.
+operation}, \emph{trivial exception handling}, \emph{trivial forward jump},
+as shown in \Fref{fig:additional-execInstr}.
 
+\begin{figure}
 \begin{codei}
   execInstr : forall {s t} -> Instr s t -> State s -> State t
   -- Normal operation
@@ -1529,8 +1545,11 @@ operation}, \emph{trivial exception handling}, \emph{trivial forward jump}.
   -- Exception handling: no exception, skip the handler, keep the stack
   execInstr  HANDLE		\tick[ x \scons han\scons skp\scons st ] = ![ zero , x \scons st ]
 \end{codei}
+\caption{Additional types and operations: execution functions}
+\label{fig:additional-execInstr}
+\end{figure}
 
-\noindent Note that the only non-trivial addition was the one in the
+Note that the only non-trivial addition was the one in the
 \emph{normal execution} section, which defines the operational semantics of the
 two new instructions. The remaining two pairs are just obligatory no-ops,
 consistent with the skipping interpretation of these two modes of execution.
