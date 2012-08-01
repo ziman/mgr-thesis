@@ -188,19 +188,19 @@ One of the most elementary kind of a type declaration follows.
 \end{code}
 This declaration declares a finite type inhabited by three values represented by 
 the three data constructors \ident{Red}, \ident{Orange}, and \ident{Green}. Such declarations
-are usually possible even in non-functional mainstream languages, often called \emph{enums}.
+are usually possible even in non-functional languages, often called \emph{enums}.
 
 In Agda however, data constructors may take arguments, as shown in the following snippet.
 \begin{code}
   data Observation : Set where
-    LightsOn : Bool -> Measurement
-    PersonsPresent : \bN -> Measurement
+    LightsOn : Bool -> Observation
+    PersonsPresent : \bN -> Observation
 \end{code}
 Hence we get a type containing values like \ident{LightsOn false} or \ident{PersonsPresent 3},
 representing some observations a program might need to model.
 
 What's more, data types can be \emph{recursive}. Instead of the simplest recursive type,
-the natural numbers, let us declare the type of lists (of natural numbers).
+the type of natural numbers, let us declare the type of lists of natural numbers.
 \begin{code}
   data NList : Set where
     \NIL : NList
@@ -229,13 +229,16 @@ a type. This resulting type represents the lists whose elements have the type \i
 so our original type of natural-number lists is written as \ident{List $\bN$}.
 
 Such types are called \emph{parameterized types} because they abstract out parts of the
-declaration as parameters that may be chosen arbitrarily. As already mentioned, in the case
+declaration as parameters that may be chosen arbitrarily\footnote{Arbitrarily within the given
+type. In our case, \ident{A : Set} so the parameter \ident{A} represents any type.}.
+As already mentioned, in the case
 of lists, the single parameter \ident{A} denotes the type of the elements contained in a list.
 
 Now suppose we want to write a function \ident{head : $\forall$ \{A\} $\to$ List A $\to$ A}.
 We cannot do that, because the list might be empty and there is nothing to return in that case,
 and Agda does not allow partial functions. We should probably make the function accept only
-non-empty lists.
+non-empty lists\footnote{The other option would be to return \ident{Maybe A} but sometimes
+it is not appropriate.}.
 
 For that purpose, we need to extend our parameterized type of lists further into
 an~\emph{indexed type family} by adding another argument to the type constructor \ident{List}%
@@ -248,11 +251,11 @@ The newly added argument will denote the length of the list.
     _::_ : forall {n} -> A -> Vec A n -> Vec A (suc n)
 \end{code}
 The above code says that the constructor \ident{[\,]} constructs a list of any given type
-with zero length; the constructor \ident{\_::\_}, for any (implicit) length \ident{n},
-takes an element of the type \ident{A} and an appropriately typed list of length \ident{n},
+with the zero length; the constructor \ident{\_::\_}, for any (implicit) length \ident{n},
+takes an element of the type \ident{A} and an appropriately typed list of the length \ident{n},
 yielding a list whose length is \ident{suc n}.
 
-There are several important differences of the newly added \emph{index}, in contrast with
+There are several important points where the newly added \emph{index} differs to
 the \emph{parameter} \ident{A}:
 \begin{itemize}
 
@@ -300,7 +303,7 @@ the \emph{parameter} \ident{A}:
 		also rule out some constructors: if we have a list whose type is indexed by \ident{zero},
 		we can be sure that the list was not constructed by the constructor \ident{\_::\_}
 		since \ident{zero} is not equal to \ident{suc n} for any \ident{n}; these expressions
-		simply do not unify.
+		do not unify.
 		
 \end{itemize}
 In non-dependent functional languages like Haskell or OCaml, (type-) parameterized
@@ -309,12 +312,13 @@ types are generally available\footnote{Although these too allow definitions like
 families are available for example in Haskell in different forms; the form closest to
 the inductive families of Agda are GADTs \cite[p.~178]{haskell-manual}.
 
-Now that we have defined the length-indexed type family of vectors, we are ready to write
+Now that we have declared the length-indexed type family of vectors, we are ready to write
 the function \ident{head} that is completely safe and total.
 \begin{code}
   head : forall {A n} -> Vec A (suc n) -> A
   head (x :: _) = x
 \end{code}
+
 First, note that the type signature says that the function accepts only nonempty vectors;
 the length index \ident{zero} of the empty vector would not unify with the required form
 \ident{suc n}.
