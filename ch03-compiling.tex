@@ -383,7 +383,7 @@ and Wright.
 Now the machine will have two modes of execution, as hinted in
 \cite[p.~7]{gmh:exceptions}.
 
-The normal mode is exactly what one would expect: executing instructions on a stack, nothing surprising.
+The normal mode is exactly what one would expect: executing instructions on a~stack, nothing surprising.
 
 However, the non-trivial part is the exception-handling mode. When an exception is thrown,
 two things need to be done in order to execute the exception handler: \label{sec:stack-unwinding}
@@ -1071,8 +1071,8 @@ identical to that in \Fref{sec:cor-compile-distr}.
 \noindent We also use two lemmas that perform specialized case analysis. When
 doing induction on the structure of the expression while proving correctness,
 there are two non-trivial cases: the case of binary operators\footnote{The
-constructor \ident{Bin}.} and the case of catch-expressions\footnote{The
-constructor \ident{Catch}.}. Apart from containing sub-expressions recursively
+constructor \ident{Bin}.} and the case of catch-expressions.\footnote{The
+constructor \ident{Catch}.} Apart from containing sub-expressions recursively
 (thus requiring the induction hypothesis), it is non-trivial to show that the
 effect of the code compiled from these expressions conforms to their
 denotational semantics with respect to exception propagation.  This is where we
@@ -1131,10 +1131,10 @@ change the layout for catch-expressions.
 The instruction \ident{UNMARK} no longer takes any piece of code.
 The role of this instruction is taken by the newly-introduced instruction
 \ident{HANDLE}, which introduces the handler code.  The instruction
-\ident{UNMARK} now indicates the end of the handler\footnote{This \emph{change}
+\ident{UNMARK} now indicates the end of the handler,\footnote{This \emph{change}
 of naming may be a bit confusing with respect to our previous development but
 the \emph{result} is more logical and intuitive:
-\ident{MARK}-\ident{HANDLE}-\ident{UNMARK}.}, as sketched in
+\ident{MARK}-\ident{HANDLE}-\ident{UNMARK}.} as sketched in
 \Fref{fig:linearized-code}.
 
 \begin{figure}[htp]
