@@ -9,7 +9,8 @@ Hutton and Wright \cite{gmh:exceptions}, where the basic approach to compiling e
 was shown.
 The paper provides excellent insight and inspiration how such code can be written
 in a language such as Haskell. However, specialties of programming with dependent types,
-especially termination concerns, will make us diverge in design a bit.
+especially termination concerns, will make us diverge in design a bit: the code by Hutton and
+Wright is not always structurally recursive, which needs to be the case in Agda.
 
 \section{Compiling exceptions, after Hutton \& Wright}
 
@@ -21,13 +22,14 @@ even using the same numbering of lemmas.
 In contrast with the original paper and Tobias Nipkow's formalization thereof,
 our aim is to create a dependently typed program, which means we don't want to
 \emph{copy} the Haskell code as is and prove it correct; instead, we will
-\emph{adapt} it for the dependently typed setting and see how it works out.
+\emph{adapt} it for the dependently typed setting and try to expose some appropriate
+structure.
 
 Furthermore, besides the code performing the actual compilation, we also
 provide its specification like we did in Chapter \ref{chap:dependent-types},
 including formal semantics of the high-level and low-level languages, and a statement of what
 it means for an implementation to be correct. We then also provide a machine-checkable proof
-of correctness for our implementation.
+of correctness of our implementation.
 
 Finally, being implemented in Agda, the specification is both formal and total%
 \footnote{A total specification covers all possible cases that may occur, that is,
@@ -108,6 +110,8 @@ of \ident{Exp} to the denotation function \ident{denExp}.
 \noindent We had to alter the original two cases slightly, most importantly the
 binary operator case, where the result now yields a value (i.e.  doesn't throw)
 if and only if both subexpressions yield values without throwing.
+
+\todo{Evaluation order and with-splitting?}
 
 As hinted above, we added a case for the expression \ident{Throw}: this one
 never yields a value and always throws; and also case for catch-expressions: if
@@ -542,15 +546,15 @@ There are several standard ways how to cope with this issue: accessibility
 predicates, decreasing measures, or rewriting the algorithm to be
 structurally recursive -- and we will aim for the last one.
 
-This is the reason why we ``simulate'' the jump by switching the machine to an
+This is the reason that we ``simulate'' the jump by switching the machine to an
 alternative mode of execution and keep the function \ident{execCode}
-structurally recursing over the instruction sequence.
+structurally recursive over the instruction sequence.
 
 Also, the type of the function \ident{execInstr}, that describes effects of
 instructions on the machine state, takes only the instruction and state and
 returns the new state. Since we don't include the ``instruction pointer'' in
 the state, there is no way for the instructions to cause jumps in the code in
-this setup without adding the special states or changing how execInstr works.
+this setup without adding the special states or changing how \ident{execInstr} works.
 
 \subsection{Implementation}
 
@@ -585,8 +589,8 @@ smoothly in our type signatures.}
   unwindShape \NIL           _       = \NIL
 \end{code}\label{sec:ham-unwindShape}
 
-\noindent Now we can define the data types. First, the resumption point, which
-represents information needed to resume computation after skipping the instructions
+\noindent Now we can define the data types. We start by defining the type of resumption points,
+which represent information needed to resume computation after skipping the instructions
 of the current handler frame.
 \begin{code}
   -- Normal operation resumption point.
@@ -738,7 +742,7 @@ represented as follows:
 		description). This value is initially zero.
 \end{itemize}
 
-The reason why we need to keep track of the nesting depth is that instruction
+The reason that we need to keep track of the nesting depth is that instruction
 skipping always ends at an \ident{UNMARK} instruction -- but not always the
 first one encountered. The instruction sequence we want to skip may contain
 more \ident{MARK}-\ident{UNMARK} pairs if the current handler frame contains
@@ -873,10 +877,10 @@ placeholder method. We actually cannot do better than going through every
 single instruction if we want to recurse structurally over \ident{code}.
 However, the work we do at every instruction\footnote{Well, every one
 except \ident{MARK} and \ident{UNMARK}.} in the exception-handling mode is
-trivial: we simply skip it. No stack inspection, no manipulation with machine
+trivial: we simply skip it, doing no stack inspection, no manipulation with machine
 state at all.  Hence, when entering the exception handling mode, the machine
-focuses just on the code sequence and starts to search an appropriate place to
-resume execution at. This approximates real-world jumps better although we still
+focuses just on the code sequence and starts to search an appropriate place at which
+to resume execution. This approximates real-world jumps better although we still
 need to keep track of what instruction is being skipped and when we need to
 stop skipping.
 
@@ -1093,6 +1097,10 @@ use the two lemmas to analyze all these cases, one for the constructor
 The function \ident{lemma-catch} also takes the induction hypothesis as an
 argument, instantiated for the compiled handler code.
 
+Both functions are quite simple -- they consist of 12 to 16 clauses
+performing just case analysis on the given arguments and with-patterns.
+All clauses are trivial: they have a simple \ident{refl} on the right-hand side.
+
 This is all we need to prove correctness (as stated in
 \Fref{sec:hau-correctness}): the cases for the constructors \ident{Throw} and
 \ident{Lit} can be trivially discharged using \ident{refl}; the cases for the
@@ -1132,28 +1140,25 @@ the \emph{result} is more logical and intuitive:
 \Fref{fig:linearized-code}.
 
 \begin{figure}[htp]
-\footnotesize
-\hspace{1em}In the previous section, handlers were attached to \ident{UNMARK}.
+\small
 \begin{center}
-\mbox{\footnotesize
-\begin{tabular}{rcccccl}
-    \ldots
-	& \ident{MARK}
-	& \textit{expression code}
-	& \ident{UNMARK} + \textit{handler}
-	& \ldots \\
-    \midrule
-    \ldots
-    	& \ident{MARK}
-	& \textit{expression code}
-	& \ident{HANDLE}
-	& \textit{handler}
-	& \ident{UNMARK}
-	& \ldots
-\end{tabular}
-}
+\begin{minipage}{0.9\textwidth}\begin{tabbing}
+In the previous section, handlers were attached to \ident{UNMARK}.\\
+\quad \ldots
+	\= \quad \ident{MARK}
+	\= \quad \textit{expression code}
+	\= \quad \begin{tabular}{c}\ident{UNMARK} \\ + \textit{handler}\end{tabular}
+	\= \quad \ldots \\\\
+In this section, we will use inline handlers. \\
+\quad \ldots
+	\> \quad \ident{MARK}
+	\> \quad \textit{expression code}
+	\> \quad \hspace{5pt} \ident{HANDLE}
+	\> \quad \textit{handler}
+		\quad \ident{UNMARK}
+		\quad \ldots 
+\end{tabbing}\end{minipage}
 \end{center}
-\hspace{1em}In this section, we will use inline handlers.
 \caption{Linearized code layout}
 \label{fig:linearized-code}
 \end{figure}
@@ -1550,7 +1555,11 @@ possible if, instead of keeping track of the types of elements on the stack, we
 kept just the size of the stack.
 
 Of course, there are lots of things to improve. Most notably, the large number
-of cases in the operator lemma belonging to the proof of correctness might
+of clauses in the operator lemma belonging to the proof of correctness might
 probably be factored into smaller functions, resulting in slower growth of
 the clause count when adding new instructions.
+
+Possible ways to deal with this issue could be metaprogramming in the spirit
+of Template Haskell, reflection, or perhaps automation in the form of a tactic
+language, as found in Coq.
 

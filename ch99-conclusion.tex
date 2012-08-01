@@ -1,19 +1,13 @@
 \chapter{Discussion}
 
-Finally, we converged to a solution that meets our objectives: a certified compiler for a
-language with exceptions, along with a tail-recursive executable interpreter of simple
-low-level code. While we have diverged from the
-paper by Hutton and Wright \cite{gmh:exceptions} in low-level execution-related matters
-by using different machine modes for instruction skipping instead of jumping, the overall
-direction of our development happens to match that of the paper.
-
 \section{Further work}
 
 There are \emph{lots} of things in this development that could be improved and many alternatives
 to the design choices of ours that could be interesting to explore further.
 
 In \Fref{sec:forks}, we mentioned the transactionality of exceptions in pure code. Transforming
-linear code to this form of ``forks'' is not too hard -- although not trivial -- and this
+linear code to the form of ``forks'' mentioned there is not too hard -- although not trivial
+-- and this
 intermediate representation could provide a reasoning bridge between tree-structured expressions
 and linear code. The compiler could even emit this intermediate structure first,
 linearizing it later, which might facilitate proving the part of correspondence between ``forks''
@@ -48,7 +42,8 @@ the code unnecessarily complicated and this simplification would pay off.
 
 In \Fref{sec:lin-correctness} we mention that the operator lemma in the proof of correctness
 must contain as much as 12 (trivial) clauses per operator. A suitable factorization of the
-lemma into smaller functions might reduce this constant.
+lemma into smaller functions might reduce this constant; employing some automation technique
+might remove it altogether.
 
 Unfortunately, our structurally recursive model of execution cannot include jumps, which are an
 important part of functionality of real-world machines. The paper by Hutton and Wright
@@ -84,7 +79,62 @@ Leroy presents a verified realistic compiler of (a substantial subset of) the C 
 named CompCert \cite{leroy09}, also written and verified in Coq. This is a full-featured real-world
 compiler of a mainstream procedural language to PowerPC machine code, dealing with advanced topics
 like optimizations and register allocation in a completely certified way, while keeping
-the performance of the emitted code on par with that of the mainstream C compilers.
+the performance of the emitted code on par with that of the mainstream C compilers. Being a C
+compiler, it does not support exceptions.
+
+\section{Conclusions}
+
+Finally, we converged to a solution that meets our objectives: a certified compiler for a
+language with exceptions, along with a tail-recursive executable interpreter of the corresponding
+low-level code. While we have diverged from the
+paper by Hutton and Wright \cite{gmh:exceptions} in low-level execution-related matters
+by using different machine modes for instruction skipping instead of jumping, the overall
+direction of our development happens to match that of the paper, while adding
+structurality everywhere.
+
+We use the power of dependent types to keep relatively strong invariants; as a~consequence,
+we needn't bother with cases that are impossible, such as executing the instruction \ident{ADD}
+on an empty stack. We set up the types so that they rule out all such cases, which would be
+impossible in languages with weaker type systems, such as Haskell or OCaml.
+
+However, this did not take too much work, when compared to such languages.
+Type signatures are a bit more elaborate but the code itself is very similar. The whole Agda
+development is 210 lines of code, and 120 lines of proofs, all inclusive.
+
+When we look at the objectives listed in the Introduction on page \pageref{objectives},
+we can conclude that they have been met.
+\begin{itemize}
+	\item Our program is \emph{runnable}; it is structurally recursive,
+		obviously terminating, and provably correct with respect to the presented
+		specification.
+		
+	\item The code is \emph{readable}. Especially because all recursion is structural,
+		there are no proof terms in the
+		informative part of the development. The small-step operational semantics
+		of individual instructions is given clearly by the tabular form of the function
+		\ident{execInstr} (\Fref{sec:lin-instr-semantics}). And, as already mentioned,
+		also the rest of code looks similarly to what the counterparts in other functional
+		languages would look like.
+		
+	\item The low-level code is simple enough to be \emph{executable by a stack machine}.
+		Except for a small and limited amount of state, we do not use anything more,
+		especially not implicit stacks, nor arbitrarily-sized instructions.
+		
+	\item \emph{Extraction of code} to other languages should also be simple, mostly due to
+		the properties that make the code readable; in particular, due to the absence of
+		of proof terms in the informative/executable part of the development, which follows
+		from structurality of the recursion used, and due to the similarity to what
+		the program would look like in other functional languages.
+\end{itemize}
+
+It has been 45 years since the seminal paper by McCarthy and Painter \cite{mccarthy67}
+opened up the door into the world of verified compilers by introducing the first formally
+verified compiler. In the meantime, many things have changed,
+machines have become more powerful and able to not even check our proofs but also assist us
+in writing them. To fully reap the power of the machines, we need to develop
+efficient methods of formal verification -- and while lots of ingenious work has been
+done in this area, it is still a long and exciting way to go. Let this thesis be a small
+step towards this goal.
 
 \begin{comment}
 
