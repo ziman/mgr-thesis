@@ -729,14 +729,13 @@ type family.
 \end{code}
 
 \noindent The definition implies that all nonempty members (inhabited by \ident{refl}) of this
-family must have the index identical to the parameter.
-Therefore conversely, if we have a~\ident{refl : a $\equiv$ b}, it must be the case that
-\ident{a} is definitionally equal to \ident{b}.
-
-\todo{Wouter Swierstra July 31, 2012 11:33 AM: tread carefully here. Is 1+1 identical to 2? Agda is allowed to do some beta reduction. Perhaps 'definitionally equal' is better than identical.}
+family must have the index the same as the parameter.
+Therefore conversely, if we have a~value \ident{refl : a $\equiv$ b}, it must be the case that
+\ident{a} is the same\footnote{The proper term is \emph{definitionally equal}. Agda has an
+internal notion of definitional equality, based on comparing normal forms.} as \ident{b}.
 
 This is taken into account by Agda when doing pattern matching on the constructor
-\ident{refl} and causes unification of the corresponding type variables. This is not special
+\ident{refl} and causes unification of the corresponding type variables. Such behavior is not special
 to propositional equality at all -- after all, propositional equality is expressed by
 an ordinary type family -- it is just a consequence of a more general unification mechanism,
 which works this way for any other data type.
