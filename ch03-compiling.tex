@@ -111,8 +111,6 @@ of \ident{Exp} to the denotation function \ident{denExp}.
 binary operator case, where the result now yields a value (i.e.  doesn't throw)
 if and only if both subexpressions yield values without throwing.
 
-\todo{Evaluation order and with-splitting?}
-
 As hinted above, we added a case for the expression \ident{Throw}: this one
 never yields a value and always throws; and also case for catch-expressions: if
 no exception gets thrown in the value, the whole catch-expression is equivalent
