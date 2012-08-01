@@ -238,45 +238,93 @@ and Agda does not allow partial functions. We should probably make the function 
 non-empty lists.
 
 For that purpose, we need to extend our parameterized type of lists further into
-a~\emph{type family} by adding another argument to the type constructor \ident{List}.
+an~\emph{indexed type family} by adding another argument to the type constructor \ident{List}%
+\footnote{Traditionally, length-indexed lists are called \emph{vectors} so we will also
+change the name of the constructor to \ident{Vec}.}.
 The newly added argument will denote the length of the list.
 \begin{code}
   data Vec (A : Set) : Nat -> Set where
     \NIL : Vec A zero
-    _::_ : forall {n} -> A -> Vec A n -> Vec A (1 + n)
+    _::_ : forall {n} -> A -> Vec A n -> Vec A (suc n)
 \end{code}
 The above code says that the constructor \ident{[\,]} constructs a list of any given type
 with zero length; the constructor \ident{\_::\_}, for any (implicit) length \ident{n},
 takes an element of the type \ident{A} and an appropriately typed list of length \ident{n},
-yielding a list whose length is \ident{1 + n}.
+yielding a list whose length is \ident{suc n}.
 
-Note several important differences of the newly added \emph{index} to the \emph{parameter}
-\ident{A}:
+There are several important differences of the newly added \emph{index}, in contrast with
+the \emph{parameter} \ident{A}:
 \begin{itemize}
 
-	\item Parameters appear to the left of the semicolon in the declaration head
+	\item Parameters appear to the left of the semicolon in the type declaration head
 		and they are named because their names stay in scope throughout the whole declaration.
 		Indices appear to the right of the semicolon and they are usually not named.
 		Even if they are, these names are not accessible in the body of the type declaration.
 
 	\item The parameter \ident{A} is bound in the declaration head and it is used
 		uniformly within the body of the declaration, whereas the index \ident{n}
-		in the constructor \ident{\_::\_} is defined locally only for that particular
+		in the constructor \ident{\_::\_} is defined locally, only for that particular
 		constructor.
 		
 	\item In the above example, all data constructors must result in the type \ident{Vec A n}
-		for some value of \ident{n}. The way the declaration is written, there is no way to have
+		for some value of \ident{n}. The way the declaration is written, it is not possible to have
 		a~constructor construct a~value of the type \ident{Vec (Maybe A) n}.
 		
-	\item Recursive occurrences of a data type must use the same parameters.%
-		\footnote{In Agda, this is a bit complicated. Indices are \emph{usually} written
-			to the right of the semicolon in the declaration head. However, Agda allows
-			using different parameters in recursive occurrences of a data type in its
-			constructors.}
+	\item Recursive occurrences of a data type must also use the parameters as they were bound
+		in the declaration head.
+		If \ident{A} is a parameter, the following data constructor declaration is not valid%
+		\footnote{In Agda, this is a bit complicated. Type indices are \emph{usually} written
+			to the right of the semicolon in the declaration head. However, Agda does allow
+			using different \emph{parameters} in recursive occurrences of a data type in its
+			constructors. Such ``parameters'' would be classified as indices by Dybjer
+			\cite{dybjer97}, despite being to the left of the semicolon in Agda \cite{mcbride08}.}:
+		\ident{\_::\_ : A $\to$ List (Maybe A) $\to$ List A}. Indices are not bound in the
+		declaration head so this restriction wouldn't even make sense for them.
 		
-	\item given by user vs. given by constructors
+	\item Therefore, the values of parameters are ``chosen from the outside'' arbitrarily
+		when the type is used and they parameterize the whole recursive structure uniformly.
+		On the other hand, the values of indices are ``chosen by the constructors'': they
+		may change in recursive occurrences and different data constructor may construct values
+		of different types, differing in type indices.
+		
+		For example, any nonempty length-indexed list
+		contains another list indexed with a different number, smaller by one, but they
+		both store elements of the same type given by the parameter.
+		
+	\item Since type indices depend on the particular constructor used, pattern matching
+		on different constructors yields information about the indices: if we know
+		what constructor was used to construct a value, we also know how the corresponding
+		type indices are related to other values.
+		
+		Conversely, this correspondence can
+		also rule out some constructors: if we have a list whose type is indexed by \ident{zero},
+		we can be sure that the list was not constructed by the constructor \ident{\_::\_}
+		since \ident{zero} is not equal to \ident{suc n} for any \ident{n}; these expressions
+		simply do not unify.
 		
 \end{itemize}
+In non-dependent functional languages like Haskell or OCaml, (type-) parameterized
+types are generally available\footnote{Although these too allow definitions like
+\ident{data AltList a b = Nil | Cons a (AltList b a)}.}. (Type-) indexed type
+families are available for example in Haskell in different forms; the form closest to
+the inductive families of Agda are GADTs \cite[p.~178]{haskell-manual}.
+
+Now that we have defined the length-indexed type family of vectors, we are ready to write
+the function \ident{head} that is completely safe and total.
+\begin{code}
+  head : forall {A n} -> Vec A (suc n) -> A
+  head (x :: _) = x
+\end{code}
+First, note that the type signature says that the function accepts only nonempty vectors;
+the length index \ident{zero} of the empty vector would not unify with the required form
+\ident{suc n}.
+
+Second, note that we used only one clause in the definition and the clause for the empty-list
+case is missing. Agda sees that the type of the argument rules out the constructor \ident{[\,]}
+and does not require us to write a clause for that case.
+
+This concludes our discussion of parameterized types and indexed type families. We will use
+the above principles in the code that follows.
 
 \begin{comment}
 Dependently typed languages with inductive types, like Agda, generally support inductive
