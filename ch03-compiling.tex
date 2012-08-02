@@ -39,6 +39,8 @@ not sensible enough to be described by the specification, which is what
 we prefer in this work.}, which explains the
 ``totally'' part of the title of this chapter.
 
+\srcdir{sec3.3-stack-unwinding}
+
 \subsection{High-level language}
 
 \subsubsection{Expressions}
@@ -376,7 +378,7 @@ begin with the first three of them.
 \section{Execution: stack unwinding}
 
 We will adapt the method of \emph{stack unwinding}, described in the paper by Hutton
-and Wright.
+and Wright. \srcdir{sec3.3-stack-unwinding}
 
 \subsection{Virtual machine}
 
@@ -913,6 +915,8 @@ A surprisingly simple change solves all the terminating trouble: let us just
 attach handler code to the instruction \ident{UNMARK} instead of the
 corresponding \ident{MARK}.
 
+\srcdir{sec3.4-handlers-at-unmark}
+
 \subsection{Virtual machine}
 
 First, we alter the definition of the type of instructions from
@@ -1031,8 +1035,6 @@ correctness. We do this by induction on the given expression, in a way
 very similar to how the proof was done in \Fref{sec:cor-correctness}, using
 equational reasoning.
 
-\todo{Insert a reference to the source code.}
-
 The complete proof can be found
 in the attached code; here we will just outline the main theorem and the
 accompanying lemmas.
@@ -1122,6 +1124,7 @@ What's left is the fifth problem related to pushing code blobs on the stack.
 This is solved by linearizing handlers in the main code sequence and adding
 jumps so that these handlers are skipped unless actually needed.
 
+\newpage
 \section{Linearized code}
 \label{sec:linearized-code}
 
@@ -1167,6 +1170,8 @@ In this section, we will use inline handlers. \\
 \caption{Linearized code layout}
 \label{fig:linearized-code}
 \end{figure}
+
+\srcdir{sec3.5-linearized-code}
 
 \subsection{Virtual machine}
 
@@ -1371,8 +1376,7 @@ fact that we have three machine states now. Basically, all functions performing
 case analysis get several new clauses dealing with the new handler-skipping
 machine state -- and that's all.
 
-The detailed proof can be found in the accompanying code.\\
-\todo{Add a reference to the source code.}
+The detailed proof can be found in the accompanying code.
 
 \section{Adding types and binary operators}
 
@@ -1388,6 +1392,8 @@ adding new cases in pattern matches in various places. The upside is that,
 where relevant, the number of cases grows linearly in the number of operators.
 The downside is that the constant factor in one of the lemmas belonging to the
 correctness proof is as much as $12$ (trivial) clauses per binary operator.
+
+\srcdir{sec3.6-more-ops}
 
 \subsection{High-level language}
 
@@ -1473,8 +1479,9 @@ the action of the two new operators.
 
 Next, we extend the virtual machine with two new instructions representing
 the two new operations. We do this through adding new constructors to the
-\ident{Instr} data type.
+\ident{Instr} data type, as shown in \Fref{fig:more-ops-instr}.
 
+\begin{figure}
 \begin{code}
   data Instr : Shape -> Shape -> Set where
     PUSH : forall {u s} -> el u -> Instr s (Val u :: s)
@@ -1487,6 +1494,9 @@ the two new operations. We do this through adding new constructors to the
     LEQ : forall {s} -> Instr (Val nat :: Val nat :: s) (Val bool :: s)
     AND : forall {s} -> Instr (Val bool :: Val bool :: s) (Val bool :: s)
 \end{code}
+\caption{Additional operations: data type of instructions}
+\label{fig:more-ops-instr}
+\end{figure}
 
 \subsubsection{Compiler}
 
@@ -1563,7 +1573,7 @@ operator are examined so we end up with $2 \times 24$ new trivial\footnote{All
 these proof obligations can be discharged using a simple \ident{refl}.}
 clauses. However, the rest of the proof remains completely untouched.
 
-\todo{Add a reference to the source code.}
+The precise formulation of the proof can be found in the attached code.
 
 \subsection{Remarks}
 
@@ -1577,6 +1587,6 @@ probably be factored into smaller functions, resulting in slower growth of
 the clause count when adding new instructions.
 
 Possible ways to deal with this issue could be metaprogramming in the spirit
-of Template Haskell, reflection, or perhaps automation in the form of a tactic
-language, as found in Coq.
+of Template Haskell, reflection, or, perhaps most readily available, automation
+in the form of a tactic language, as found in Coq.
 

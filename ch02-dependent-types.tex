@@ -35,7 +35,7 @@ looks like, we will also implement the auxiliary ecosystem of the
 compiler and the skeleton of our development, upon which we will build later
 throughout the thesis.
 
-\todo{Add a reference to the source code.}
+\srcdir{sec2.1-no-exceptions}
 
 % branch: no-exceptions
 
@@ -329,30 +329,6 @@ and does not require us to write a clause for that case.
 
 This concludes our discussion of parameterized types and indexed type families. We will use
 the above principles in the code that follows.
-
-\begin{comment}
-Dependently typed languages with inductive types, like Agda, generally support inductive
-type families. An inductive type family is a collection of inductive types given by
-a common (generally $n$-ary) type constructor. Specific types from this family are then obtained
-by saturating the type constructor with arguments of the appropriate types.
-
-For example, the above type family given by the type constructor \ident{Op} is indexed
-by three values of the type \ident{U}. By providing such specific values \ident{u}, \ident{v},
-and \ident{w}, we instantiate the concrete type \ident{Op u v w} belonging to this type family.
-
-Superficially, type families might resemble parameterized types, as found in other functional
-languages such as Haskell or OCaml: in both cases, types are constructed by saturating a type
-constructor.
-
-\todo{Wouter Swierstra July 31, 2012 10:52 AM: This paragraph is a little vague. Inductive type families are very different from parameterized types (such as lists or trees). This isn't clear from the text as it stands. Perhaps explain a bit about how pattern matching works, or the difference between GADTs and regular data types. I'm sure some of the Agda tutorials have some text you can use to word this a bit more precisely. \cite[Sec.~2.6 and 3.1]{bove-dybjer}}
-
-Some non-dependently typed languages, like Haskell, also provide a limited form of
-type families, indexed only by types, not arbitrary values. For example, in Haskell,
-``\ident{Expression Int}'' may represent a valid type (and it often does) but
-``\ident{VectorOfLength 3}'' may not.%
-\footnote{In Haskell, suitable type declarations allow expressions like \ident{S (S (S Z))}
-to appear in type signatures. However, these expressions are proper \emph{types}, not values.}
-\end{comment}
 
 \subsubsection{Expressions}
 
