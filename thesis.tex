@@ -5,7 +5,7 @@
 
 \begin{document}
 
-%\input{frontblah.tex}
+\input{frontblah.tex}
 
 \newpage
 
@@ -22,14 +22,16 @@
 
 \pagestyle{plain}
 
-%\appendix
-%\include{chA1-additional-proofs}
-%\chapwithtoc{List of Tables}
-%\chapwithtoc{List of Abbreviations}
-%\chapwithtoc{Attachments}
-
 \backmatter
 \include{bibliography}
+
+\appendix
+%\include{chA1-additional-proofs}
+%\chapwithtoc{List of Tables and Figures}
+%\listoftables
+\listoffigures
+%\chapwithtoc{List of Abbreviations}
+%\chapwithtoc{Attachments}
 
 \openright
 \end{document}

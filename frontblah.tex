@@ -72,8 +72,14 @@ Prague 2012
 \openright
 
 \noindent
-Dedication. % TODO
+I would like to thank to my dear Flu for giving me the key initial push to leave for
+Nijmegen -- thus triggering a sequence of exciting events leading to this work --
+and for her support all along the way.
 
+Not the smallest bit less, I would like to thank Dr. Wouter Swierstra for his excellent
+guidance, from the point of helping a confused student pick a topic, through consultations
+conveying experience and insight while leaving decisions up to me, to the final reviews few days
+before submission of the thesis.
 \newpage
 
 %%% Strana s čestným prohlášením k diplomové práci
@@ -123,8 +129,14 @@ Wouter Swierstra PhD, Software Technology Group of Utrecht University
 % dle Organizační struktury MFF UK, případně plný název pracoviště mimo MFF UK
 
 Abstrakt:
-TODO
-% abstrakt v rozsahu 80-200 slov; nejedná se však o opis zadání diplomové práce
+V práci se zabýváme korektností kompilátoru jazyka s výjimkami. Předkládáme formální sémantiku;
+jak denotační sémantiku vysokoúrovňového jazyka, tak operační sémantiku jazyka instrukcí pro
+zásobníkový stroj. Studujeme metodu odvíjení zásobníku a poté,
+iterativně ve více krocích, předkládáme modifikovanou metodu. Tato je strukturálně rekurzivní
+a tudíž vhodná pro implementaci v totálních závisle typovaných jazycích. Nakonec předkládáme
+implementaci kompilátoru v závisle typovaném jazyce Agda,
+spolu se strojově ověřitelným důkazem, že předložená implementace kompilátoru při překladu
+zachovává sémantiku programu. 
 
 Klíčová slova:
 závisle typované programování, výjimky, kompilátor, korektnost
@@ -151,7 +163,17 @@ Wouter Swierstra PhD, Software Technology Group of Utrecht University
 % mimo MFF UK v angličtině
 
 Abstract:
-TODO
+The thesis deals with correctness of a compiler of a simple language featuring exceptions.
+We present formal semantics, both denotational semantics of a~high-level language and
+operational semantics of a low-level language for a simple stack machine.
+We study the method of stack unwinding and then iteratively, improving upon a naive solution,
+we present a different method
+that is structurally recursive and thus suitable for implementation in total dependently
+typed languages.
+Finally, we provide
+an implementation of the compiler in the dependently typed functional programming language
+Agda, along with a mechanically verifiable proof of adherence of the implementation to the
+semantics.
 % abstrakt v rozsahu 80-200 slov v angličtině; nejedná se však o překlad
 % zadání diplomové práce
 
